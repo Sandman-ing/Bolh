@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tpl_wake">Early wake-up</string>
+    <string name="tpl_wake_norm">up before 7:00</string>
+    <string name="tpl_reading">Reading</string>
+    <string name="tpl_reading_min">one page</string>
+    <string name="tpl_reading_norm">20 pages</string>
+    <string name="tpl_gym">Gym</string>
+    <string name="tpl_gym_norm">full session</string>
+    <string name="tpl_run">Running</string>
+    <string name="tpl_run_min">put on shoes and step outside</string>
+    <string name="tpl_run_norm">30 minutes</string>
+    <string name="tpl_water">Water</string>
+    <string name="tpl_water_norm">2 litres</string>
+    <string name="tpl_language">Language</string>
+    <string name="tpl_language_min">five minutes</string>
+    <string name="tpl_language_norm">half an hour</string>
+    <string name="tpl_meditation">Stillness</string>
+    <string name="tpl_meditation_min">three minutes</string>
+    <string name="tpl_meditation_norm">15 minutes</string>
+    <string name="tpl_steps">Steps</string>
+    <string name="tpl_steps_norm">10,000 steps</string>
+    <string name="tpl_vitamins">Vitamins</string>
+    <string name="tpl_vitamins_norm">taken</string>
+    <string name="tpl_journal">Journal</string>
+    <string name="tpl_journal_min">one sentence</string>
+    <string name="tpl_journal_norm">a page</string>
+    <string name="tpl_sleep">Bed on time</string>
+    <string name="tpl_sleep_norm">before 23:00</string>
+    <string name="tpl_tidy">Tidying up</string>
+    <string name="tpl_tidy_norm">20 minutes of cleaning</string>
+    <string name="tpl_instrument">Instrument</string>
+    <string name="tpl_instrument_min">five minutes</string>
+    <string name="tpl_instrument_norm">45 minutes</string>
+    <string name="tpl_study">Studying</string>
+    <string name="tpl_study_min">ten minutes</string>
+    <string name="tpl_study_norm">an hour</string>
+    <string name="tpl_smoking">Smoking</string>
+    <string name="tpl_alcohol">Alcohol</string>
+    <string name="tpl_delivery">Food delivery</string>
+    <string name="tpl_sweets">Sweets</string>
+    <string name="tpl_scrolling">Doomscrolling</string>
+</resources>

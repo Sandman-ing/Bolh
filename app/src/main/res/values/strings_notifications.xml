@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="notif_channel_habits">Habit reminders</string>
+    <string name="notif_channel_habits_desc">A reminder at the time you chose. Nothing else.</string>
+    <string name="notif_default_text">Mark the day</string>
+    <string name="notif_evening_text">%1$s — and the day counts</string>
+    <string name="notif_action_minimum">Minimum</string>
+    <string name="notif_action_done">Done</string>
+    <string name="notif_recurring_text">Tomorrow: %1$s will be charged</string>
+</resources>

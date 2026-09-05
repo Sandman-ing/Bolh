@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="goals_sort_manual">Mine</string>
+    <string name="goals_sort_deadline">By deadline</string>
+    <string name="goals_sort_tempo">By tempo</string>
+
+    <string name="goal_period">%1$s → %2$s</string>
+    <string name="goal_no_deadline">no deadline</string>
+    <string name="goal_progress">%1$d%% · %2$d of %3$s</string>
+    <string name="goal_tempo">tempo %1$d%%</string>
+    <string name="goal_tempo_unknown">no linked habits</string>
+    <string name="goal_next_stage">Next — %1$s, %2$s</string>
+
+    <string name="goal_forecast_title">At the current pace</string>
+    <string name="goal_forecast_later">%1$s — %2$s later</string>
+    <string name="goal_forecast_earlier">%1$s — %2$s ahead</string>
+    <string name="goal_forecast_on_time">%1$s — on time</string>
+    <string name="goal_forecast_plain">%1$s</string>
+
+    <string name="goal_cost_title">What it costs</string>
+    <string name="goal_cost_time">%1$s a week</string>
+    <string name="goal_cost_time_hours">%1$dh %2$02dm</string>
+    <string name="goal_cost_no_estimate">%1$d linked habits have no duration set</string>
+
+    <string name="goal_deadline_check_title">Deadline check</string>
+    <string name="goal_deadline_check_text">Your factor is %1$s×. Of %2$d deadlines you set, you met %3$d.</string>
+    <string name="goal_keep_deadline">Keep %1$s</string>
+    <string name="goal_take_deadline">Take %1$s</string>
+
+    <string name="goal_reschedule_title">The deadline has passed</string>
+    <string name="goal_reschedule_text">A new date, already corrected by your factor.</string>
+
+    <string name="goal_new_title">New goal</string>
+    <string name="goal_edit_title">Goal</string>
+    <string name="goal_name_hint">Name</string>
+    <string name="goal_deadline_hint">Deadline</string>
+    <string name="goal_deadline_pick">Choose a date</string>
+    <string name="goal_stages_title">Stages</string>
+    <string name="goal_stage_hint">Stage name</string>
+    <string name="goal_add_stage">Add a stage</string>
+    <string name="goal_tasks_title">Tasks</string>
+    <string name="goal_task_hint">Task</string>
+    <string name="goal_add_task">Add a task</string>
+    <string name="goal_save">Save</string>
+    <string name="goal_complete">Goal reached</string>
+    <string name="goal_delete">Delete</string>
+
+    <plurals name="goal_months">
+        <item quantity="one">%d month</item>
+        <item quantity="other">%d months</item>
+    </plurals>
+    <string name="goal_jar_title">Budget</string>
+    <string name="goal_jar_target_hint">How much is needed</string>
+    <string name="goal_jar_create">Start</string>
+    <string name="goal_jar_add_hint">Add</string>
+    <string name="goal_jar_add">Put in</string>
+    <string name="goal_jar_edit">amount</string>
+    <string name="goal_jar_undo">undo top-up</string>
+    <string name="goal_jar_delete">Delete the jar</string>
+    <string name="goals_sort_button">Sort</string>
+    <string name="goals_completed">Reached</string>
+    <string name="goal_completed_at">Reached %1$s</string>
+    <string name="goal_reopen">Back to work</string>
+    <string name="goal_completed_stages">%1$s closed</string>
+    <string name="goal_budget_add">Add a budget</string>
+</resources>

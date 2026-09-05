@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Bolh</string>
+
+    <!-- Navigation -->
+    <string name="tab_goals">Goals</string>
+    <string name="tab_habits">Habits</string>
+    <string name="tab_finance">Finance</string>
+    <string name="tab_stats">Stats</string>
+
+    <!-- Common -->
+    <string name="action_create">Create</string>
+    <string name="action_settings">Settings</string>
+
+    <!-- Empty states -->
+    <string name="goals_empty_action">Create your first goal</string>
+    <string name="goals_empty_example">For example: a place of my own by May 2029</string>
+    <string name="habits_empty_action">Create your first habit</string>
+    <string name="habits_empty_example">For example: read one page every day</string>
+    <string name="finance_empty_action">Add your first account</string>
+    <string name="finance_empty_example">For example: card, 1 240 €</string>
+    <string name="stats_empty_title">Nothing to count yet</string>
+    <string name="stats_empty_example">Statistics appear once habits and money have some history</string>
+    <string name="common_delete">Delete</string>
+    <string name="common_cancel">Cancel</string>
+    <string name="confirm_delete">Delete “%1$s”?</string>
+    <string name="tx_list_title">Transactions</string>
+    <string name="tx_list_empty">Nothing recorded yet</string>
+    <string name="finance_all_transactions">All transactions</string>
+    <string name="hint_long_press_delete">long press to delete</string>
+    <plurals name="days_of">
+        <item quantity="one">%d day</item>
+        <item quantity="other">%d days</item>
+    </plurals>
+    <plurals name="stages_of">
+        <item quantity="one">%d stage</item>
+        <item quantity="other">%d stages</item>
+    </plurals>
+    <string name="confirm_delete_transaction">Delete the %1$s entry?</string>
+</resources>

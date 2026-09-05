@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="stats_period_week">Неделя</string>
+    <string name="stats_period_month">Месяц</string>
+    <string name="stats_period_year">Год</string>
+
+    <string name="stats_metric_habits">Привычки</string>
+    <string name="stats_metric_spend">Расходы</string>
+    <string name="stats_metric_goals">Цели в темпе</string>
+    <string name="stats_goals_value">%1$d из %2$d</string>
+    <string name="stats_no_value">—</string>
+
+    <string name="stats_habits_chart">Выполнение привычек</string>
+    <string name="stats_categories">Расходы по категориям</string>
+    <string name="stats_insights">Что из этого следует</string>
+
+    <string name="insight_category_up_habit_slipping">%1$s выросла на %2$d%%. Привычка держалась %3$s из %4$d.</string>
+    <string name="insight_goal_stalled">Цель «%1$s» стоит: темп упал на %2$d%%, привязанные привычки выполняются на %3$d%%.</string>
+    <string name="insight_jar_slowed">Пополнение копилки замедлилось: прогноз по цели «%1$s» уехал на %2$d месяцев.</string>
+    <string name="insight_depth_low">%1$s идёт %2$s из %3$d, но %4$d из них на минимуме.</string>
+    <string name="insight_habit_clustered">%1$s случается только по %2$s, хотя запланирована %3$s в неделю.</string>
+    <string name="insight_category_anomaly">%1$s выше своего обычного уровня на %2$d%%.</string>
+    <plurals name="days_count">
+        <item quantity="one">%d день</item>
+        <item quantity="few">%d дня</item>
+        <item quantity="many">%d дней</item>
+        <item quantity="other">%d дня</item>
+    </plurals>
+    <plurals name="times_count">
+        <item quantity="one">%d раз</item>
+        <item quantity="few">%d раза</item>
+        <item quantity="many">%d раз</item>
+        <item quantity="other">%d раза</item>
+    </plurals>
+    <string name="stats_block_habits">Привычки</string>
+    <string name="stats_block_goals">Цели</string>
+    <string name="stats_block_finance">Деньги</string>
+    <string name="stats_no_habits">Привычек пока нет</string>
+    <string name="stats_no_goals">Целей пока нет</string>
+    <string name="stats_no_spend">В этом периоде трат не было</string>
+    <string name="stats_habit_line">%1$d из %2$s, %3$d из них на минимуме</string>
+    <string name="stats_goal_line">%1$d%% пройдено · темп %2$s</string>
+    <string name="stats_goal_no_tempo">привычки не привязаны</string>
+</resources>

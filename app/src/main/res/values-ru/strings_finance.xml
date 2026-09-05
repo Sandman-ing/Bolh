@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="finance_total">Всего</string>
+    <string name="finance_reserved">Отложено на цели: %1$s</string>
+    <string name="finance_available">%1$s можно потратить</string>
+    <string name="finance_month_spend">Расходы за месяц</string>
+    <string name="finance_view_ring">Круг</string>
+    <string name="finance_view_list">Список</string>
+    <string name="finance_view_dynamics">Динамика</string>
+    <string name="finance_hide_obligatory">без обязательных</string>
+    <string name="finance_next_payment">Ближайший платёж</string>
+    <string name="finance_record">записать</string>
+    <string name="finance_skip">пропустить</string>
+    <string name="finance_no_spend">В этом месяце трат ещё не было</string>
+    <string name="finance_uncategorised">Без категории</string>
+    <string name="finance_jar_progress">%1$s из %2$s</string>
+
+    <string name="account_new_title">Новый счёт</string>
+    <string name="account_name_hint">Название</string>
+    <string name="account_balance_hint">Текущий остаток</string>
+    <string name="account_type_cash">Наличные</string>
+    <string name="account_type_card">Карта</string>
+    <string name="account_type_bank">Банк</string>
+    <string name="account_type_savings">Накопления</string>
+    <string name="account_save">Сохранить</string>
+
+    <string name="tx_expense">Расход</string>
+    <string name="tx_income">Доход</string>
+    <string name="tx_transfer">Перевод</string>
+    <string name="tx_amount">Сумма</string>
+    <string name="tx_account">Счёт</string>
+    <string name="tx_account_to">Куда</string>
+    <string name="tx_category">Категория</string>
+    <string name="tx_more">Дата, заметка, привязка к цели</string>
+    <string name="tx_note">Заметка</string>
+    <string name="tx_date">Дата</string>
+    <string name="tx_goal">Цель</string>
+    <string name="tx_record">Записать</string>
+    <string name="recurring_new_title">Регулярный платёж</string>
+    <string name="recurring_name_hint">За что</string>
+    <string name="recurring_every">Каждый</string>
+    <string name="recurring_period_day">день</string>
+    <string name="recurring_period_week">неделю</string>
+    <string name="recurring_period_month">месяц</string>
+    <string name="recurring_period_year">год</string>
+    <string name="recurring_first_date">Первое списание</string>
+    <string name="recurring_add">Добавить регулярный платёж</string>
+    <string name="recurring_interval">Повторять через</string>
+    <string name="account_edit">Изменить</string>
+    <string name="account_expenses">Расходы</string>
+    <string name="account_income">Доходы</string>
+    <string name="account_balance_note">Остаток правится сдвигом начальной суммы. Записанные операции остаются на месте.</string>
+    <string name="finance_view">Вид</string>
+</resources>

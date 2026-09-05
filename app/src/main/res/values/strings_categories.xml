@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cat_groceries">Groceries</string>
+    <string name="cat_cafe">Eating out</string>
+    <string name="cat_home">Home</string>
+    <string name="cat_transport">Transport</string>
+    <string name="cat_health">Health</string>
+    <string name="cat_clothes">Clothes</string>
+    <string name="cat_fun">Fun</string>
+    <string name="cat_bills">Bills</string>
+    <string name="cat_travel">Travel</string>
+    <string name="cat_pets">Pets</string>
+    <string name="cat_education">Education</string>
+    <string name="cat_other">Other</string>
+    <string name="cat_salary">Salary</string>
+    <string name="cat_gift">Gift</string>
+    <string name="cat_refund">Refund</string>
+    <string name="cat_other_income">Other income</string>
+</resources>

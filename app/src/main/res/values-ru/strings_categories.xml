@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cat_groceries">Продукты</string>
+    <string name="cat_cafe">Кафе и доставка</string>
+    <string name="cat_home">Жильё</string>
+    <string name="cat_transport">Транспорт</string>
+    <string name="cat_health">Здоровье</string>
+    <string name="cat_clothes">Одежда</string>
+    <string name="cat_fun">Развлечения</string>
+    <string name="cat_bills">Счета</string>
+    <string name="cat_travel">Поездки</string>
+    <string name="cat_pets">Питомцы</string>
+    <string name="cat_education">Учёба</string>
+    <string name="cat_other">Прочее</string>
+    <string name="cat_salary">Зарплата</string>
+    <string name="cat_gift">Подарок</string>
+    <string name="cat_refund">Возврат</string>
+    <string name="cat_other_income">Прочий доход</string>
+</resources>

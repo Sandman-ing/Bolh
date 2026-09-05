@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tpl_wake">Ранний подъём</string>
+    <string name="tpl_wake_norm">встать до 7:00</string>
+    <string name="tpl_reading">Чтение</string>
+    <string name="tpl_reading_min">одна страница</string>
+    <string name="tpl_reading_norm">20 страниц</string>
+    <string name="tpl_gym">Зал</string>
+    <string name="tpl_gym_norm">полная тренировка</string>
+    <string name="tpl_run">Пробежка</string>
+    <string name="tpl_run_min">надеть кроссовки и выйти за дверь</string>
+    <string name="tpl_run_norm">30 минут</string>
+    <string name="tpl_water">Вода</string>
+    <string name="tpl_water_norm">2 литра</string>
+    <string name="tpl_language">Язык</string>
+    <string name="tpl_language_min">пять минут</string>
+    <string name="tpl_language_norm">полчаса</string>
+    <string name="tpl_meditation">Тишина</string>
+    <string name="tpl_meditation_min">три минуты</string>
+    <string name="tpl_meditation_norm">15 минут</string>
+    <string name="tpl_steps">Шаги</string>
+    <string name="tpl_steps_norm">10 000 шагов</string>
+    <string name="tpl_vitamins">Витамины</string>
+    <string name="tpl_vitamins_norm">принять</string>
+    <string name="tpl_journal">Дневник</string>
+    <string name="tpl_journal_min">одно предложение</string>
+    <string name="tpl_journal_norm">страница</string>
+    <string name="tpl_sleep">Лечь вовремя</string>
+    <string name="tpl_sleep_norm">до 23:00</string>
+    <string name="tpl_tidy">Порядок дома</string>
+    <string name="tpl_tidy_norm">20 минут уборки</string>
+    <string name="tpl_instrument">Инструмент</string>
+    <string name="tpl_instrument_min">пять минут</string>
+    <string name="tpl_instrument_norm">45 минут</string>
+    <string name="tpl_study">Учёба</string>
+    <string name="tpl_study_min">десять минут</string>
+    <string name="tpl_study_norm">час</string>
+    <string name="tpl_smoking">Курение</string>
+    <string name="tpl_alcohol">Алкоголь</string>
+    <string name="tpl_delivery">Доставка еды</string>
+    <string name="tpl_sweets">Сладкое</string>
+    <string name="tpl_scrolling">Залипание в телефоне</string>
+</resources>

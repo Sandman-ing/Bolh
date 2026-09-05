@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="habits_bad_section">Вредные</string>
+    <string name="habits_week_previous">Прошлая неделя</string>
+    <string name="habits_week_next">Следующая неделя</string>
+    <string name="habits_mark_minimum">мин</string>
+    <string name="habits_mark_norm">норма</string>
+    <string name="habits_mark_done">Отметить</string>
+    <string name="habits_slip">срыв</string>
+    <string name="habits_slip_add">+1</string>
+    <string name="habits_slip_undo">Отменить последний срыв</string>
+    <string name="habits_recovery">на этой неделе довольно минимума</string>
+    <string name="habits_paused">на паузе</string>
+
+    <string name="habit_done_of_planned">%1$d из %2$s</string>
+    <string name="habit_slips_of_limit">%1$d из %2$d за неделю</string>
+    <string name="habit_saved">сэкономлено %1$s</string>
+
+    <plurals name="habit_streak">
+        <item quantity="one">%d день подряд</item>
+        <item quantity="few">%d дня подряд</item>
+        <item quantity="many">%d дней подряд</item>
+        <item quantity="other">%d дня подряд</item>
+    </plurals>
+
+    <plurals name="habit_days_clean">
+        <item quantity="one">%d день без срыва</item>
+        <item quantity="few">%d дня без срыва</item>
+        <item quantity="many">%d дней без срыва</item>
+        <item quantity="other">%d дня без срыва</item>
+    </plurals>
+
+    <!-- Создание и настройки -->
+    <string name="habit_new_title">Новая привычка</string>
+    <string name="habit_edit_title">Привычка</string>
+    <string name="habit_templates">Готовые</string>
+    <string name="habit_name_hint">Название</string>
+    <string name="habit_kind_good">Полезная привычка</string>
+    <string name="habit_kind_bad">Вредная привычка</string>
+    <string name="habit_schedule_daily">Каждый день</string>
+    <string name="habit_schedule_weekdays">Выбранные дни</string>
+    <string name="habit_schedule_times">N раз в неделю</string>
+    <string name="habit_advanced">Расширенные настройки</string>
+    <string name="habit_mode_title">При пропуске</string>
+    <string name="habit_mode_game">серия обнуляется</string>
+    <string name="habit_mode_skips">два дня отдыха в месяц не ломают счёт</string>
+    <string name="habit_mode_minimum">плохой день не обнуляет прогресс</string>
+    <string name="habit_mode_counter">считать дни без срыва</string>
+    <string name="habit_mode_limit">не больше N раз в неделю</string>
+    <string name="habit_minimum_hint">Минимум: то, что невозможно не сделать</string>
+    <string name="habit_norm_hint">Норма: то, ради чего привычка заведена</string>
+    <string name="habit_limit_hint">Раз в неделю</string>
+    <string name="habit_cost_hint">Стоимость одного случая</string>
+    <string name="habit_estimate_hint">Минут за раз</string>
+    <string name="habit_reminder">Напоминание</string>
+    <string name="habit_reminder_evening">Вечерний повтор с предложением минимума</string>
+    <string name="habit_save">Сохранить</string>
+    <string name="habit_delete">Удалить</string>
+    <string name="habit_link_goal">Привязать к цели</string>
+    <string name="habit_pause">Пауза</string>
+    <string name="habit_pause_until">до %1$s</string>
+    <string name="habit_pause_none">нет</string>
+    <string name="habit_pause_hint">статистика не пострадает</string>
+    <string name="habit_pause_clear">снять</string>
+    <string name="habits_other_days">Ещё %1$d — не на сегодня</string>
+    <string name="habits_hide_other">скрыть</string>
+    <string name="habit_schedule_times_hint">Любые %1$d дня в неделю — какие именно, решаешь по ходу. Для закреплённых дней возьми «Выбранные дни».</string>
+    <string name="habit_schedule_weekdays_hint">Привычка спрашивается только в эти дни.</string>
+    <string name="habits_nothing_today">На этот день ничего не запланировано</string>
+</resources>

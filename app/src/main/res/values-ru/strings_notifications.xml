@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="notif_channel_habits">Напоминания о привычках</string>
+    <string name="notif_channel_habits_desc">Напоминание в выбранное время. Больше ничего.</string>
+    <string name="notif_default_text">Отметить день</string>
+    <string name="notif_evening_text">%1$s — и день засчитан</string>
+    <string name="notif_action_minimum">Минимум</string>
+    <string name="notif_action_done">Готово</string>
+    <string name="notif_recurring_text">Завтра спишется %1$s</string>
+</resources>

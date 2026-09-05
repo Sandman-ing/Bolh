@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="finance_total">Total</string>
+    <string name="finance_reserved">Reserved for goals: %1$s</string>
+    <string name="finance_available">%1$s free to spend</string>
+    <string name="finance_month_spend">Spent this month</string>
+    <string name="finance_view_ring">Ring</string>
+    <string name="finance_view_list">List</string>
+    <string name="finance_view_dynamics">Trend</string>
+    <string name="finance_hide_obligatory">without fixed costs</string>
+    <string name="finance_next_payment">Next payment</string>
+    <string name="finance_record">record</string>
+    <string name="finance_skip">skip</string>
+    <string name="finance_no_spend">Nothing spent this month yet</string>
+    <string name="finance_uncategorised">Without a category</string>
+    <string name="finance_jar_progress">%1$s of %2$s</string>
+
+    <string name="account_new_title">New account</string>
+    <string name="account_name_hint">Name</string>
+    <string name="account_balance_hint">Current balance</string>
+    <string name="account_type_cash">Cash</string>
+    <string name="account_type_card">Card</string>
+    <string name="account_type_bank">Bank</string>
+    <string name="account_type_savings">Savings</string>
+    <string name="account_save">Save</string>
+
+    <string name="tx_expense">Expense</string>
+    <string name="tx_income">Income</string>
+    <string name="tx_transfer">Transfer</string>
+    <string name="tx_amount">Amount</string>
+    <string name="tx_account">Account</string>
+    <string name="tx_account_to">To account</string>
+    <string name="tx_category">Category</string>
+    <string name="tx_more">Date, note, goal</string>
+    <string name="tx_note">Note</string>
+    <string name="tx_date">Date</string>
+    <string name="tx_goal">Goal</string>
+    <string name="tx_record">Record</string>
+    <string name="recurring_new_title">Recurring payment</string>
+    <string name="recurring_name_hint">What for</string>
+    <string name="recurring_every">Every</string>
+    <string name="recurring_period_day">day</string>
+    <string name="recurring_period_week">week</string>
+    <string name="recurring_period_month">month</string>
+    <string name="recurring_period_year">year</string>
+    <string name="recurring_first_date">First charge</string>
+    <string name="recurring_add">Add a recurring payment</string>
+    <string name="recurring_interval">Repeat every N periods</string>
+    <string name="account_edit">Edit</string>
+    <string name="account_expenses">Expenses</string>
+    <string name="account_income">Income</string>
+    <string name="account_balance_note">The balance is corrected by shifting the starting amount. Recorded transactions stay untouched.</string>
+    <string name="finance_view">View</string>
+</resources>

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="habits_bad_section">Bad habits</string>
+    <string name="habits_week_previous">Previous week</string>
+    <string name="habits_week_next">Next week</string>
+    <string name="habits_mark_minimum">min</string>
+    <string name="habits_mark_norm">norm</string>
+    <string name="habits_mark_done">Mark done</string>
+    <string name="habits_slip">slip</string>
+    <string name="habits_slip_add">+1</string>
+    <string name="habits_slip_undo">Undo the last slip</string>
+    <string name="habits_recovery">minimum is enough this week</string>
+    <string name="habits_paused">on pause</string>
+
+    <string name="habit_done_of_planned">%1$d of %2$s</string>
+    <string name="habit_slips_of_limit">%1$d of %2$d this week</string>
+    <string name="habit_saved">saved %1$s</string>
+
+    <plurals name="habit_streak">
+        <item quantity="one">%d day in a row</item>
+        <item quantity="other">%d days in a row</item>
+    </plurals>
+
+    <plurals name="habit_days_clean">
+        <item quantity="one">%d day without a slip</item>
+        <item quantity="other">%d days without a slip</item>
+    </plurals>
+
+    <!-- Создание и настройки -->
+    <string name="habit_new_title">New habit</string>
+    <string name="habit_edit_title">Habit</string>
+    <string name="habit_templates">Ready-made</string>
+    <string name="habit_name_hint">Name</string>
+    <string name="habit_kind_good">Useful habit</string>
+    <string name="habit_kind_bad">Bad habit</string>
+    <string name="habit_schedule_daily">Every day</string>
+    <string name="habit_schedule_weekdays">Chosen days</string>
+    <string name="habit_schedule_times">Times a week</string>
+    <string name="habit_advanced">Advanced settings</string>
+    <string name="habit_mode_title">On a missed day</string>
+    <string name="habit_mode_game">the streak resets</string>
+    <string name="habit_mode_skips">two rest days a month keep the count</string>
+    <string name="habit_mode_minimum">a bad day does not reset progress</string>
+    <string name="habit_mode_counter">count days without a slip</string>
+    <string name="habit_mode_limit">no more than N times a week</string>
+    <string name="habit_minimum_hint">Minimum: what you cannot fail to do</string>
+    <string name="habit_norm_hint">Norm: what the habit is for</string>
+    <string name="habit_limit_hint">Times a week</string>
+    <string name="habit_cost_hint">Cost of one occurrence</string>
+    <string name="habit_estimate_hint">Minutes per time</string>
+    <string name="habit_reminder">Reminder</string>
+    <string name="habit_reminder_evening">Evening repeat offering the minimum</string>
+    <string name="habit_save">Save</string>
+    <string name="habit_delete">Delete</string>
+    <string name="habit_link_goal">Link to a goal</string>
+    <string name="habit_pause">Pause</string>
+    <string name="habit_pause_until">until %1$s</string>
+    <string name="habit_pause_none">none</string>
+    <string name="habit_pause_hint">statistics will not suffer</string>
+    <string name="habit_pause_clear">clear</string>
+    <string name="habits_other_days">%1$d more, not for today</string>
+    <string name="habits_hide_other">hide</string>
+    <string name="habit_schedule_times_hint">Any %1$d days a week — you choose which as you go. For fixed days pick “Chosen days”.</string>
+    <string name="habit_schedule_weekdays_hint">The habit is asked for only on these days.</string>
+    <string name="habits_nothing_today">Nothing planned for this day</string>
+</resources>
