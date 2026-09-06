@@ -35,6 +35,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -52,11 +54,17 @@ data class CategoryStat(
 )
 
 /** Строка привычки в статистике: постоянство и глубина рядом (§5.3). */
+/** Блок статистики, который можно убрать с экрана (§7). */
+enum class StatBlock { Habits, Goals, Money, Insights }
+
 data class StatHabitRow(
+    val id: String,
     val name: String,
     val doneDays: Int,
     val plannedDays: Int,
     val minimumDays: Int,
+    /** Отметки по дням — из них рисуется календарь привычки. */
+    val days: Map<LocalDate, EntryLevel> = emptyMap(),
 )
 
 /** Строка цели: прогресс и темп — два разных числа, и они не складываются (§4.2). */
@@ -82,10 +90,14 @@ data class StatsUiState(
     val goalsById: Map<String, Goal> = emptyMap(),
     val categoriesById: Map<String, Category> = emptyMap(),
     val baseCurrency: String = "EUR",
+    /** Пусто — показываем всё. */
+    val hiddenBlocks: Set<StatBlock> = emptySet(),
     val loaded: Boolean = false,
 ) {
     val isEmpty: Boolean
         get() = loaded && habitRows.isEmpty() && goalRows.isEmpty() && spendMinor == 0L
+
+    fun shows(block: StatBlock): Boolean = block !in hiddenBlocks
 }
 
 class StatsViewModel(
@@ -134,7 +146,15 @@ class StatsViewModel(
         )
     }
 
-    val state: StateFlow<StatsUiState> = combine(dataFlow, period) { data, currentPeriod ->
+    private val hidden = settings.statBlocks.map { stored ->
+        stored.mapNotNull { name -> runCatching { StatBlock.valueOf(name) }.getOrNull() }.toSet()
+    }
+
+    val state: StateFlow<StatsUiState> = combine(
+        dataFlow,
+        period,
+        hidden,
+    ) { data, currentPeriod, hiddenBlocks ->
         val today = habits.today()
         val current = boundsFor(currentPeriod, today)
         val previous = previousBounds(currentPeriod, current)
@@ -172,6 +192,7 @@ class StatsViewModel(
             habitRows = goodHabits.map { habit ->
                 val marks = data.marks[habit.id].orEmpty().filter { current.covers(it.date) }
                 StatHabitRow(
+                    id = habit.id,
                     name = habit.name,
                     doneDays = HabitAnalytics.doneDays(
                         data.marks[habit.id].orEmpty(),
@@ -184,6 +205,9 @@ class StatsViewModel(
                         habit.startDate,
                     ),
                     minimumDays = marks.count { it.level == EntryLevel.Minimum },
+                    // Календарь показывает весь известный след привычки,
+                    // а не только выбранный период: месяц листается сам по себе.
+                    days = data.marks[habit.id].orEmpty().associate { it.date to it.level },
                 )
             },
             goalRows = data.goals.map { goal ->
@@ -245,6 +269,7 @@ class StatsViewModel(
             goalsById = data.goals.associateBy { it.id },
             categoriesById = categoriesById,
             baseCurrency = finance.baseCurrency,
+            hiddenBlocks = hiddenBlocks,
             loaded = true,
         )
     }.stateIn(
@@ -256,6 +281,15 @@ class StatsViewModel(
     fun setPeriod(value: StatPeriod) {
         period.value = value
         viewModelScope.launch { settings.setStatPeriod(value.name.lowercase()) }
+    }
+
+    /** Блок либо есть на экране, либо его нет: третьего состояния не нужно. */
+    fun toggleBlock(block: StatBlock) {
+        viewModelScope.launch {
+            val current = settings.statBlocks.first()
+            val next = if (block.name in current) current - block.name else current + block.name
+            settings.setStatBlocks(next)
+        }
     }
 
     private fun averageTempo(

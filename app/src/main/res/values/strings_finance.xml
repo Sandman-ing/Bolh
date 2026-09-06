@@ -22,6 +22,8 @@
     <string name="finance_no_payments">No recurring payments yet</string>
     <string name="finance_no_jars">Jars appear here once a goal gets a budget</string>
     <string name="finance_options">View options</string>
+    <string name="finance_tile_transactions_hint">Everything recorded, by day</string>
+    <string name="finance_tile_categories_hint">Colours, icons, monthly limits</string>
     <string name="category_system_note">A built-in category can be recoloured and renamed, but not deleted: recorded transactions rely on it.</string>
     <string name="confirm_delete_category">Delete \u00ab%1$s\u00bb?</string>
     <string name="finance_flow_expense">Expenses</string>

@@ -9,21 +9,28 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -33,11 +40,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import eu.bolh.app.R
 import eu.bolh.app.domain.analytics.Insight
+import eu.bolh.app.domain.model.EntryLevel
 import eu.bolh.app.domain.model.Category
 import eu.bolh.app.domain.templates.SystemCategories
 import eu.bolh.app.ui.common.BolhCard
@@ -55,6 +64,10 @@ import eu.bolh.app.ui.theme.NumberSmall
 import eu.bolh.app.ui.theme.Radius
 import eu.bolh.app.ui.theme.Spacing
 import eu.bolh.app.ui.theme.TextPrimary
+import java.time.DayOfWeek
+import java.time.LocalDate
+import java.time.YearMonth
+import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.Locale
 import kotlin.math.abs
@@ -73,6 +86,11 @@ fun StatsScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
     val status = LocalStatusColors.current
     val locale = rememberLocale()
+    var blocksMenu by remember { mutableStateOf(false) }
+    // Раскрытая привычка и месяц её календаря живут на экране: это способ
+    // смотреть, а не данные, и переживать уход отсюда им незачем.
+    var openHabit by remember { mutableStateOf<String?>(null) }
+    var month by remember { mutableStateOf(YearMonth.now()) }
 
     if (state.isEmpty) {
         Column(
@@ -139,10 +157,46 @@ fun StatsScreen(
                                 shape = chip,
                             )
                             .clickable { viewModel.setPeriod(period) }
-                            .padding(horizontal = Spacing.l, vertical = Spacing.s),
+                            .padding(horizontal = Spacing.m, vertical = Spacing.s),
                     )
                 }
                 Spacer(modifier = Modifier.weight(1f))
+                // Что показывать — решение человека, а не приложения (§7).
+                Box {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_tune),
+                        contentDescription = stringResource(R.string.stats_blocks),
+                        tint = status.textSecondary,
+                        modifier = Modifier
+                            .clip(CircleShape)
+                            .background(status.surfaceRaised)
+                            .border(1.dp, status.stroke, CircleShape)
+                            .clickable { blocksMenu = true }
+                            .padding(Spacing.s)
+                            .size(20.dp),
+                    )
+                    DropdownMenu(
+                        expanded = blocksMenu,
+                        onDismissRequest = { blocksMenu = false },
+                        containerColor = status.surfaceRaised,
+                    ) {
+                        StatBlock.entries.forEach { block ->
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        text = stringResource(blockLabel(block)),
+                                        color = if (state.shows(block)) {
+                                            MaterialTheme.colorScheme.onBackground
+                                        } else {
+                                            status.textTertiary
+                                        },
+                                    )
+                                },
+                                onClick = { viewModel.toggleBlock(block) },
+                            )
+                        }
+                    }
+                }
                 // Настройки живут здесь: статистика — единственный раздел без своих объектов.
                 Icon(
                     painter = painterResource(R.drawable.ic_settings),
@@ -204,7 +258,7 @@ fun StatsScreen(
             }
         }
 
-        item(key = "habits-block") {
+        if (state.shows(StatBlock.Habits)) item(key = "habits-block") {
             SectionCard(
                 title = stringResource(R.string.stats_block_habits),
                 titleColor = HabitsViolet,
@@ -217,34 +271,60 @@ fun StatsScreen(
                     EmptyLine(stringResource(R.string.stats_no_habits))
                 } else {
                     BarChart(bars = state.bars, color = HabitsViolet)
+                    Text(
+                        text = stringResource(R.string.stats_calendar_hint),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = status.textTertiary,
+                        modifier = Modifier.padding(bottom = Spacing.s),
+                    )
                     state.habitRows.forEachIndexed { index, row ->
                         if (index > 0) InnerDivider()
-                        Text(
-                            text = row.name,
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onBackground,
-                        )
-                        Text(
-                            text = stringResource(
-                                R.string.stats_habit_line,
-                                row.doneDays,
-                                pluralStringResource(
-                                    R.plurals.days_of,
-                                    row.plannedDays,
-                                    row.plannedDays,
+                        val open = openHabit == row.id
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(Radius.block))
+                                .clickable {
+                                    openHabit = if (open) null else row.id
+                                    month = YearMonth.now()
+                                }
+                                .padding(vertical = Spacing.xs),
+                        ) {
+                            Text(
+                                text = row.name,
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.onBackground,
+                            )
+                            Text(
+                                text = stringResource(
+                                    R.string.stats_habit_line,
+                                    row.doneDays,
+                                    pluralStringResource(
+                                        R.plurals.days_of,
+                                        row.plannedDays,
+                                        row.plannedDays,
+                                    ),
+                                    row.minimumDays,
                                 ),
-                                row.minimumDays,
-                            ),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = status.textSecondary,
-                            modifier = Modifier.padding(top = Spacing.xs),
-                        )
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = status.textSecondary,
+                                modifier = Modifier.padding(top = Spacing.xs),
+                            )
+                        }
+                        if (open) {
+                            HabitCalendar(
+                                days = row.days,
+                                month = month,
+                                onPrevious = { month = month.minusMonths(1) },
+                                onNext = { month = month.plusMonths(1) },
+                            )
+                        }
                     }
                 }
             }
         }
 
-        item(key = "goals-block") {
+        if (state.shows(StatBlock.Goals)) item(key = "goals-block") {
             SectionCard(
                 title = stringResource(R.string.stats_block_goals),
                 titleColor = GoalsTeal,
@@ -283,7 +363,7 @@ fun StatsScreen(
             }
         }
 
-        item(key = "finance-block") {
+        if (state.shows(StatBlock.Money)) item(key = "finance-block") {
             SectionCard(
                 title = stringResource(R.string.stats_block_finance),
                 titleColor = FinanceBlue,
@@ -346,7 +426,7 @@ fun StatsScreen(
 
         // Блока «Выводы» просто нет, когда сказать нечего. Пустая рамка с надписью
         // «всё хорошо» — это та самая констатация, ради которой перестают заходить.
-        if (state.insights.isNotEmpty()) {
+        if (state.insights.isNotEmpty() && state.shows(StatBlock.Insights)) {
             item(key = "insights") {
                 Text(
                     text = stringResource(R.string.stats_insights),
@@ -376,6 +456,138 @@ fun StatsScreen(
             }
         }
     }
+}
+
+/**
+ * Месяц привычки: закрашенный день — сделано, полый — минимум, красный — срыв.
+ *
+ * Строка «14 из 20 дней» говорит, сколько, но не говорит когда. Календарь
+ * показывает рисунок: пропуски по выходным видно сразу, а по числу — нет.
+ */
+@Composable
+private fun HabitCalendar(
+    days: Map<LocalDate, EntryLevel>,
+    month: YearMonth,
+    onPrevious: () -> Unit,
+    onNext: () -> Unit,
+) {
+    val status = LocalStatusColors.current
+    val locale = rememberLocale()
+    val today = LocalDate.now()
+    val first = month.atDay(1)
+    // Понедельник первым: неделя в приложении начинается с него везде (§5.8).
+    val lead = first.dayOfWeek.value - 1
+    val cells = lead + month.lengthOfMonth()
+    val weeks = (cells + 6) / 7
+
+    Column(modifier = Modifier.padding(top = Spacing.m, bottom = Spacing.s)) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.ic_chevron_left),
+                contentDescription = null,
+                tint = status.textSecondary,
+                modifier = Modifier
+                    .clip(CircleShape)
+                    .clickable(onClick = onPrevious)
+                    .padding(Spacing.xs)
+                    .size(18.dp),
+            )
+            Text(
+                text = month.atDay(1).format(DateTimeFormatter.ofPattern("LLLL yyyy", locale)),
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onBackground,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.weight(1f),
+            )
+            Icon(
+                painter = painterResource(R.drawable.ic_chevron_right),
+                contentDescription = null,
+                tint = if (month.isBefore(YearMonth.from(today))) {
+                    status.textSecondary
+                } else {
+                    status.divider
+                },
+                modifier = Modifier
+                    .clip(CircleShape)
+                    .clickable(enabled = month.isBefore(YearMonth.from(today)), onClick = onNext)
+                    .padding(Spacing.xs)
+                    .size(18.dp),
+            )
+        }
+
+        Row(modifier = Modifier.padding(top = Spacing.s)) {
+            (1..7).forEach { index ->
+                Text(
+                    text = DayOfWeek.of(index)
+                        .getDisplayName(TextStyle.NARROW, locale)
+                        .uppercase(locale),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = status.textTertiary,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.weight(1f),
+                )
+            }
+        }
+
+        repeat(weeks) { week ->
+            Row(modifier = Modifier.padding(top = Spacing.xs)) {
+                repeat(7) { column ->
+                    val dayNumber = week * 7 + column - lead + 1
+                    if (dayNumber < 1 || dayNumber > month.lengthOfMonth()) {
+                        Box(modifier = Modifier.weight(1f))
+                        return@repeat
+                    }
+                    val date = month.atDay(dayNumber)
+                    val level = days[date]
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(2.dp)
+                            .aspectRatio(1f)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(
+                                when (level) {
+                                    EntryLevel.Norm -> HabitsViolet
+                                    EntryLevel.Minimum -> HabitsViolet.copy(alpha = 0.35f)
+                                    EntryLevel.Slip -> status.problem.copy(alpha = 0.35f)
+                                    null -> status.surfaceSunken
+                                },
+                            )
+                            .border(
+                                width = if (date == today) 1.5.dp else 0.dp,
+                                color = if (date == today) {
+                                    MaterialTheme.colorScheme.onBackground
+                                } else {
+                                    Color.Transparent
+                                },
+                                shape = RoundedCornerShape(10.dp),
+                            ),
+                    ) {
+                        Text(
+                            text = dayNumber.toString(),
+                            style = NumberSmall,
+                            color = when (level) {
+                                EntryLevel.Norm -> Ink
+                                null -> status.textTertiary
+                                else -> MaterialTheme.colorScheme.onBackground
+                            },
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+private fun blockLabel(block: StatBlock): Int = when (block) {
+    StatBlock.Habits -> R.string.stats_block_habits
+    StatBlock.Goals -> R.string.stats_block_goals
+    StatBlock.Money -> R.string.stats_block_finance
+    StatBlock.Insights -> R.string.stats_insights
 }
 
 /** Честная пустая строка вместо спрятанного блока: раздел есть, данных нет. */

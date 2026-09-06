@@ -13,6 +13,8 @@
     <string name="stats_habits_chart">Habit completion</string>
     <string name="stats_categories">Spending by category</string>
     <string name="stats_insights">What it adds up to</string>
+    <string name="stats_blocks">Which blocks to show</string>
+    <string name="stats_calendar_hint">Tap a habit to open its month</string>
 
     <string name="insight_category_up_habit_slipping">%1$s grew by %2$d%%. The habit held %3$s out of %4$d.</string>
     <string name="insight_goal_stalled">Goal “%1$s” has stopped: tempo fell by %2$d%%, linked habits run at %3$d%%.</string>

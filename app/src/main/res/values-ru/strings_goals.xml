@@ -63,6 +63,12 @@
     <string name="goals_completed">Достигнутые</string>
     <string name="goal_completed_at">Достигнута %1$s</string>
     <string name="goal_reopen">Вернуть в работу</string>
+    <string name="goal_delete_goal">Удалить цель</string>
+    <string name="confirm_delete_goal">Удалить «%1$s» вместе с этапами и задачами?</string>
+    <string name="goal_habits_title">Привычки</string>
+    <string name="goal_habits_add">Привязать привычку</string>
+    <string name="goal_habits_none">Привычки не привязаны. Без них у цели нет темпа.</string>
+    <string name="goal_habits_free">Свободных привычек не осталось</string>
     <string name="goal_completed_stages">%1$s закрыто</string>
     <string name="goal_budget_add">Добавить бюджет</string>
 </resources>

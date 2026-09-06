@@ -35,6 +35,16 @@ class SettingsStore(private val context: Context) {
     }
 
     /**
+     * Блоки статистики, которые человек оставил себе (§7).
+     *
+     * Пусто — показываем всё: экран по умолчанию полный, а прятать лишнее
+     * человек решает сам.
+     */
+    val statBlocks: Flow<Set<String>> = context.settingsDataStore.data.map { prefs ->
+        prefs[KEY_STAT_BLOCKS]?.takeIf { it.isNotBlank() }?.split(",")?.toSet() ?: emptySet()
+    }
+
+    /**
      * Версия палитры готовых категорий.
      *
      * Нужна, чтобы обновить цвета один раз при смене палитры и больше
@@ -57,6 +67,10 @@ class SettingsStore(private val context: Context) {
         context.settingsDataStore.edit { it[KEY_LINKS_ENABLED] = enabled }
     }
 
+    suspend fun setStatBlocks(blocks: Set<String>) {
+        context.settingsDataStore.edit { it[KEY_STAT_BLOCKS] = blocks.joinToString(",") }
+    }
+
     suspend fun setPaletteVersion(version: Int) {
         context.settingsDataStore.edit { it[KEY_PALETTE_VERSION] = version }
     }
@@ -69,5 +83,6 @@ class SettingsStore(private val context: Context) {
         val KEY_STAT_PERIOD = stringPreferencesKey("stat_period")
         val KEY_LINKS_ENABLED = booleanPreferencesKey("links_enabled")
         val KEY_PALETTE_VERSION = intPreferencesKey("palette_version")
+        val KEY_STAT_BLOCKS = stringPreferencesKey("stat_blocks")
     }
 }

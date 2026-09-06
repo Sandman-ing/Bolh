@@ -13,6 +13,8 @@
     <string name="stats_habits_chart">Выполнение привычек</string>
     <string name="stats_categories">Расходы по категориям</string>
     <string name="stats_insights">Что из этого следует</string>
+    <string name="stats_blocks">Какие блоки показывать</string>
+    <string name="stats_calendar_hint">Нажмите на привычку, чтобы раскрыть месяц</string>
 
     <string name="insight_category_up_habit_slipping">%1$s выросла на %2$d%%. Привычка держалась %3$s из %4$d.</string>
     <string name="insight_goal_stalled">Цель «%1$s» стоит: темп упал на %2$d%%, привязанные привычки выполняются на %3$d%%.</string>

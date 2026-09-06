@@ -45,6 +45,8 @@ data class GoalDetailUiState(
     val minutesPerWeek: Int? = null,
     val habitsWithoutEstimate: Int = 0,
     val linkedHabits: List<Habit> = emptyList(),
+    /** Привычки, не занятые ни одной целью, — их и предлагаем привязать. */
+    val freeHabits: List<Habit> = emptyList(),
     val jar: SavingsJar? = null,
     val jarCurrentMinor: Long = 0L,
     val moneyPerMonthMinor: Long = 0L,
@@ -122,6 +124,7 @@ class GoalDetailViewModel(
             minutesPerWeek = GoalCostAnalytics.minutesPerWeek(costsOf(linked)),
             habitsWithoutEstimate = GoalCostAnalytics.habitsWithoutEstimate(costsOf(linked)),
             linkedHabits = linked,
+            freeHabits = habitList.filter { it.goalId == null },
             jar = jar,
             jarCurrentMinor = jarCurrent,
             moneyPerMonthMinor = jar?.plannedMonthlyMinor ?: 0L,
@@ -194,6 +197,27 @@ class GoalDetailViewModel(
 
     fun toggleStage(stage: Stage) {
         viewModelScope.launch { goals.setStageDone(stage.id, !stage.isDone) }
+    }
+
+    /** Удаление цели: этапы и задачи уходят вместе с ней. */
+    fun delete() {
+        viewModelScope.launch { goals.delete(goalId) }
+    }
+
+    /**
+     * Привязка привычки к цели. Привычка принадлежит одной цели: иначе темп
+     * цели считался бы по чужой работе, и обе цифры перестали бы что-то значить.
+     */
+    fun linkHabit(habitId: String) {
+        viewModelScope.launch {
+            habits.findHabit(habitId)?.let { habits.update(it.copy(goalId = goalId)) }
+        }
+    }
+
+    fun unlinkHabit(habitId: String) {
+        viewModelScope.launch {
+            habits.findHabit(habitId)?.let { habits.update(it.copy(goalId = null)) }
+        }
     }
 
     fun deleteStage(stageId: String) {

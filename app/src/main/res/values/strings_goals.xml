@@ -61,6 +61,12 @@
     <string name="goals_completed">Reached</string>
     <string name="goal_completed_at">Reached %1$s</string>
     <string name="goal_reopen">Back to work</string>
+    <string name="goal_delete_goal">Delete goal</string>
+    <string name="confirm_delete_goal">Delete \u00ab%1$s\u00bb with its stages and tasks?</string>
+    <string name="goal_habits_title">Habits</string>
+    <string name="goal_habits_add">Attach a habit</string>
+    <string name="goal_habits_none">No habits attached. Without them the goal has no tempo.</string>
+    <string name="goal_habits_free">No free habits left</string>
     <string name="goal_completed_stages">%1$s closed</string>
     <string name="goal_budget_add">Add a budget</string>
 </resources>

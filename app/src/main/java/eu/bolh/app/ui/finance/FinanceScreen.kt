@@ -8,10 +8,12 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -441,43 +443,33 @@ fun FinanceScreen(
             }
         }
 
-        item(key = "all-transactions") {
+        item(key = "shortcuts") {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(Spacing.s),
-                modifier = Modifier.padding(
-                    start = Spacing.screenPadding,
-                    end = Spacing.screenPadding,
-                    top = Spacing.m,
-                    bottom = Spacing.s,
-                ),
+                modifier = Modifier
+                    .padding(
+                        start = Spacing.screenPadding,
+                        end = Spacing.screenPadding,
+                        top = Spacing.m,
+                        bottom = Spacing.s,
+                    )
+                    .height(IntrinsicSize.Min),
             ) {
-                PillButton(
-                    text = stringResource(R.string.finance_all_transactions),
+                ShortcutTile(
+                    title = stringResource(R.string.finance_all_transactions),
+                    hint = stringResource(R.string.finance_tile_transactions_hint),
+                    icon = R.drawable.ic_receipt_long,
                     onClick = onOpenTransactions,
-                    icon = R.drawable.ic_chevron_right,
-                    iconAtEnd = true,
                     modifier = Modifier.weight(1f),
                 )
-                PillButton(
-                    text = stringResource(R.string.categories_title),
+                ShortcutTile(
+                    title = stringResource(R.string.categories_title),
+                    hint = stringResource(R.string.finance_tile_categories_hint),
+                    icon = R.drawable.ic_shopping_cart,
                     onClick = onOpenCategories,
-                    icon = R.drawable.ic_chevron_right,
-                    iconAtEnd = true,
                     modifier = Modifier.weight(1f),
                 )
             }
-        }
-
-        item(key = "add-account") {
-            PillButton(
-                text = stringResource(R.string.finance_add_account),
-                onClick = onAddAccount,
-                icon = R.drawable.ic_plus,
-                modifier = Modifier.padding(
-                    horizontal = Spacing.screenPadding,
-                    vertical = Spacing.xs,
-                ),
-            )
         }
 
         // Кнопки разложены по смыслу: сначала «какие данные», отдельно
@@ -643,6 +635,56 @@ fun FinanceScreen(
 
         }
     }
+    }
+}
+
+/**
+ * Крупная плитка перехода: значок, название, строка о том, что внутри.
+ *
+ * Слово посреди прямоугольника не говорит, куда ведёт; плитка говорит,
+ * и держит тот же ритм, что карточки выше.
+ */
+@Composable
+private fun ShortcutTile(
+    title: String,
+    hint: String,
+    icon: Int,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val status = LocalStatusColors.current
+
+    BolhCard(
+        onClick = onClick,
+        modifier = modifier.fillMaxHeight(),
+        contentPadding = PaddingValues(Spacing.l),
+    ) {
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .size(40.dp)
+                .clip(RoundedCornerShape(Radius.block))
+                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)),
+        ) {
+            Icon(
+                painter = painterResource(icon),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(20.dp),
+            )
+        }
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onBackground,
+            modifier = Modifier.padding(top = Spacing.m),
+        )
+        Text(
+            text = hint,
+            style = MaterialTheme.typography.labelMedium,
+            color = status.textTertiary,
+            modifier = Modifier.padding(top = Spacing.xs),
+        )
     }
 }
 

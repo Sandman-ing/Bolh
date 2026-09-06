@@ -23,6 +23,8 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -91,7 +93,20 @@ fun GoalDetailScreen(
     var editingJar by remember { mutableStateOf(false) }
     var addingBudget by remember { mutableStateOf(false) }
     var pendingStage by remember { mutableStateOf<Pair<String, String>?>(null) }
+    var habitPicker by remember { mutableStateOf(false) }
+    var pendingGoal by remember { mutableStateOf(false) }
     var pendingTask by remember { mutableStateOf<Pair<String, String>?>(null) }
+
+    if (pendingGoal && goal != null) {
+        ConfirmDeleteDialog(
+            title = stringResource(R.string.confirm_delete_goal, goal.name),
+            onConfirm = {
+                viewModel.delete()
+                onBack()
+            },
+            onDismiss = { pendingGoal = false },
+        )
+    }
 
     pendingStage?.let { (id, name) ->
         ConfirmDeleteDialog(
@@ -325,6 +340,83 @@ fun GoalDetailScreen(
                             color = status.textTertiary,
                             modifier = Modifier.padding(top = Spacing.xs),
                         )
+                    }
+                }
+            }
+
+            // Привычки цели правятся здесь же: раньше за привязкой надо было
+            // идти в привычку и выбирать цель оттуда — задом наперёд.
+            InfoBlock(
+                title = stringResource(R.string.goal_habits_title),
+                titleColor = HabitsViolet,
+            ) {
+                if (state.linkedHabits.isEmpty()) {
+                    Text(
+                        text = stringResource(R.string.goal_habits_none),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = status.textTertiary,
+                    )
+                }
+                state.linkedHabits.forEach { habit ->
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = Spacing.xs),
+                    ) {
+                        Icon(
+                            painter = painterResource(BolhIcons.resFor(habit.icon)),
+                            contentDescription = null,
+                            tint = HabitsViolet,
+                            modifier = Modifier.size(18.dp),
+                        )
+                        Text(
+                            text = habit.name,
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onBackground,
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(start = Spacing.m),
+                        )
+                        Icon(
+                            painter = painterResource(R.drawable.ic_close),
+                            contentDescription = stringResource(R.string.common_delete),
+                            tint = status.textTertiary,
+                            modifier = Modifier
+                                .clip(CircleShape)
+                                .clickable { viewModel.unlinkHabit(habit.id) }
+                                .padding(Spacing.xs)
+                                .size(16.dp),
+                        )
+                    }
+                }
+                Box(modifier = Modifier.padding(top = Spacing.m)) {
+                    PillButton(
+                        text = stringResource(R.string.goal_habits_add),
+                        onClick = { habitPicker = true },
+                        icon = R.drawable.ic_plus,
+                        color = HabitsViolet,
+                    )
+                    DropdownMenu(
+                        expanded = habitPicker,
+                        onDismissRequest = { habitPicker = false },
+                        containerColor = status.surfaceRaised,
+                    ) {
+                        if (state.freeHabits.isEmpty()) {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.goal_habits_free)) },
+                                onClick = { habitPicker = false },
+                            )
+                        }
+                        state.freeHabits.forEach { habit ->
+                            DropdownMenuItem(
+                                text = { Text(habit.name) },
+                                onClick = {
+                                    viewModel.linkHabit(habit.id)
+                                    habitPicker = false
+                                },
+                            )
+                        }
                     }
                 }
             }
@@ -603,12 +695,12 @@ fun GoalDetailScreen(
                         vertical = Spacing.xl,
                     ),
                 )
-                TextButton(
+                PillButton(
+                    text = stringResource(R.string.goal_reopen),
                     onClick = viewModel::reopen,
-                    modifier = Modifier.padding(horizontal = Spacing.m),
-                ) {
-                    Text(stringResource(R.string.goal_reopen))
-                }
+                    color = status.textSecondary,
+                    modifier = Modifier.padding(horizontal = Spacing.screenPadding),
+                )
             } else {
                 Button(
                     onClick = {
@@ -626,6 +718,19 @@ fun GoalDetailScreen(
                     Text(stringResource(R.string.goal_complete))
                 }
             }
+
+            // Удаление живёт здесь, а не только в правке: достигнутую цель
+            // тоже надо чем-то убирать, а в правку за этим никто не идёт.
+            PillButton(
+                text = stringResource(R.string.goal_delete_goal),
+                onClick = { pendingGoal = true },
+                color = status.problem,
+                modifier = Modifier.padding(
+                    start = Spacing.screenPadding,
+                    end = Spacing.screenPadding,
+                    bottom = Spacing.xl,
+                ),
+            )
         }
     }
 }

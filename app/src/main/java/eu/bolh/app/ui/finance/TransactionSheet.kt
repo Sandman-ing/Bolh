@@ -164,6 +164,16 @@ fun TransactionSheet(
                         icon = account.icon,
                     )
                 }
+                // Новый счёт заводится там же, где выбирается: отдельная кнопка
+                // на главной занимала место ради действия раз в полгода.
+                item(key = "add-account") {
+                    SheetChip(
+                        text = stringResource(R.string.finance_add_account),
+                        selected = false,
+                        onClick = onAddAccount,
+                        icon = "plus",
+                    )
+                }
             }
 
             if (draft.type == TransactionType.Transfer) {
