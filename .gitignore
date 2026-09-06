@@ -9,3 +9,7 @@
 .cxx
 local.properties
 /app/build/
+
+# Ключ подписи и его пароль: в репозиторий не едут.
+/keystore.properties
+*.jks
