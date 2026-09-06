@@ -85,6 +85,8 @@ data class FinanceUiState(
     val dynamics: List<MonthSpend> = emptyList(),
     val jars: List<JarRow> = emptyList(),
     val nextPayment: RecurringPayment? = null,
+    /** Все регулярные платежи по дате ближайшего списания. */
+    val payments: List<RecurringPayment> = emptyList(),
     val view: FinanceView = FinanceView.Ring,
     val flow: MoneyFlow = MoneyFlow.Expense,
     val period: FinancePeriod = FinancePeriod.Month,
@@ -236,6 +238,7 @@ class FinanceViewModel(
                 )
             },
             nextPayment = extras.recurring.minByOrNull { it.nextDate },
+            payments = extras.recurring.sortedBy { it.nextDate },
             view = choices.view,
             flow = choices.flow,
             period = choices.period,

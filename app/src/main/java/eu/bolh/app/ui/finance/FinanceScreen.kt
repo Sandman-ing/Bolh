@@ -74,6 +74,15 @@ import kotlin.math.roundToInt
  * Экран финансов — приборная панель (§9.2): строки-выписка, моноширинные цифры,
  * тонкие разделители. Читается как банковская выписка, что для денег уместно.
  */
+/**
+ * Подвкладки финансов.
+ *
+ * Обзор отвечает на «сколько и куда», всё остальное — отдельные занятия,
+ * которые случаются раз в месяц. На одном экране они спорили за внимание
+ * с главным числом.
+ */
+private enum class FinanceTab { Overview, Payments, Jars }
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun FinanceScreen(
@@ -92,6 +101,8 @@ fun FinanceScreen(
     val locale = rememberLocale()
     var pendingAccount by remember { mutableStateOf<String?>(null) }
     var accountMenu by remember { mutableStateOf(false) }
+    var optionsMenu by remember { mutableStateOf(false) }
+    var tab by remember { mutableStateOf(FinanceTab.Overview) }
     var pendingPayment by remember { mutableStateOf<String?>(null) }
 
     pendingAccount?.let { id ->
@@ -120,11 +131,40 @@ fun FinanceScreen(
         return
     }
 
+    Column(modifier = modifier.fillMaxSize()) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
+            modifier = Modifier.padding(
+                horizontal = Spacing.screenPadding,
+                vertical = Spacing.s,
+            ),
+        ) {
+            SubTab(
+                text = stringResource(R.string.finance_tab_overview),
+                selected = tab == FinanceTab.Overview,
+                onClick = { tab = FinanceTab.Overview },
+                modifier = Modifier.weight(1f),
+            )
+            SubTab(
+                text = stringResource(R.string.finance_tab_payments),
+                selected = tab == FinanceTab.Payments,
+                onClick = { tab = FinanceTab.Payments },
+                modifier = Modifier.weight(1f),
+            )
+            SubTab(
+                text = stringResource(R.string.finance_tab_jars),
+                selected = tab == FinanceTab.Jars,
+                onClick = { tab = FinanceTab.Jars },
+                modifier = Modifier.weight(1f),
+            )
+        }
+
     LazyColumn(
-        modifier = modifier.fillMaxSize(),
+        modifier = Modifier.fillMaxSize(),
         // Запас снизу под плавающую кнопку: иначе она накрывает последнюю строку.
         contentPadding = PaddingValues(bottom = 96.dp),
     ) {
+        if (tab == FinanceTab.Overview) {
         item(key = "total") {
             BolhCard(
                 modifier = Modifier.padding(
@@ -135,6 +175,7 @@ fun FinanceScreen(
             ) {
                 // Шапка отвечает на «сколько у меня», и счёт выбирается здесь:
                 // иначе за остатком одного счёта надо уходить на другой экран.
+                Row(verticalAlignment = Alignment.CenterVertically) {
                 Box {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -180,6 +221,67 @@ fun FinanceScreen(
                             )
                         }
                     }
+                }
+                Spacer(modifier = Modifier.weight(1f))
+                // Вид и фильтр — редкие решения, поэтому они под одной
+                // маленькой кнопкой, а не занимают собой отдельный блок.
+                Box {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_tune),
+                        contentDescription = stringResource(R.string.finance_options),
+                        tint = status.textSecondary,
+                        modifier = Modifier
+                            .clip(CircleShape)
+                            .clickable { optionsMenu = true }
+                            .padding(Spacing.xs)
+                            .size(20.dp),
+                    )
+                    DropdownMenu(
+                        expanded = optionsMenu,
+                        onDismissRequest = { optionsMenu = false },
+                        containerColor = status.surfaceRaised,
+                    ) {
+                        FinanceView.entries.forEach { view ->
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        text = stringResource(viewLabel(view)),
+                                        color = if (view == state.view) {
+                                            MaterialTheme.colorScheme.primary
+                                        } else {
+                                            MaterialTheme.colorScheme.onBackground
+                                        },
+                                    )
+                                },
+                                onClick = {
+                                    viewModel.setView(view)
+                                    optionsMenu = false
+                                },
+                            )
+                        }
+                        if (state.flow == MoneyFlow.Expense) {
+                            HorizontalDivider(color = status.divider)
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        text = stringResource(
+                                            R.string.finance_hide_obligatory_clear,
+                                        ),
+                                        color = if (state.hideObligatory) {
+                                            MaterialTheme.colorScheme.primary
+                                        } else {
+                                            MaterialTheme.colorScheme.onBackground
+                                        },
+                                    )
+                                },
+                                onClick = {
+                                    viewModel.toggleObligatory()
+                                    optionsMenu = false
+                                },
+                            )
+                        }
+                    }
+                }
                 }
                 // Остаток — в центре, движение денег — кольцом вокруг него.
                 // Так одна картинка отвечает сразу на «сколько есть» и «куда уходит».
@@ -236,6 +338,47 @@ fun FinanceScreen(
                         style = NumberSmall,
                         color = status.textSecondary,
                     )
+                }
+            }
+        }
+
+        item(key = "what") {
+            SectionCard(
+                title = stringResource(R.string.finance_group_what),
+                titleColor = status.textTertiary,
+                modifier = Modifier.padding(
+                    horizontal = Spacing.screenPadding,
+                    vertical = Spacing.s,
+                ),
+            ) {
+                Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
+                    FlowTab(
+                        text = stringResource(R.string.finance_flow_expense),
+                        selected = state.flow == MoneyFlow.Expense,
+                        accent = MaterialTheme.colorScheme.primary,
+                        onClick = { viewModel.setFlow(MoneyFlow.Expense) },
+                        modifier = Modifier.weight(1f),
+                    )
+                    FlowTab(
+                        text = stringResource(R.string.finance_flow_income),
+                        selected = state.flow == MoneyFlow.Income,
+                        accent = status.success,
+                        onClick = { viewModel.setFlow(MoneyFlow.Income) },
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
+                    modifier = Modifier.padding(top = Spacing.s),
+                ) {
+                    FinancePeriod.entries.forEach { period ->
+                        ToggleChip(
+                            text = stringResource(periodLabel(period)),
+                            selected = state.period == period,
+                            onClick = { viewModel.setPeriod(period) },
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
                 }
             }
         }
@@ -339,84 +482,43 @@ fun FinanceScreen(
 
         // Кнопки разложены по смыслу: сначала «какие данные», отдельно
         // «в каком виде». В одной куче они читались как один набор.
-        item(key = "what") {
-            SectionCard(
-                title = stringResource(R.string.finance_group_what),
-                titleColor = status.textTertiary,
-                modifier = Modifier.padding(
-                    horizontal = Spacing.screenPadding,
-                    vertical = Spacing.s,
-                ),
-            ) {
-                Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
-                    FlowTab(
-                        text = stringResource(R.string.finance_flow_expense),
-                        selected = state.flow == MoneyFlow.Expense,
-                        accent = MaterialTheme.colorScheme.primary,
-                        onClick = { viewModel.setFlow(MoneyFlow.Expense) },
-                        modifier = Modifier.weight(1f),
-                    )
-                    FlowTab(
-                        text = stringResource(R.string.finance_flow_income),
-                        selected = state.flow == MoneyFlow.Income,
-                        accent = status.success,
-                        onClick = { viewModel.setFlow(MoneyFlow.Income) },
-                        modifier = Modifier.weight(1f),
-                    )
-                }
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
-                    modifier = Modifier.padding(top = Spacing.s),
+
+        }
+
+        if (tab == FinanceTab.Payments) {
+
+        if (state.payments.isEmpty()) {
+            item(key = "no-payments") {
+                BolhCard(
+                    modifier = Modifier.padding(
+                        horizontal = Spacing.screenPadding,
+                        vertical = Spacing.s,
+                    ),
                 ) {
-                    FinancePeriod.entries.forEach { period ->
-                        ToggleChip(
-                            text = stringResource(periodLabel(period)),
-                            selected = state.period == period,
-                            onClick = { viewModel.setPeriod(period) },
-                            modifier = Modifier.weight(1f),
-                        )
-                    }
+                    Text(
+                        text = stringResource(R.string.finance_no_payments),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = status.textTertiary,
+                    )
                 }
             }
         }
 
-        item(key = "how") {
-            SectionCard(
-                title = stringResource(R.string.finance_group_how),
-                titleColor = status.textTertiary,
-                modifier = Modifier.padding(
-                    horizontal = Spacing.screenPadding,
-                    vertical = Spacing.s,
-                ),
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(Spacing.s),
-                ) {
-                    ViewSwitch(current = state.view, onSelect = viewModel::setView)
-                    // Обязательные прячут только из трат: в доходах такого деления нет.
-                    // Подпись называет вещи своими именами — «без обязательных»
-                    // ничего не объясняло.
-                    if (state.flow == MoneyFlow.Expense) {
-                        ToggleChip(
-                            text = stringResource(R.string.finance_hide_obligatory_clear),
-                            selected = state.hideObligatory,
-                            onClick = viewModel::toggleObligatory,
-                        )
-                    }
-                }
-            }
-        }
-
-        state.nextPayment?.let { payment ->
-            item(key = "recurring") {
-                SectionCard(
-                    title = stringResource(R.string.finance_next_payment),
-                    titleColor = status.textSecondary,
+        items(state.payments.size, key = { state.payments[it].id }) { index ->
+            val payment = state.payments[index]
+            run {
+                // Ближайший платёж обведён цветом раздела: из списка сразу
+                // видно, за какой из них браться первым.
+                BolhCard(
+                    accent = if (payment.id == state.nextPayment?.id) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        null
+                    },
                     modifier = Modifier
                         .padding(
                             horizontal = Spacing.screenPadding,
-                            vertical = Spacing.s,
+                            vertical = Spacing.xs,
                         )
                         .combinedClickable(
                             onClick = { onOpenRecurring(payment.id) },
@@ -477,6 +579,27 @@ fun FinanceScreen(
             )
         }
 
+        }
+
+        if (tab == FinanceTab.Jars) {
+
+        if (state.jars.isEmpty()) {
+            item(key = "no-jars") {
+                BolhCard(
+                    modifier = Modifier.padding(
+                        horizontal = Spacing.screenPadding,
+                        vertical = Spacing.s,
+                    ),
+                ) {
+                    Text(
+                        text = stringResource(R.string.finance_no_jars),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = status.textTertiary,
+                    )
+                }
+            }
+        }
+
         items(state.jars.size, key = { state.jars[it].jar.id }) { index ->
             val row = state.jars[index]
             BolhCard(
@@ -517,7 +640,42 @@ fun FinanceScreen(
             }
             }
         }
+
+        }
     }
+    }
+}
+
+/** Подвкладка раздела: выбранная залита, остальные обведены. */
+@Composable
+private fun SubTab(
+    text: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val status = LocalStatusColors.current
+    val shape = RoundedCornerShape(Radius.chip)
+
+    Text(
+        text = text,
+        style = MaterialTheme.typography.labelLarge,
+        color = if (selected) Ink else status.textSecondary,
+        maxLines = 1,
+        textAlign = TextAlign.Center,
+        modifier = modifier
+            .clip(shape)
+            .background(
+                if (selected) MaterialTheme.colorScheme.primary else status.surfaceRaised,
+            )
+            .border(
+                width = 1.dp,
+                color = if (selected) MaterialTheme.colorScheme.primary else status.stroke,
+                shape = shape,
+            )
+            .clickable(onClick = onClick)
+            .padding(horizontal = Spacing.s, vertical = Spacing.m),
+    )
 }
 
 /** Вкладка блока: выбранная залита своим цветом, остальная — обведена. */

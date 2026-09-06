@@ -16,6 +16,12 @@
     <string name="finance_view_label">Вид</string>
     <string name="finance_group_what">Что смотрим</string>
     <string name="finance_group_how">Как показать</string>
+    <string name="finance_tab_overview">Обзор</string>
+    <string name="finance_tab_payments">Платежи</string>
+    <string name="finance_tab_jars">Копилки</string>
+    <string name="finance_no_payments">Регулярных платежей пока нет</string>
+    <string name="finance_no_jars">Копилка появится здесь, когда у цели будет бюджет</string>
+    <string name="finance_options">Как показать</string>
     <string name="category_system_note">Готовую категорию можно перекрасить и переименовать, но не удалить: на ней держатся записанные операции.</string>
     <string name="confirm_delete_category">Удалить «%1$s»?</string>
     <string name="finance_flow_expense">Расходы</string>
