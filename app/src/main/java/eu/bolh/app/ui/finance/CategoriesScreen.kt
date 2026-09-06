@@ -1,5 +1,7 @@
 package eu.bolh.app.ui.finance
 
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -59,7 +61,9 @@ import eu.bolh.app.domain.model.CategoryKind
 import eu.bolh.app.domain.templates.SystemCategories
 import eu.bolh.app.ui.common.BolhIcons
 import eu.bolh.app.ui.common.ConfirmDeleteDialog
+import eu.bolh.app.ui.common.Money
 import eu.bolh.app.ui.common.PillButton
+import eu.bolh.app.ui.common.rememberLocale
 import eu.bolh.app.ui.theme.Ink
 import eu.bolh.app.ui.theme.LocalStatusColors
 import eu.bolh.app.ui.theme.Radius
@@ -77,13 +81,17 @@ class CategoriesViewModel(private val finance: FinanceRepository) : ViewModel() 
         initialValue = emptyList(),
     )
 
-    fun create(name: String, icon: String, colorArgb: Int, kind: CategoryKind) {
+    fun create(name: String, icon: String, colorArgb: Int, kind: CategoryKind, planned: Long?) {
         if (name.isBlank()) return
-        viewModelScope.launch { finance.createCategory(name, icon, colorArgb, kind) }
+        viewModelScope.launch {
+            finance.createCategory(name, icon, colorArgb, kind, planned)
+        }
     }
 
-    fun update(id: String, name: String, icon: String, colorArgb: Int) {
-        viewModelScope.launch { finance.updateCategory(id, name, icon, colorArgb) }
+    fun update(id: String, name: String, icon: String, colorArgb: Int, planned: Long?) {
+        viewModelScope.launch {
+            finance.updateCategory(id, name, icon, colorArgb, planned)
+        }
     }
 
     fun delete(id: String) {
@@ -142,12 +150,12 @@ fun CategoriesScreen(
                 creating = false
                 editing = null
             },
-            onSave = { name, icon, color ->
+            onSave = { name, icon, color, planned ->
                 val current = editing
                 if (current == null) {
-                    viewModel.create(name, icon, color, kind)
+                    viewModel.create(name, icon, color, kind, planned)
                 } else {
-                    viewModel.update(current.id, name, icon, color)
+                    viewModel.update(current.id, name, icon, color, planned)
                 }
                 creating = false
                 editing = null
@@ -223,7 +231,10 @@ fun CategoriesScreen(
                 ),
                 verticalArrangement = Arrangement.spacedBy(Spacing.m),
             ) {
-                items(visible.size, key = { visible[it].id }) { index ->
+                // Без ключей намеренно: список приходит из потока и первым
+                // значением пуст, а с ключами сетка после его прихода
+                // восстанавливает прокрутку и открывается сдвинутой.
+                items(visible.size) { index ->
                     val category = visible[index]
                     CategoryTile(
                         name = categoryTitle(category),
@@ -232,7 +243,7 @@ fun CategoriesScreen(
                         onClick = { editing = category },
                     )
                 }
-                item(key = "new") {
+                item {
                     CategoryTile(
                         name = stringResource(R.string.category_new),
                         icon = R.drawable.ic_plus,
@@ -321,7 +332,7 @@ private fun CategorySheet(
     category: Category?,
     kind: CategoryKind,
     onDismiss: () -> Unit,
-    onSave: (String, String, Int) -> Unit,
+    onSave: (String, String, Int, Long?) -> Unit,
     onDelete: () -> Unit,
 ) {
     val status = LocalStatusColors.current
@@ -332,6 +343,12 @@ private fun CategorySheet(
     var icon by remember(category) { mutableStateOf(category?.icon ?: BolhIcons.finance.first()) }
     var color by remember(category) {
         mutableStateOf(category?.colorArgb ?: CategoryPalette.first().toInt())
+    }
+    val locale = rememberLocale()
+    var planned by remember(category) {
+        mutableStateOf(
+            category?.plannedMinor?.let { Money.formatPlain(it, locale = locale) }.orEmpty(),
+        )
     }
 
     ModalBottomSheet(
@@ -355,6 +372,35 @@ private fun CategorySheet(
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
             )
+
+            // Лимит по категории (§6.7): человек ставит его сам, по умолчанию его нет.
+            if (kind == CategoryKind.Expense) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(top = Spacing.m),
+                ) {
+                    OutlinedTextField(
+                        value = planned,
+                        onValueChange = { planned = it },
+                        label = { Text(stringResource(R.string.category_plan)) },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        modifier = Modifier.weight(1f),
+                    )
+                    Text(
+                        text = stringResource(R.string.category_plan_hint),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = status.textSecondary,
+                        modifier = Modifier.padding(start = Spacing.m),
+                    )
+                }
+                Text(
+                    text = stringResource(R.string.category_plan_note),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = status.textTertiary,
+                    modifier = Modifier.padding(top = Spacing.xs),
+                )
+            }
 
             Text(
                 text = stringResource(R.string.category_icon),
@@ -429,7 +475,7 @@ private fun CategorySheet(
             ) {
                 PillButton(
                     text = stringResource(R.string.account_save),
-                    onClick = { onSave(name, icon, color) },
+                    onClick = { onSave(name, icon, color, parseMinor(planned)) },
                     modifier = Modifier.weight(1f),
                 )
                 // Готовую категорию удалять нельзя: на ней держатся уже
@@ -466,6 +512,14 @@ private val CategoryPalette: List<Long> = listOf(
     0xFF7FC8EC, 0xFFC2926B, 0xFF7E8FD4, 0xFF79838F,
     0xFF9CC77A, 0xFFE0B8D0, 0xFF6FA3A0, 0xFFB0A46E,
 )
+
+/** Пустое поле значит «лимита нет», а не «лимит ноль». */
+private fun parseMinor(raw: String): Long? {
+    val cleaned = raw.trim().replace(',', '.').filter { it.isDigit() || it == '.' }
+    if (cleaned.isBlank()) return null
+    val value = cleaned.toDoubleOrNull() ?: return null
+    return if (value <= 0.0) null else Math.round(value * 100)
+}
 
 @Composable
 private fun categoryTitle(category: Category): String {

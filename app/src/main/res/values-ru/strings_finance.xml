@@ -7,6 +7,15 @@
     <string name="category_name_hint">Название</string>
     <string name="category_icon">Значок</string>
     <string name="category_color">Цвет</string>
+    <string name="category_plan">Планирую тратить</string>
+    <string name="category_plan_hint">в месяц</string>
+    <string name="category_plan_note">Пусто — лимита нет. С лимитом категория показывает, сколько из него уже ушло.</string>
+    <string name="category_plan_of">%1$s из %2$s</string>
+    <string name="finance_add_account">Добавить счёт</string>
+    <string name="finance_hide_obligatory_clear">Без жилья и счетов</string>
+    <string name="finance_view_label">Вид</string>
+    <string name="finance_group_what">Что смотрим</string>
+    <string name="finance_group_how">Как показать</string>
     <string name="category_system_note">Готовую категорию можно перекрасить и переименовать, но не удалить: на ней держатся записанные операции.</string>
     <string name="confirm_delete_category">Удалить «%1$s»?</string>
     <string name="finance_flow_expense">Расходы</string>

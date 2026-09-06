@@ -3,9 +3,11 @@ package eu.bolh.app.ui.finance.components
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import eu.bolh.app.ui.theme.MoneyHero
+import eu.bolh.app.ui.theme.NumberSmall
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,6 +30,9 @@ fun DonutChart(
     slices: List<DonutSlice>,
     centerText: String,
     trackColor: Color,
+    /** Подпись под главным числом: чем занято само кольцо. */
+    centerCaption: String? = null,
+    captionColor: Color = Color.Unspecified,
     modifier: Modifier = Modifier,
     diameter: Dp = 190.dp,
     thickness: Dp = 22.dp,
@@ -69,12 +74,23 @@ fun DonutChart(
                 start += sweep
             }
         }
-        // Главная цифра живёт внутри кольца: человек ищет «сколько всего»,
-        // и не должен искать это где-то сбоку.
-        Text(
-            text = centerText,
-            style = MoneyHero,
-            color = MaterialTheme.colorScheme.onBackground,
-        )
+        // Главная цифра живёт внутри кольца: человек ищет «сколько у меня»,
+        // и не должен искать это где-то сбоку. Кольцо вокруг — то, куда
+        // эти деньги уходят, и связь читается без единой подписи.
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                text = centerText,
+                style = MoneyHero,
+                color = MaterialTheme.colorScheme.onBackground,
+            )
+            if (centerCaption != null) {
+                Text(
+                    text = centerCaption,
+                    style = NumberSmall,
+                    color = captionColor,
+                    maxLines = 1,
+                )
+            }
+        }
     }
 }

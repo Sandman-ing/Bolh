@@ -4,6 +4,9 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.migration.Migration
+import androidx.sqlite.SQLiteConnection
+import androidx.sqlite.execSQL
 import androidx.room.TypeConverters
 import eu.bolh.app.data.db.dao.FinanceDao
 import eu.bolh.app.data.db.dao.GoalDao
@@ -45,7 +48,7 @@ import eu.bolh.app.data.db.entity.TransactionEntity
         HabitEntryEntity::class,
         HabitPauseEntity::class,
     ],
-    version = 1,
+    version = 2,
     exportSchema = true,
 )
 @TypeConverters(Converters::class)
@@ -60,6 +63,18 @@ abstract class BolhDatabase : RoomDatabase() {
     companion object {
         private const val NAME = "bolh.db"
 
+        /**
+         * Месячный лимит по категории (§6.7).
+         *
+         * Именно миграция, а не пересоздание базы: у людей уже есть записанные
+         * операции, и терять их ради одной колонки недопустимо.
+         */
+        private val MIGRATION_1_2 = object : Migration(1, 2) {
+            override fun migrate(connection: SQLiteConnection) {
+                connection.execSQL("ALTER TABLE categories ADD COLUMN plannedMinor INTEGER")
+            }
+        }
+
         @Volatile
         private var instance: BolhDatabase? = null
 
@@ -69,6 +84,7 @@ abstract class BolhDatabase : RoomDatabase() {
 
         private fun build(context: Context): BolhDatabase =
             Room.databaseBuilder(context.applicationContext, BolhDatabase::class.java, NAME)
+                .addMigrations(MIGRATION_1_2)
                 .build()
     }
 }

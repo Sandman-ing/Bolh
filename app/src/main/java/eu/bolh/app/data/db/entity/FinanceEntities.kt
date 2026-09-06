@@ -45,6 +45,8 @@ data class CategoryEntity(
     val parentId: String? = null,
     /** Категория, помеченная как относящаяся к цели, — вход для цены цели в деньгах (§4.5). */
     val goalId: String? = null,
+    /** Сколько человек собирается тратить здесь в месяц. Пусто — лимита нет (§6.7). */
+    val plannedMinor: Long? = null,
     val sortOrder: Int = 0,
     val createdAt: Long,
     val updatedAt: Long,

@@ -138,13 +138,20 @@ class FinanceRepository(
      * готовую категорию можно, превратить расход в доход — нет, иначе
      * записанные операции задним числом сменят смысл.
      */
-    suspend fun updateCategory(id: String, name: String, icon: String, colorArgb: Int) {
+    suspend fun updateCategory(
+        id: String,
+        name: String,
+        icon: String,
+        colorArgb: Int,
+        plannedMinor: Long?,
+    ) {
         val existing = dao.categoryById(id) ?: return
         dao.upsertCategory(
             existing.copy(
                 name = name.trim().ifBlank { existing.name },
                 icon = icon,
                 colorArgb = colorArgb,
+                plannedMinor = plannedMinor,
                 // Своё название перебивает переводимое: иначе переименование
                 // готовой категории не было бы видно.
                 nameKey = if (name.isBlank()) existing.nameKey else null,
@@ -157,7 +164,13 @@ class FinanceRepository(
         dao.softDeleteCategory(id, clock.millis())
     }
 
-    suspend fun createCategory(name: String, icon: String, colorArgb: Int, kind: CategoryKind) {
+    suspend fun createCategory(
+        name: String,
+        icon: String,
+        colorArgb: Int,
+        kind: CategoryKind,
+        plannedMinor: Long? = null,
+    ) {
         val now = clock.millis()
         dao.upsertCategory(
             CategoryEntity(
@@ -166,6 +179,7 @@ class FinanceRepository(
                 icon = icon,
                 colorArgb = colorArgb,
                 kind = kind.name,
+                plannedMinor = plannedMinor,
                 isSystem = false,
                 createdAt = now,
                 updatedAt = now,
@@ -349,6 +363,7 @@ private fun CategoryEntity.toDomain() = Category(
     isSystem = isSystem,
     parentId = parentId,
     goalId = goalId,
+    plannedMinor = plannedMinor,
     sortOrder = sortOrder,
 )
 

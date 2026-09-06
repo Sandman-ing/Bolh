@@ -7,6 +7,15 @@
     <string name="category_name_hint">Name</string>
     <string name="category_icon">Icon</string>
     <string name="category_color">Colour</string>
+    <string name="category_plan">Planning to spend</string>
+    <string name="category_plan_hint">per month</string>
+    <string name="category_plan_note">Leave empty and there is no limit. With a limit set, the category shows how much of it is gone.</string>
+    <string name="category_plan_of">%1$s of %2$s</string>
+    <string name="finance_add_account">Add account</string>
+    <string name="finance_hide_obligatory_clear">Without rent and bills</string>
+    <string name="finance_view_label">View</string>
+    <string name="finance_group_what">What we look at</string>
+    <string name="finance_group_how">How to show it</string>
     <string name="category_system_note">A built-in category can be recoloured and renamed, but not deleted: recorded transactions rely on it.</string>
     <string name="confirm_delete_category">Delete \u00ab%1$s\u00bb?</string>
     <string name="finance_flow_expense">Expenses</string>

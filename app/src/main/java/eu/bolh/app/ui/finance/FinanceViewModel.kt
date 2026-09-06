@@ -62,7 +62,15 @@ data class CategorySpend(
     val share: Double,
     val isAnomalous: Boolean,
     val deltaToPrevious: Double?,
-)
+    /** Месячный лимит категории — только если человек его поставил (§6.7). */
+    val plannedMinor: Long? = null,
+) {
+    val overPlan: Boolean get() = plannedMinor?.let { amountMinor > it } == true
+
+    /** Девять десятых лимита — ещё не перебор, но уже стоит знать. */
+    val nearPlan: Boolean
+        get() = plannedMinor?.let { amountMinor >= it * 9 / 10 && amountMinor <= it } == true
+}
 
 data class JarRow(val jar: SavingsJar, val goal: Goal?, val currentMinor: Long)
 
@@ -190,6 +198,11 @@ class FinanceViewModel(
                             currentMinor = amount,
                             historyMonthly = historyFor(categoryId, money.transactions, month),
                         ),
+                        // Лимит помесячный, поэтому и сравнивать его можно
+                        // только с месяцем: за день или год «из 300 €» соврёт.
+                        plannedMinor = categoriesById[categoryId]
+                            ?.plannedMinor
+                            ?.takeIf { choices.period == FinancePeriod.Month },
                         deltaToPrevious = if (!comparable) {
                             null
                         } else {

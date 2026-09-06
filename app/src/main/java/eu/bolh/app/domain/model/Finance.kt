@@ -29,6 +29,8 @@ data class Category(
     val isSystem: Boolean = false,
     val parentId: String? = null,
     val goalId: String? = null,
+    /** Месячный лимит по категории. Пусто — человек его не ставил (§6.7). */
+    val plannedMinor: Long? = null,
     val sortOrder: Int = 0,
 )
 
