@@ -58,9 +58,22 @@ object FinanceAnalytics {
         transactions: List<Transaction>,
         from: LocalDate,
         to: LocalDate,
+    ): Map<String?, Long> = byCategory(transactions, from, to, TransactionType.Expense)
+
+    /**
+     * Суммы по категориям за период для одного вида операций.
+     *
+     * Доходы разбираются тем же способом, что и траты: вопрос «откуда пришло»
+     * ничем не отличается от «куда ушло», и считать его отдельно незачем.
+     */
+    fun byCategory(
+        transactions: List<Transaction>,
+        from: LocalDate,
+        to: LocalDate,
+        type: TransactionType,
     ): Map<String?, Long> = transactions
         .asSequence()
-        .filter { it.type == TransactionType.Expense }
+        .filter { it.type == type }
         .filter { !it.date.isBefore(from) && !it.date.isAfter(to) }
         .groupBy { it.categoryId }
         .mapValues { (_, rows) -> rows.sumOf { it.amountMinor } }

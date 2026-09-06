@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -55,7 +56,9 @@ import eu.bolh.app.ui.common.rememberLocale
 import eu.bolh.app.ui.finance.components.DonutChart
 import eu.bolh.app.ui.finance.components.DonutSlice
 import eu.bolh.app.ui.theme.GoalsTeal
+import eu.bolh.app.ui.theme.Ink
 import eu.bolh.app.ui.theme.LocalStatusColors
+import eu.bolh.app.ui.theme.MoneyHero
 import eu.bolh.app.ui.theme.MoneyLarge
 import eu.bolh.app.ui.theme.MoneyRow
 import eu.bolh.app.ui.theme.NumberSmall
@@ -77,6 +80,7 @@ fun FinanceScreen(
     onAddTransaction: () -> Unit,
     onAddRecurring: () -> Unit,
     onOpenTransactions: () -> Unit,
+    onOpenCategories: () -> Unit,
     onOpenAccount: (String) -> Unit,
     onOpenRecurring: (String) -> Unit,
     modifier: Modifier = Modifier,
@@ -86,6 +90,7 @@ fun FinanceScreen(
     val status = LocalStatusColors.current
     val locale = rememberLocale()
     var pendingAccount by remember { mutableStateOf<String?>(null) }
+    var accountMenu by remember { mutableStateOf(false) }
     var pendingPayment by remember { mutableStateOf<String?>(null) }
 
     pendingAccount?.let { id ->
@@ -126,16 +131,65 @@ fun FinanceScreen(
                     top = Spacing.l,
                 ),
             ) {
+                // Шапка отвечает на «сколько у меня», и счёт выбирается здесь:
+                // иначе за остатком одного счёта надо уходить на другой экран.
+                Box {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(Radius.chip))
+                            .clickable { accountMenu = true }
+                            .padding(vertical = Spacing.xs),
+                    ) {
+                        Text(
+                            text = state.selectedAccount?.account?.name
+                                ?: stringResource(R.string.finance_all_accounts),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                        Icon(
+                            painter = painterResource(R.drawable.ic_chevron_down),
+                            contentDescription = stringResource(R.string.finance_total),
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier
+                                .padding(start = Spacing.xs)
+                                .size(14.dp),
+                        )
+                    }
+                    DropdownMenu(
+                        expanded = accountMenu,
+                        onDismissRequest = { accountMenu = false },
+                        containerColor = status.surfaceRaised,
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.finance_all_accounts)) },
+                            onClick = {
+                                viewModel.selectAccount(null)
+                                accountMenu = false
+                            },
+                        )
+                        state.accounts.forEach { row ->
+                            DropdownMenuItem(
+                                text = { Text(row.account.name) },
+                                onClick = {
+                                    viewModel.selectAccount(row.account.id)
+                                    accountMenu = false
+                                },
+                            )
+                        }
+                    }
+                }
                 Text(
-                    text = stringResource(R.string.finance_total),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = status.textTertiary,
-                )
-                Text(
-                    text = Money.format(state.totalMinor, state.baseCurrency, locale),
-                    style = MoneyLarge,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier.padding(top = Spacing.xs),
+                    text = Money.format(state.headlineMinor, state.baseCurrency, locale),
+                    style = MoneyHero,
+                    color = if (state.headlineMinor < 0L) {
+                        status.problem
+                    } else {
+                        MaterialTheme.colorScheme.onBackground
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = Spacing.xs),
                 )
                 // Без этой строки человек считает своими деньги, уже обещанные цели.
                 if (state.reservedMinor > 0L) {
@@ -219,47 +273,103 @@ fun FinanceScreen(
         }
 
         item(key = "all-transactions") {
-            PillButton(
-                text = stringResource(R.string.finance_all_transactions),
-                onClick = onOpenTransactions,
-                icon = R.drawable.ic_chevron_right,
-                iconAtEnd = true,
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(Spacing.s),
                 modifier = Modifier.padding(
                     start = Spacing.screenPadding,
                     end = Spacing.screenPadding,
                     top = Spacing.m,
                     bottom = Spacing.s,
                 ),
-            )
+            ) {
+                PillButton(
+                    text = stringResource(R.string.finance_all_transactions),
+                    onClick = onOpenTransactions,
+                    icon = R.drawable.ic_chevron_right,
+                    iconAtEnd = true,
+                    modifier = Modifier.weight(1f),
+                )
+                PillButton(
+                    text = stringResource(R.string.categories_title),
+                    onClick = onOpenCategories,
+                    icon = R.drawable.ic_chevron_right,
+                    iconAtEnd = true,
+                    modifier = Modifier.weight(1f),
+                )
+            }
         }
 
         item(key = "spend") {
-            SectionCard(
-                title = stringResource(R.string.finance_month_spend),
-                titleColor = status.textSecondary,
+            BolhCard(
                 modifier = Modifier.padding(
                     horizontal = Spacing.screenPadding,
                     vertical = Spacing.s,
                 ),
-                trailing = { ViewSwitch(current = state.view, onSelect = viewModel::setView) },
             ) {
-                when {
-                    state.monthSpendMinor == 0L -> Text(
-                        text = stringResource(R.string.finance_no_spend),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = status.textTertiary,
+                // Расходы и доходы — две стороны одного вопроса, поэтому они
+                // вкладки одного блока, а не два разных экрана.
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.s),
+                ) {
+                    FlowTab(
+                        text = stringResource(R.string.finance_flow_expense),
+                        selected = state.flow == MoneyFlow.Expense,
+                        accent = MaterialTheme.colorScheme.primary,
+                        onClick = { viewModel.setFlow(MoneyFlow.Expense) },
                     )
-
-                    state.view == FinanceView.Ring -> RingBlock(state = state, locale = locale)
-                    state.view == FinanceView.List -> ListBlock(state = state, locale = locale)
-                    else -> DynamicsBlock(state = state, locale = locale)
+                    FlowTab(
+                        text = stringResource(R.string.finance_flow_income),
+                        selected = state.flow == MoneyFlow.Income,
+                        accent = status.success,
+                        onClick = { viewModel.setFlow(MoneyFlow.Income) },
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    ViewSwitch(current = state.view, onSelect = viewModel::setView)
                 }
-                ToggleChip(
-                    text = stringResource(R.string.finance_hide_obligatory),
-                    selected = state.hideObligatory,
-                    onClick = viewModel::toggleObligatory,
+
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
                     modifier = Modifier.padding(top = Spacing.m),
-                )
+                ) {
+                    FinancePeriod.entries.forEach { period ->
+                        ToggleChip(
+                            text = stringResource(periodLabel(period)),
+                            selected = state.period == period,
+                            onClick = { viewModel.setPeriod(period) },
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
+                }
+
+                Box(modifier = Modifier.padding(top = Spacing.m)) {
+                    when {
+                        state.periodTotalMinor == 0L -> Text(
+                            text = if (state.flow == MoneyFlow.Expense) {
+                                stringResource(R.string.finance_no_spend)
+                            } else {
+                                stringResource(R.string.finance_no_income)
+                            },
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = status.textTertiary,
+                        )
+
+                        state.view == FinanceView.Ring -> RingBlock(state = state, locale = locale)
+                        state.view == FinanceView.List -> ListBlock(state = state, locale = locale)
+                        else -> DynamicsBlock(state = state, locale = locale)
+                    }
+                }
+
+                // Обязательные платежи прячут только из трат: в доходах
+                // такого деления нет.
+                if (state.flow == MoneyFlow.Expense) {
+                    ToggleChip(
+                        text = stringResource(R.string.finance_hide_obligatory),
+                        selected = state.hideObligatory,
+                        onClick = viewModel::toggleObligatory,
+                        modifier = Modifier.padding(top = Spacing.m),
+                    )
+                }
             }
         }
 
@@ -375,6 +485,35 @@ fun FinanceScreen(
     }
 }
 
+/** Вкладка блока: выбранная залита своим цветом, остальная — обведена. */
+@Composable
+private fun FlowTab(
+    text: String,
+    selected: Boolean,
+    accent: Color,
+    onClick: () -> Unit,
+) {
+    val status = LocalStatusColors.current
+    val shape = RoundedCornerShape(Radius.chip)
+
+    Text(
+        text = text,
+        style = MaterialTheme.typography.labelLarge,
+        color = if (selected) Ink else status.textSecondary,
+        maxLines = 1,
+        modifier = Modifier
+            .clip(shape)
+            .background(if (selected) accent else status.surfaceSunken)
+            .border(
+                width = 1.dp,
+                color = if (selected) accent else status.strokeInner,
+                shape = shape,
+            )
+            .clickable(onClick = onClick)
+            .padding(horizontal = Spacing.l, vertical = Spacing.s),
+    )
+}
+
 /**
  * Вид расходов — редкое решение, поэтому он живёт под кнопкой, а не тремя
  * бледными словами поперёк экрана.
@@ -451,7 +590,7 @@ private fun RingBlock(state: FinanceUiState, locale: Locale) {
                     color = sliceColor(spend, status.problem, status.textTertiary),
                 )
             },
-            centerText = Money.format(state.monthSpendMinor, state.baseCurrency, locale),
+            centerText = Money.format(state.periodTotalMinor, state.baseCurrency, locale),
             trackColor = status.surfaceSunken,
             modifier = Modifier.padding(vertical = Spacing.m),
         )
@@ -614,6 +753,13 @@ private fun sliceColor(spend: CategorySpend, problem: Color, fallback: Color): C
     spend.isAnomalous -> problem
     spend.category != null -> Color(spend.category.colorArgb)
     else -> fallback
+}
+
+private fun periodLabel(period: FinancePeriod): Int = when (period) {
+    FinancePeriod.Day -> R.string.finance_period_day
+    FinancePeriod.Week -> R.string.finance_period_week
+    FinancePeriod.Month -> R.string.finance_period_month
+    FinancePeriod.Year -> R.string.finance_period_year
 }
 
 private fun viewLabel(view: FinanceView): Int = when (view) {

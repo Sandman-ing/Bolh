@@ -40,6 +40,9 @@ interface FinanceDao {
     @Query("SELECT COUNT(*) FROM categories")
     suspend fun categoryCount(): Int
 
+    @Query("SELECT * FROM categories WHERE id = :id LIMIT 1")
+    suspend fun categoryById(id: String): CategoryEntity?
+
     @Upsert
     suspend fun upsertCategory(category: CategoryEntity)
 

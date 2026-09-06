@@ -5,6 +5,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import eu.bolh.app.domain.model.GoalSort
@@ -33,6 +34,17 @@ class SettingsStore(private val context: Context) {
         prefs[KEY_LINKS_ENABLED] ?: false
     }
 
+    /**
+     * Версия палитры готовых категорий.
+     *
+     * Нужна, чтобы обновить цвета один раз при смене палитры и больше
+     * никогда: иначе цвет, выбранный человеком вручную, откатывался бы
+     * обратно при каждом заходе в финансы.
+     */
+    val paletteVersion: Flow<Int> = context.settingsDataStore.data.map { prefs ->
+        prefs[KEY_PALETTE_VERSION] ?: 0
+    }
+
     suspend fun setGoalSort(sort: GoalSort) {
         context.settingsDataStore.edit { it[KEY_GOAL_SORT] = sort.name }
     }
@@ -45,6 +57,10 @@ class SettingsStore(private val context: Context) {
         context.settingsDataStore.edit { it[KEY_LINKS_ENABLED] = enabled }
     }
 
+    suspend fun setPaletteVersion(version: Int) {
+        context.settingsDataStore.edit { it[KEY_PALETTE_VERSION] = version }
+    }
+
     private companion object {
         /** Период статистики по умолчанию — месяц (§7). */
         const val DEFAULT_STAT_PERIOD = "month"
@@ -52,5 +68,6 @@ class SettingsStore(private val context: Context) {
         val KEY_GOAL_SORT = stringPreferencesKey("goal_sort")
         val KEY_STAT_PERIOD = stringPreferencesKey("stat_period")
         val KEY_LINKS_ENABLED = booleanPreferencesKey("links_enabled")
+        val KEY_PALETTE_VERSION = intPreferencesKey("palette_version")
     }
 }

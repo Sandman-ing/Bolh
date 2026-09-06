@@ -1,6 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="finance_total">Всего</string>
+    <string name="finance_all_accounts">Все счета</string>
+    <string name="categories_title">Категории</string>
+    <string name="category_new">Создать</string>
+    <string name="category_name_hint">Название</string>
+    <string name="category_icon">Значок</string>
+    <string name="category_color">Цвет</string>
+    <string name="category_system_note">Готовую категорию можно перекрасить и переименовать, но не удалить: на ней держатся записанные операции.</string>
+    <string name="confirm_delete_category">Удалить «%1$s»?</string>
+    <string name="finance_flow_expense">Расходы</string>
+    <string name="finance_flow_income">Доходы</string>
+    <string name="finance_period_day">День</string>
+    <string name="finance_period_week">Неделя</string>
+    <string name="finance_period_month">Месяц</string>
+    <string name="finance_period_year">Год</string>
+    <string name="finance_no_income">В этом периоде доходов ещё не было</string>
     <string name="finance_reserved">Отложено на цели: %1$s</string>
     <string name="finance_available">%1$s можно потратить</string>
     <string name="finance_month_spend">Расходы за месяц</string>

@@ -133,6 +133,30 @@ class FinanceRepository(
         }
     }
 
+    /**
+     * Правка категории. Вид и признак «готовая» не меняются: перекрасить
+     * готовую категорию можно, превратить расход в доход — нет, иначе
+     * записанные операции задним числом сменят смысл.
+     */
+    suspend fun updateCategory(id: String, name: String, icon: String, colorArgb: Int) {
+        val existing = dao.categoryById(id) ?: return
+        dao.upsertCategory(
+            existing.copy(
+                name = name.trim().ifBlank { existing.name },
+                icon = icon,
+                colorArgb = colorArgb,
+                // Своё название перебивает переводимое: иначе переименование
+                // готовой категории не было бы видно.
+                nameKey = if (name.isBlank()) existing.nameKey else null,
+                updatedAt = clock.millis(),
+            ),
+        )
+    }
+
+    suspend fun deleteCategory(id: String) {
+        dao.softDeleteCategory(id, clock.millis())
+    }
+
     suspend fun createCategory(name: String, icon: String, colorArgb: Int, kind: CategoryKind) {
         val now = clock.millis()
         dao.upsertCategory(
