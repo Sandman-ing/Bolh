@@ -35,6 +35,7 @@
     <string name="stats_no_goals">No goals yet</string>
     <string name="stats_no_spend">Nothing spent in this period</string>
     <string name="stats_habit_line">%1$d of %2$s, %3$d of them at the minimum</string>
-    <string name="stats_goal_line">%1$d%% done · tempo %2$s</string>
+    <string name="stats_goal_line">%1$d%% done · %2$s</string>
+    <string name="stats_goal_tempo">tempo %1$d%%</string>
     <string name="stats_goal_no_tempo">no linked habits</string>
 </resources>

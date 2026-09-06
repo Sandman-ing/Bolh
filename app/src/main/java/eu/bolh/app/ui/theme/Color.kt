@@ -20,10 +20,19 @@ val ProblemRed = Color(0xFFE24B4A)
 val SuccessGreen = Color(0xFF97C459)
 
 // Нейтральная основа тёмной темы.
-val Ink = Color(0xFF0F1114)
-val Surface1 = Color(0xFF16191D)
-val Surface2 = Color(0xFF1E2228)
-val Divider = Color(0xFF2A2F36)
+//
+// Шаги яркости взяты заметными намеренно: карточка, отличающаяся от фона
+// на пару процентов, на телефоне просто не читается как отдельный предмет.
+val Ink = Color(0xFF0C0E11)
+val Surface1 = Color(0xFF171B21)
+val Surface2 = Color(0xFF1F242C)
+val Divider = Color(0xFF272D35)
+
+/** Обводка карточки: граница блока должна быть видна, а не угадываться. */
+val Stroke = Color(0xFF3A434F)
+
+/** Обводка вложенной плитки — тише внешней, чтобы рамки не спорили. */
+val StrokeInner = Color(0xFF2E3640)
 val TextPrimary = Color(0xFFE8EAED)
 val TextSecondary = Color(0xFF9AA3AE)
 val TextTertiary = Color(0xFF6B7480)

@@ -28,7 +28,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.activity.compose.LocalActivity
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -47,16 +51,14 @@ import eu.bolh.app.BuildConfig
 import eu.bolh.app.R
 import eu.bolh.app.data.backup.BackupService
 import eu.bolh.app.data.backup.PdfReport
-import eu.bolh.app.data.prefs.SettingsStore
+import eu.bolh.app.data.prefs.LanguagePrefs
 import eu.bolh.app.ui.theme.Ink
 import eu.bolh.app.ui.theme.LocalStatusColors
 import eu.bolh.app.ui.theme.Spacing
 import java.time.LocalDate
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 sealed interface BackupMessage {
@@ -68,18 +70,7 @@ sealed interface BackupMessage {
 class SettingsViewModel(
     private val backup: BackupService,
     private val report: PdfReport,
-    private val settings: SettingsStore,
 ) : ViewModel() {
-
-    val language: StateFlow<String> = settings.language.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5_000),
-        initialValue = SettingsStore.LANGUAGE_SYSTEM,
-    )
-
-    fun setLanguage(code: String) {
-        viewModelScope.launch { settings.setLanguage(code) }
-    }
 
     fun exportPdf(context: Context, uri: Uri) = run(context) {
         context.contentResolver.openOutputStream(uri)?.use { BackupMessage.Exported(report.write(it)) }
@@ -119,7 +110,6 @@ class SettingsViewModel(
                 SettingsViewModel(
                     backup = app.container.backupService,
                     report = app.container.pdfReport,
-                    settings = app.container.settings,
                 )
             }
         }
@@ -138,10 +128,11 @@ fun SettingsScreen(
     viewModel: SettingsViewModel = viewModel(factory = SettingsViewModel.Factory),
 ) {
     val message by viewModel.message.collectAsStateWithLifecycle()
-    val language by viewModel.language.collectAsStateWithLifecycle()
     val status = LocalStatusColors.current
     val context = LocalContext.current
+    val activity = LocalActivity.current
     val stamp = LocalDate.now().toString()
+    var language by remember { mutableStateOf(LanguagePrefs.get(context)) }
 
     val exportJson = rememberLauncherForActivityResult(
         ActivityResultContracts.CreateDocument("application/json"),
@@ -194,7 +185,15 @@ fun SettingsScreen(
             SectionTitle(stringResource(R.string.settings_language))
             LanguageRow(
                 current = language,
-                onSelect = viewModel::setLanguage,
+                onSelect = { code ->
+                    if (code != language) {
+                        LanguagePrefs.set(context, code)
+                        language = code
+                        // Экран пересоздаётся: язык применяется при его создании,
+                        // и это единственный момент, когда его можно поменять честно.
+                        activity?.recreate()
+                    }
+                },
             )
 
             SectionTitle(stringResource(R.string.settings_appearance))
@@ -327,7 +326,7 @@ private fun SectionTitle(text: String) {
 private fun LanguageRow(current: String, onSelect: (String) -> Unit) {
     val status = LocalStatusColors.current
     val options = listOf(
-        SettingsStore.LANGUAGE_SYSTEM to stringResource(R.string.settings_language_system),
+        LanguagePrefs.SYSTEM to stringResource(R.string.settings_language_system),
         "ru" to stringResource(R.string.settings_language_ru),
         "en" to stringResource(R.string.settings_language_en),
     )

@@ -8,7 +8,7 @@
     <string name="goal_no_deadline">no deadline</string>
     <string name="goal_progress">%1$d%% · %2$d of %3$s</string>
     <string name="goal_tempo">tempo %1$d%%</string>
-    <string name="goal_tempo_unknown">no linked habits</string>
+    <string name="goal_tempo_unknown">no habits</string>
     <string name="goal_next_stage">Next — %1$s, %2$s</string>
 
     <string name="goal_forecast_title">At the current pace</string>
@@ -54,9 +54,9 @@
     <string name="goal_jar_create">Start</string>
     <string name="goal_jar_add_hint">Add</string>
     <string name="goal_jar_add">Put in</string>
-    <string name="goal_jar_edit">amount</string>
-    <string name="goal_jar_undo">undo top-up</string>
-    <string name="goal_jar_delete">Delete the jar</string>
+    <string name="goal_jar_edit">Change</string>
+    <string name="goal_jar_undo">Undo</string>
+    <string name="goal_jar_delete">Delete budget</string>
     <string name="goals_sort_button">Sort</string>
     <string name="goals_completed">Reached</string>
     <string name="goal_completed_at">Reached %1$s</string>

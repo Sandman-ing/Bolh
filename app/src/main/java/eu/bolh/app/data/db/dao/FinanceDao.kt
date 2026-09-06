@@ -46,6 +46,12 @@ interface FinanceDao {
     @Upsert
     suspend fun upsertCategories(categories: List<CategoryEntity>)
 
+    @Query(
+        "UPDATE categories SET colorArgb = :color, updatedAt = :now " +
+            "WHERE nameKey = :key AND isSystem = 1 AND colorArgb != :color",
+    )
+    suspend fun updateSystemCategoryColor(key: String, color: Int, now: Long)
+
     @Query("UPDATE categories SET deletedAt = :now, updatedAt = :now WHERE id = :id")
     suspend fun softDeleteCategory(id: String, now: Long)
 

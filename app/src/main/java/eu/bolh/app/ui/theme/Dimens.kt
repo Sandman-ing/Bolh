@@ -27,10 +27,15 @@ object Spacing {
     val financeRowVertical = 12.dp
 }
 
+/**
+ * Скругления. Крупный радиус карточки — характер приложения: блок должен
+ * читаться как отдельный предмет, а не как кусок фона.
+ */
 object Radius {
-    val card = 18.dp
-    val control = 12.dp
-    val chip = 10.dp
+    val card = 22.dp
+    val block = 16.dp
+    val control = 14.dp
+    val chip = 12.dp
 }
 
 /** Минимальная зона нажатия для ежедневного действия. */

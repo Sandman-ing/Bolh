@@ -25,9 +25,15 @@
     <string name="common_cancel">Cancel</string>
     <string name="confirm_delete">Delete “%1$s”?</string>
     <string name="tx_list_title">Transactions</string>
+    <string name="tx_selected">Selected: %1$d</string>
+    <string name="tx_select_all">Select all</string>
     <string name="tx_list_empty">Nothing recorded yet</string>
     <string name="finance_all_transactions">All transactions</string>
     <string name="hint_long_press_delete">long press to delete</string>
+    <plurals name="confirm_delete_transactions">
+        <item quantity="one">Delete %1$d entry?</item>
+        <item quantity="other">Delete %1$d entries?</item>
+    </plurals>
     <plurals name="days_of">
         <item quantity="one">%d day</item>
         <item quantity="other">%d days</item>

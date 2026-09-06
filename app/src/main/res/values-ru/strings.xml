@@ -25,9 +25,17 @@
     <string name="common_cancel">Отмена</string>
     <string name="confirm_delete">Удалить «%1$s»?</string>
     <string name="tx_list_title">Операции</string>
+    <string name="tx_selected">Выбрано: %1$d</string>
+    <string name="tx_select_all">Выбрать все</string>
     <string name="tx_list_empty">Записей пока нет</string>
     <string name="finance_all_transactions">Все операции</string>
     <string name="hint_long_press_delete">долгое нажатие — удалить</string>
+    <plurals name="confirm_delete_transactions">
+        <item quantity="one">Удалить %1$d операцию?</item>
+        <item quantity="few">Удалить %1$d операции?</item>
+        <item quantity="many">Удалить %1$d операций?</item>
+        <item quantity="other">Удалить %1$d операции?</item>
+    </plurals>
     <plurals name="days_of">
         <item quantity="one">%d дня</item>
         <item quantity="few">%d дней</item>

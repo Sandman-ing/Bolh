@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -53,7 +54,7 @@ fun WeekStrip(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = Spacing.s, vertical = Spacing.s),
+            .padding(top = Spacing.s),
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         days.forEach { day ->
@@ -67,7 +68,7 @@ fun WeekStrip(
                 modifier = Modifier
                     .clip(RoundedCornerShape(14.dp))
                     .clickable(enabled = !isFuture) { onSelect(day) }
-                    .padding(horizontal = Spacing.s, vertical = Spacing.xs),
+                    .padding(horizontal = Spacing.xs, vertical = Spacing.xs),
             ) {
                 Text(
                     text = day.dayOfWeek.getDisplayName(TextStyle.NARROW, locale).uppercase(locale),
@@ -83,7 +84,9 @@ fun WeekStrip(
                     contentAlignment = Alignment.Center,
                     modifier = Modifier
                         .padding(top = Spacing.xs)
-                        .size(30.dp)
+                        // requiredSize, а не size: в узкой колонке обычный размер
+                        // ужимается родителем, и круг дня становится овалом.
+                        .requiredSize(30.dp)
                         .clip(CircleShape)
                         .background(if (isSelected) accent else Color.Transparent),
                 ) {

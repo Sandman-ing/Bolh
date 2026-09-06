@@ -1,12 +1,14 @@
 package eu.bolh.app.ui.goals
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -38,7 +40,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import eu.bolh.app.R
 import eu.bolh.app.domain.model.GoalSort
+import eu.bolh.app.ui.common.BolhCard
 import eu.bolh.app.ui.common.BolhIcons
+import eu.bolh.app.ui.common.MetricChip
 import eu.bolh.app.ui.common.rememberLocale
 import eu.bolh.app.ui.common.EmptyState
 import eu.bolh.app.ui.theme.HabitsViolet
@@ -117,22 +121,33 @@ private fun SortRow(current: GoalSort, onSelect: (GoalSort) -> Unit) {
     var open by remember { mutableStateOf(false) }
 
     Box(modifier = Modifier.padding(bottom = Spacing.xs)) {
+        val shape = RoundedCornerShape(Radius.chip)
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
-                .clip(RoundedCornerShape(Radius.chip))
+                .clip(shape)
+                .background(status.surfaceRaised)
+                .border(1.dp, status.stroke, shape)
                 .clickable { open = true }
-                .padding(horizontal = Spacing.s, vertical = Spacing.xs),
+                .padding(horizontal = Spacing.m, vertical = Spacing.s),
         ) {
             Text(
                 text = stringResource(R.string.goals_sort_button),
-                style = MaterialTheme.typography.labelLarge,
+                style = MaterialTheme.typography.labelMedium,
                 color = status.textSecondary,
             )
             Text(
-                text = " · " + stringResource(sortLabel(current)),
-                style = MaterialTheme.typography.labelLarge,
+                text = "  " + stringResource(sortLabel(current)),
+                style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.primary,
+            )
+            Icon(
+                painter = painterResource(R.drawable.ic_chevron_down),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier
+                    .padding(start = Spacing.xs)
+                    .size(14.dp),
             )
         }
         DropdownMenu(
@@ -168,15 +183,8 @@ private fun CompletedGoalCard(card: CompletedGoalState, onClick: () -> Unit) {
     val status = LocalStatusColors.current
     val locale = rememberLocale()
 
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(Radius.card))
-            .background(status.surfaceRaised)
-            .clickable(onClick = onClick)
-            .padding(Spacing.l),
-    ) {
+    BolhCard(onClick = onClick, accent = status.success) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
         Icon(
             painter = painterResource(R.drawable.ic_check),
             contentDescription = null,
@@ -215,6 +223,7 @@ private fun CompletedGoalCard(card: CompletedGoalState, onClick: () -> Unit) {
                 color = status.success,
             )
         }
+        }
     }
 }
 
@@ -224,13 +233,11 @@ private fun GoalCard(card: GoalCardState, onClick: () -> Unit) {
     val accent = MaterialTheme.colorScheme.primary
     val locale = rememberLocale()
 
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(Radius.card))
-            .background(status.surfaceRaised)
-            .clickable(onClick = onClick)
-            .padding(Spacing.l),
+    BolhCard(
+        onClick = onClick,
+        // Цель с прошедшим сроком обведена красным: статус перебивает цвет
+        // раздела, потому что «встала» важнее, чем «это цель» (§9.3).
+        accent = if (card.isOverdue) status.problem else null,
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(
@@ -279,35 +286,35 @@ private fun GoalCard(card: GoalCardState, onClick: () -> Unit) {
                 track = status.surfaceSunken,
                 modifier = Modifier.padding(top = Spacing.m),
             )
-            Text(
-                text = stringResource(
-                    R.string.goal_progress,
-                    (card.progress * 100).roundToInt(),
-                    card.stagesClosed,
-                    pluralStringResource(
-                        R.plurals.stages_of,
-                        card.stagesTotal,
-                        card.stagesTotal,
-                    ),
-                ),
-                style = NumberSmall,
-                color = status.textSecondary,
-                modifier = Modifier.padding(top = Spacing.s),
-            )
         }
 
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(top = Spacing.s),
+            horizontalArrangement = Arrangement.spacedBy(Spacing.s),
+            modifier = Modifier.padding(top = Spacing.m),
         ) {
-            Text(
+            if (card.progress != null) {
+                MetricChip(
+                    text = stringResource(
+                        R.string.goal_progress,
+                        (card.progress * 100).roundToInt(),
+                        card.stagesClosed,
+                        pluralStringResource(
+                            R.plurals.stages_of,
+                            card.stagesTotal,
+                            card.stagesTotal,
+                        ),
+                    ),
+                    color = status.textSecondary,
+                )
+            }
+            MetricChip(
                 text = card.tempo?.let {
                     stringResource(R.string.goal_tempo, (it * 100).roundToInt())
                 } ?: stringResource(R.string.goal_tempo_unknown),
-                style = NumberSmall,
                 color = tempoColor(card),
-                modifier = Modifier.weight(1f),
             )
+            Spacer(modifier = Modifier.weight(1f))
             // Значок привязанной привычки — фиолетовый: цвет читается как связь (§9.3).
             if (card.linkedHabits.isNotEmpty()) {
                 Row(horizontalArrangement = Arrangement.spacedBy(Spacing.xs)) {

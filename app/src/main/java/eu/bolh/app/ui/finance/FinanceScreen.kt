@@ -1,6 +1,7 @@
 package eu.bolh.app.ui.finance
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
@@ -42,7 +43,11 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import eu.bolh.app.R
 import eu.bolh.app.domain.model.Category
 import eu.bolh.app.domain.templates.SystemCategories
+import eu.bolh.app.ui.common.BolhCard
 import eu.bolh.app.ui.common.BolhIcons
+import eu.bolh.app.ui.common.PillButton
+import eu.bolh.app.ui.common.SectionCard
+import eu.bolh.app.ui.common.ToggleChip
 import eu.bolh.app.ui.common.ConfirmDeleteDialog
 import eu.bolh.app.ui.common.EmptyState
 import eu.bolh.app.ui.common.Money
@@ -54,6 +59,7 @@ import eu.bolh.app.ui.theme.LocalStatusColors
 import eu.bolh.app.ui.theme.MoneyLarge
 import eu.bolh.app.ui.theme.MoneyRow
 import eu.bolh.app.ui.theme.NumberSmall
+import eu.bolh.app.ui.theme.Radius
 import eu.bolh.app.ui.theme.Spacing
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
@@ -112,7 +118,7 @@ fun FinanceScreen(
         contentPadding = PaddingValues(bottom = Spacing.xxl),
     ) {
         item(key = "total") {
-            Column(
+            BolhCard(
                 modifier = Modifier.padding(
                     start = Spacing.screenPadding,
                     end = Spacing.screenPadding,
@@ -155,212 +161,189 @@ fun FinanceScreen(
 
         items(state.accounts.size, key = { state.accounts[it].account.id }) { index ->
             val row = state.accounts[index]
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
+            // Счёт — вход внутрь, к своим расходам и доходам, поэтому у него
+            // стрелка: без неё нажатие остаётся тайной.
+            BolhCard(
                 modifier = Modifier
-                    .fillMaxWidth()
+                    .padding(
+                        horizontal = Spacing.screenPadding,
+                        vertical = Spacing.xs,
+                    )
                     .combinedClickable(
                         onClick = { onOpenAccount(row.account.id) },
                         onLongClick = { pendingAccount = row.account.id },
                         onLongClickLabel = stringResource(R.string.common_delete),
-                    )
-                    .padding(
-                        horizontal = Spacing.screenPadding,
-                        vertical = Spacing.financeRowVertical,
                     ),
-            ) {
-                Icon(
-                    painter = painterResource(BolhIcons.resFor(row.account.icon)),
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(18.dp),
-                )
-                Text(
-                    text = row.account.name,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(start = Spacing.m),
-                )
-                Text(
-                    text = Money.format(row.balanceMinor, row.account.currencyCode, locale),
-                    style = MoneyRow,
-                    color = if (row.balanceMinor < 0L) {
-                        status.problem
-                    } else {
-                        MaterialTheme.colorScheme.onBackground
-                    },
-                )
-            }
-            HorizontalDivider(
-                color = status.divider,
-                modifier = Modifier.padding(horizontal = Spacing.screenPadding),
-            )
-        }
-
-        item(key = "all-transactions") {
-            Text(
-                text = stringResource(R.string.finance_all_transactions),
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable(onClick = onOpenTransactions)
-                    .padding(horizontal = Spacing.screenPadding, vertical = Spacing.l),
-            )
-        }
-
-        item(key = "spend-header") {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(
-                    start = Spacing.screenPadding,
-                    end = Spacing.screenPadding,
-                    top = Spacing.xl,
+                contentPadding = PaddingValues(
+                    horizontal = Spacing.l,
+                    vertical = Spacing.m,
                 ),
             ) {
-                Text(
-                    text = stringResource(R.string.finance_month_spend),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = status.textTertiary,
-                    modifier = Modifier.weight(1f),
-                )
-                Text(
-                    text = stringResource(R.string.finance_hide_obligatory),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = if (state.hideObligatory) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        status.textTertiary
-                    },
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(8.dp))
-                        .clickable(onClick = viewModel::toggleObligatory)
-                        .padding(Spacing.xs),
-                )
-            }
-            ViewSwitch(current = state.view, onSelect = viewModel::setView)
-        }
-
-        item(key = "spend-body") {
-            when {
-                state.monthSpendMinor == 0L -> Text(
-                    text = stringResource(R.string.finance_no_spend),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = status.textTertiary,
-                    modifier = Modifier.padding(
-                        horizontal = Spacing.screenPadding,
-                        vertical = Spacing.l,
-                    ),
-                )
-
-                state.view == FinanceView.Ring -> RingBlock(state = state, locale = locale)
-                state.view == FinanceView.List -> ListBlock(state = state, locale = locale)
-                else -> DynamicsBlock(state = state, locale = locale)
-            }
-        }
-
-        state.nextPayment?.let { payment ->
-            item(key = "recurring") {
-                HorizontalDivider(
-                    color = status.divider,
-                    modifier = Modifier.padding(horizontal = Spacing.screenPadding),
-                )
-                Text(
-                    text = stringResource(R.string.finance_next_payment),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = status.textTertiary,
-                    modifier = Modifier.padding(
-                        start = Spacing.screenPadding,
-                        top = Spacing.l,
-                    ),
-                )
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .combinedClickable(
-                            onClick = {},
-                            onLongClick = { pendingPayment = payment.id },
-                            onLongClickLabel = stringResource(R.string.common_delete),
-                        )
-                        .padding(
-                            horizontal = Spacing.screenPadding,
-                            vertical = Spacing.financeRowVertical,
-                        ),
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = payment.name,
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onBackground,
-                        )
-                        Text(
-                            text = payment.nextDate.format(
-                                DateTimeFormatter.ofPattern("d MMMM", locale),
-                            ),
-                            style = MaterialTheme.typography.labelMedium,
-                            color = status.textTertiary,
-                        )
-                    }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        painter = painterResource(BolhIcons.resFor(row.account.icon)),
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(18.dp),
+                    )
                     Text(
-                        text = Money.format(payment.amountMinor, payment.currencyCode, locale),
-                        style = MoneyRow,
+                        text = row.account.name,
+                        style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onBackground,
-                        modifier = Modifier.padding(end = Spacing.m),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(start = Spacing.m),
                     )
                     Text(
-                        text = stringResource(R.string.finance_skip),
-                        style = MaterialTheme.typography.labelLarge,
-                        color = status.textTertiary,
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(8.dp))
-                            .clickable { viewModel.skipRecurring(payment.id) }
-                            .padding(Spacing.xs),
+                        text = Money.format(row.balanceMinor, row.account.currencyCode, locale),
+                        style = MoneyRow,
+                        color = if (row.balanceMinor < 0L) {
+                            status.problem
+                        } else {
+                            MaterialTheme.colorScheme.onBackground
+                        },
                     )
-                    Text(
-                        text = stringResource(R.string.finance_record),
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.primary,
+                    Icon(
+                        painter = painterResource(R.drawable.ic_chevron_right),
+                        contentDescription = null,
+                        tint = status.textTertiary,
                         modifier = Modifier
-                            .clip(RoundedCornerShape(8.dp))
-                            .clickable { viewModel.recordRecurring(payment.id) }
-                            .padding(Spacing.xs),
+                            .padding(start = Spacing.xs)
+                            .size(18.dp),
                     )
                 }
             }
         }
 
+        item(key = "all-transactions") {
+            PillButton(
+                text = stringResource(R.string.finance_all_transactions),
+                onClick = onOpenTransactions,
+                icon = R.drawable.ic_chevron_right,
+                iconAtEnd = true,
+                modifier = Modifier.padding(
+                    start = Spacing.screenPadding,
+                    end = Spacing.screenPadding,
+                    top = Spacing.m,
+                    bottom = Spacing.s,
+                ),
+            )
+        }
+
+        item(key = "spend") {
+            SectionCard(
+                title = stringResource(R.string.finance_month_spend),
+                titleColor = status.textSecondary,
+                modifier = Modifier.padding(
+                    horizontal = Spacing.screenPadding,
+                    vertical = Spacing.s,
+                ),
+                trailing = { ViewSwitch(current = state.view, onSelect = viewModel::setView) },
+            ) {
+                when {
+                    state.monthSpendMinor == 0L -> Text(
+                        text = stringResource(R.string.finance_no_spend),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = status.textTertiary,
+                    )
+
+                    state.view == FinanceView.Ring -> RingBlock(state = state, locale = locale)
+                    state.view == FinanceView.List -> ListBlock(state = state, locale = locale)
+                    else -> DynamicsBlock(state = state, locale = locale)
+                }
+                ToggleChip(
+                    text = stringResource(R.string.finance_hide_obligatory),
+                    selected = state.hideObligatory,
+                    onClick = viewModel::toggleObligatory,
+                    modifier = Modifier.padding(top = Spacing.m),
+                )
+            }
+        }
+
+        state.nextPayment?.let { payment ->
+            item(key = "recurring") {
+                SectionCard(
+                    title = stringResource(R.string.finance_next_payment),
+                    titleColor = status.textSecondary,
+                    modifier = Modifier
+                        .padding(
+                            horizontal = Spacing.screenPadding,
+                            vertical = Spacing.s,
+                        )
+                        .combinedClickable(
+                            onClick = {},
+                            onLongClick = { pendingPayment = payment.id },
+                            onLongClickLabel = stringResource(R.string.common_delete),
+                        ),
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = payment.name,
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.onBackground,
+                            )
+                            Text(
+                                text = payment.nextDate.format(
+                                    DateTimeFormatter.ofPattern("d MMMM", locale),
+                                ),
+                                style = MaterialTheme.typography.labelMedium,
+                                color = status.textTertiary,
+                            )
+                        }
+                        Text(
+                            text = Money.format(payment.amountMinor, payment.currencyCode, locale),
+                            style = MoneyLarge,
+                            color = MaterialTheme.colorScheme.onBackground,
+                        )
+                    }
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(Spacing.s),
+                        modifier = Modifier.padding(top = Spacing.m),
+                    ) {
+                        PillButton(
+                            text = stringResource(R.string.finance_record),
+                            onClick = { viewModel.recordRecurring(payment.id) },
+                            modifier = Modifier.weight(1f),
+                        )
+                        PillButton(
+                            text = stringResource(R.string.finance_skip),
+                            onClick = { viewModel.skipRecurring(payment.id) },
+                            color = status.textSecondary,
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
+                }
+            }
+        }
+
         item(key = "recurring-add") {
-            Text(
+            PillButton(
                 text = stringResource(R.string.recurring_add),
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable(onClick = onAddRecurring)
-                    .padding(horizontal = Spacing.screenPadding, vertical = Spacing.l),
+                onClick = onAddRecurring,
+                icon = R.drawable.ic_plus,
+                modifier = Modifier.padding(
+                    horizontal = Spacing.screenPadding,
+                    vertical = Spacing.s,
+                ),
             )
         }
 
         items(state.jars.size, key = { state.jars[it].jar.id }) { index ->
             val row = state.jars[index]
-            HorizontalDivider(
-                color = status.divider,
-                modifier = Modifier.padding(horizontal = Spacing.screenPadding),
-            )
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(
-                        horizontal = Spacing.screenPadding,
-                        vertical = Spacing.financeRowVertical,
-                    ),
+            BolhCard(
+                modifier = Modifier.padding(
+                    horizontal = Spacing.screenPadding,
+                    vertical = Spacing.xs,
+                ),
+                contentPadding = PaddingValues(
+                    horizontal = Spacing.l,
+                    vertical = Spacing.m,
+                ),
             ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 // Копилка окрашена цветом целей: связь читается без подписи (§9.3).
                 Icon(
                     painter = painterResource(BolhIcons.resFor(row.goal?.icon ?: "savings")),
@@ -386,6 +369,7 @@ fun FinanceScreen(
                     color = GoalsTeal,
                 )
             }
+            }
         }
     }
 }
@@ -399,29 +383,29 @@ private fun ViewSwitch(current: FinanceView, onSelect: (FinanceView) -> Unit) {
     val status = LocalStatusColors.current
     var open by remember { mutableStateOf(false) }
 
-    Box(
-        modifier = Modifier.padding(
-            start = Spacing.screenPadding,
-            end = Spacing.screenPadding,
-            top = Spacing.s,
-        ),
-    ) {
+    Box {
+        val shape = RoundedCornerShape(Radius.chip)
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
-                .clip(RoundedCornerShape(8.dp))
+                .clip(shape)
+                .background(status.surfaceSunken)
+                .border(1.dp, status.strokeInner, shape)
                 .clickable { open = true }
-                .padding(horizontal = Spacing.s, vertical = Spacing.xs),
+                .padding(horizontal = Spacing.m, vertical = Spacing.s),
         ) {
             Text(
-                text = stringResource(R.string.finance_view),
-                style = MaterialTheme.typography.labelLarge,
-                color = status.textSecondary,
-            )
-            Text(
-                text = " · " + stringResource(viewLabel(current)),
-                style = MaterialTheme.typography.labelLarge,
+                text = stringResource(viewLabel(current)),
+                style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.primary,
+            )
+            Icon(
+                painter = painterResource(R.drawable.ic_chevron_down),
+                contentDescription = stringResource(R.string.finance_view),
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier
+                    .padding(start = Spacing.xs)
+                    .size(14.dp),
             )
         }
         DropdownMenu(
@@ -454,12 +438,9 @@ private fun ViewSwitch(current: FinanceView, onSelect: (FinanceView) -> Unit) {
 @Composable
 private fun RingBlock(state: FinanceUiState, locale: Locale) {
     val status = LocalStatusColors.current
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.padding(
-            horizontal = Spacing.screenPadding,
-            vertical = Spacing.m,
-        ),
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.fillMaxWidth(),
     ) {
         DonutChart(
             slices = state.spendByCategory.map { spend ->
@@ -471,32 +452,48 @@ private fun RingBlock(state: FinanceUiState, locale: Locale) {
             },
             centerText = Money.format(state.monthSpendMinor, state.baseCurrency, locale),
             trackColor = status.surfaceSunken,
+            modifier = Modifier.padding(vertical = Spacing.m),
         )
-        Column(modifier = Modifier.padding(start = Spacing.l)) {
-            state.spendByCategory.take(6).forEach { spend ->
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(vertical = 3.dp),
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(8.dp)
-                            .clip(CircleShape)
-                            .background(sliceColor(spend, status.problem, status.textTertiary)),
-                    )
-                    Text(
-                        text = categoryName(spend.category),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = status.textSecondary,
-                        modifier = Modifier.padding(start = Spacing.s),
-                    )
-                    Text(
-                        text = "${(spend.share * 100).roundToInt()}%",
-                        style = NumberSmall,
-                        color = status.textTertiary,
-                        modifier = Modifier.padding(start = Spacing.xs),
-                    )
-                }
+        // Легенда под кольцом, а не сбоку: в колонке шириной в треть экрана
+        // «Кафе и доставка 68%» разваливается по буквам.
+        state.spendByCategory.take(6).forEach { spend ->
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = Spacing.xs),
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(10.dp)
+                        .clip(CircleShape)
+                        .background(sliceColor(spend, status.problem, status.textTertiary)),
+                )
+                Text(
+                    text = categoryName(spend.category),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = status.textSecondary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(start = Spacing.m),
+                )
+                Text(
+                    text = Money.format(spend.amountMinor, state.baseCurrency, locale),
+                    style = NumberSmall,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    maxLines = 1,
+                    softWrap = false,
+                )
+                Text(
+                    text = "${(spend.share * 100).roundToInt()}%",
+                    style = NumberSmall,
+                    color = status.textTertiary,
+                    maxLines = 1,
+                    softWrap = false,
+                    modifier = Modifier.padding(start = Spacing.s),
+                )
             }
         }
     }
@@ -505,16 +502,13 @@ private fun RingBlock(state: FinanceUiState, locale: Locale) {
 @Composable
 private fun ListBlock(state: FinanceUiState, locale: Locale) {
     val status = LocalStatusColors.current
-    Column(modifier = Modifier.padding(top = Spacing.s)) {
+    Column {
         state.spendByCategory.forEach { spend ->
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(
-                        horizontal = Spacing.screenPadding,
-                        vertical = Spacing.financeRowVertical,
-                    ),
+                    .padding(vertical = Spacing.s),
             ) {
                 Box(
                     modifier = Modifier

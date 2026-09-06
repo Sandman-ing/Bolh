@@ -165,7 +165,10 @@ class FinanceViewModel(
     )
 
     init {
-        viewModelScope.launch { finance.ensureSystemCategories() }
+        viewModelScope.launch {
+            finance.ensureSystemCategories()
+            finance.refreshSystemCategoryColors()
+        }
     }
 
     fun setView(value: FinanceView) {

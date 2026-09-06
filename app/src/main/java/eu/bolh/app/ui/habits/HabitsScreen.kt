@@ -29,7 +29,11 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import eu.bolh.app.R
+import androidx.compose.foundation.layout.PaddingValues
+import eu.bolh.app.ui.common.BolhCard
+import eu.bolh.app.ui.common.PillButton
 import eu.bolh.app.ui.common.EmptyState
+import eu.bolh.app.ui.theme.Radius
 import eu.bolh.app.ui.common.rememberLocale
 import eu.bolh.app.ui.habits.components.HabitRowItem
 import eu.bolh.app.ui.habits.components.WeekStrip
@@ -66,81 +70,98 @@ fun HabitsScreen(
     }
 
     Column(modifier = modifier.fillMaxSize()) {
-        WeekHeader(
-            title = monthTitle(state),
-            onPrevious = viewModel::showPreviousWeek,
-            onNext = viewModel::showNextWeek,
-            nextEnabled = state.weekDays.lastOrNull()?.isBefore(state.today) == true,
-        )
-        WeekStrip(
-            days = state.weekDays,
-            selected = state.selectedDate,
-            today = state.today,
-            progress = state.weekProgress,
-            onSelect = viewModel::selectDate,
-        )
-        HorizontalDivider(color = status.divider, thickness = 1.dp)
-
-        LazyColumn(modifier = Modifier.fillMaxSize()) {
+        BolhCard(
+            modifier = Modifier.padding(
+                start = Spacing.m,
+                end = Spacing.m,
+                top = Spacing.s,
+            ),
+            contentPadding = PaddingValues(
+                horizontal = Spacing.s,
+                vertical = Spacing.s,
+            ),
+        ) {
+            WeekHeader(
+                title = monthTitle(state),
+                onPrevious = viewModel::showPreviousWeek,
+                onNext = viewModel::showNextWeek,
+                nextEnabled = state.weekDays.lastOrNull()?.isBefore(state.today) == true,
+            )
+            WeekStrip(
+                days = state.weekDays,
+                selected = state.selectedDate,
+                today = state.today,
+                progress = state.weekProgress,
+                onSelect = viewModel::selectDate,
+            )
+        }
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(
+                start = Spacing.m,
+                end = Spacing.m,
+                top = Spacing.s,
+                bottom = Spacing.xxl,
+            ),
+            verticalArrangement = Arrangement.spacedBy(Spacing.s),
+        ) {
             // Пустой список в день, когда привычек не ждут, читался бы как потеря данных.
             if (state.goodToday.isEmpty() && state.good.isNotEmpty()) {
                 item(key = "nothing-today") {
-                    Text(
-                        text = stringResource(R.string.habits_nothing_today),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = status.textTertiary,
-                        modifier = Modifier.padding(
-                            horizontal = Spacing.screenPadding,
-                            vertical = Spacing.l,
-                        ),
-                    )
+                    BolhCard(corner = Radius.block) {
+                        Text(
+                            text = stringResource(R.string.habits_nothing_today),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = status.textTertiary,
+                        )
+                    }
                 }
             }
 
             items(state.goodToday, key = { it.habit.id }) { row ->
-                HabitRowItem(
-                    row = row,
-                    onMark = { level -> viewModel.mark(row.habit, level) },
-                    onOpen = { onOpenHabit(row.habit.id) },
-                )
-                HorizontalDivider(
-                    color = status.divider,
-                    thickness = 1.dp,
-                    modifier = Modifier.padding(start = Spacing.screenPadding),
-                )
+                BolhCard(
+                    corner = Radius.block,
+                    contentPadding = PaddingValues(0.dp),
+                    // Отмеченная привычка обведена своим цветом: строка сама
+                    // говорит о состоянии, без чтения текста.
+                    accent = if (row.selectedLevel != null) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        null
+                    },
+                ) {
+                    HabitRowItem(
+                        row = row,
+                        onMark = { level -> viewModel.mark(row.habit, level) },
+                        onOpen = { onOpenHabit(row.habit.id) },
+                    )
+                }
             }
 
             if (state.goodOtherDays.isNotEmpty()) {
                 item(key = "other-days") {
-                    Text(
+                    PillButton(
                         text = if (showOtherDays) {
                             stringResource(R.string.habits_hide_other)
                         } else {
                             stringResource(R.string.habits_other_days, state.goodOtherDays.size)
                         },
-                        style = MaterialTheme.typography.labelMedium,
-                        color = status.textTertiary,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { showOtherDays = !showOtherDays }
-                            .padding(
-                                horizontal = Spacing.screenPadding,
-                                vertical = Spacing.l,
-                            ),
+                        onClick = { showOtherDays = !showOtherDays },
+                        icon = R.drawable.ic_chevron_down,
+                        iconAtEnd = true,
+                        color = status.textSecondary,
+                        modifier = Modifier.padding(vertical = Spacing.s),
                     )
                 }
                 if (showOtherDays) {
                     items(state.goodOtherDays, key = { "other-" + it.habit.id }) { row ->
-                        HabitRowItem(
-                            row = row,
-                            onMark = { level -> viewModel.mark(row.habit, level) },
-                            onOpen = { onOpenHabit(row.habit.id) },
-                        )
-                        HorizontalDivider(
-                            color = status.divider,
-                            thickness = 1.dp,
-                            modifier = Modifier.padding(start = Spacing.screenPadding),
-                        )
+                        BolhCard(corner = Radius.block, contentPadding = PaddingValues(0.dp)) {
+                            HabitRowItem(
+                                row = row,
+                                onMark = { level -> viewModel.mark(row.habit, level) },
+                                onOpen = { onOpenHabit(row.habit.id) },
+                            )
+                        }
                     }
                 }
             }
@@ -149,27 +170,24 @@ fun HabitsScreen(
                 item(key = "bad-header") {
                     Text(
                         text = stringResource(R.string.habits_bad_section),
-                        style = MaterialTheme.typography.labelLarge,
-                        color = status.textTertiary,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = status.textSecondary,
                         modifier = Modifier.padding(
-                            start = Spacing.screenPadding,
-                            top = Spacing.xl,
-                            bottom = Spacing.s,
+                            start = Spacing.s,
+                            top = Spacing.l,
+                            bottom = Spacing.xs,
                         ),
                     )
                 }
                 items(state.bad, key = { it.habit.id }) { row ->
-                    HabitRowItem(
-                        row = row,
-                        onMark = { viewModel.addSlip(row.habit) },
-                        onOpen = { onOpenHabit(row.habit.id) },
-                        onUndoSlip = { viewModel.undoSlip(row.habit) },
-                    )
-                    HorizontalDivider(
-                        color = status.divider,
-                        thickness = 1.dp,
-                        modifier = Modifier.padding(start = Spacing.screenPadding),
-                    )
+                    BolhCard(corner = Radius.block, contentPadding = PaddingValues(0.dp)) {
+                        HabitRowItem(
+                            row = row,
+                            onMark = { viewModel.addSlip(row.habit) },
+                            onOpen = { onOpenHabit(row.habit.id) },
+                            onUndoSlip = { viewModel.undoSlip(row.habit) },
+                        )
+                    }
                 }
             }
         }
@@ -189,7 +207,7 @@ private fun WeekHeader(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(start = Spacing.screenPadding, end = Spacing.m, top = Spacing.m),
+            .padding(start = Spacing.s),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(

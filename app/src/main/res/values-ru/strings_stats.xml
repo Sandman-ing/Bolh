@@ -39,6 +39,7 @@
     <string name="stats_no_goals">Целей пока нет</string>
     <string name="stats_no_spend">В этом периоде трат не было</string>
     <string name="stats_habit_line">%1$d из %2$s, %3$d из них на минимуме</string>
-    <string name="stats_goal_line">%1$d%% пройдено · темп %2$s</string>
+    <string name="stats_goal_line">%1$d%% пройдено · %2$s</string>
+    <string name="stats_goal_tempo">темп %1$d%%</string>
     <string name="stats_goal_no_tempo">привычки не привязаны</string>
 </resources>

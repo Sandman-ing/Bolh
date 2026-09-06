@@ -33,11 +33,6 @@ class SettingsStore(private val context: Context) {
         prefs[KEY_LINKS_ENABLED] ?: false
     }
 
-    /** Язык интерфейса: system, ru или en. */
-    val language: Flow<String> = context.settingsDataStore.data.map { prefs ->
-        prefs[KEY_LANGUAGE] ?: LANGUAGE_SYSTEM
-    }
-
     suspend fun setGoalSort(sort: GoalSort) {
         context.settingsDataStore.edit { it[KEY_GOAL_SORT] = sort.name }
     }
@@ -50,20 +45,12 @@ class SettingsStore(private val context: Context) {
         context.settingsDataStore.edit { it[KEY_LINKS_ENABLED] = enabled }
     }
 
-    suspend fun setLanguage(code: String) {
-        context.settingsDataStore.edit { it[KEY_LANGUAGE] = code }
-    }
-
-    companion object {
+    private companion object {
         /** Период статистики по умолчанию — месяц (§7). */
-        private const val DEFAULT_STAT_PERIOD = "month"
+        const val DEFAULT_STAT_PERIOD = "month"
 
-        /** Язык как в системе — значение по умолчанию. */
-        const val LANGUAGE_SYSTEM = "system"
-
-        private val KEY_LANGUAGE = stringPreferencesKey("language")
-        private val KEY_GOAL_SORT = stringPreferencesKey("goal_sort")
-        private val KEY_STAT_PERIOD = stringPreferencesKey("stat_period")
-        private val KEY_LINKS_ENABLED = booleanPreferencesKey("links_enabled")
+        val KEY_GOAL_SORT = stringPreferencesKey("goal_sort")
+        val KEY_STAT_PERIOD = stringPreferencesKey("stat_period")
+        val KEY_LINKS_ENABLED = booleanPreferencesKey("links_enabled")
     }
 }

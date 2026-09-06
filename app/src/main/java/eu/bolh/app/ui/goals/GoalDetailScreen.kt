@@ -7,6 +7,7 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -49,6 +50,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import eu.bolh.app.R
 import eu.bolh.app.domain.model.GoalStatus
+import eu.bolh.app.ui.common.BolhCard
+import eu.bolh.app.ui.common.MetricChip
+import eu.bolh.app.ui.common.PillButton
 import eu.bolh.app.ui.common.BolhIcons
 import eu.bolh.app.ui.common.ConfirmDeleteDialog
 import eu.bolh.app.ui.common.Money
@@ -150,10 +154,13 @@ fun GoalDetailScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(bottom = Spacing.xxl),
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(horizontal = Spacing.screenPadding),
+            BolhCard(
+                modifier = Modifier.padding(
+                    horizontal = Spacing.screenPadding,
+                    vertical = Spacing.s,
+                ),
             ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = stringResource(
                         R.string.goal_period,
@@ -182,7 +189,7 @@ fun GoalDetailScreen(
             state.progress?.let { progress ->
                 Box(
                     modifier = Modifier
-                        .padding(horizontal = Spacing.screenPadding, vertical = Spacing.m)
+                        .padding(vertical = Spacing.m)
                         .fillMaxWidth()
                         .height(6.dp)
                         .clip(RoundedCornerShape(3.dp))
@@ -209,26 +216,26 @@ fun GoalDetailScreen(
                     ),
                     style = NumberSmall,
                     color = status.textSecondary,
-                    modifier = Modifier.padding(horizontal = Spacing.screenPadding),
                 )
             }
 
-            Text(
-                text = state.tempo?.let { stringResource(R.string.goal_tempo, (it * 100).roundToInt()) }
-                    ?: stringResource(R.string.goal_tempo_unknown),
-                style = NumberSmall,
-                color = when {
-                    state.tempo == null -> status.textTertiary
-                    state.tempo!! >= 0.6 -> status.success
-                    state.tempo!! >= 0.3 -> status.attention
-                    else -> status.problem
-                },
-                modifier = Modifier.padding(
-                    start = Spacing.screenPadding,
-                    end = Spacing.screenPadding,
-                    top = Spacing.xs,
-                ),
-            )
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(Spacing.s),
+                modifier = Modifier.padding(top = Spacing.m),
+            ) {
+                MetricChip(
+                    text = state.tempo?.let {
+                        stringResource(R.string.goal_tempo, (it * 100).roundToInt())
+                    } ?: stringResource(R.string.goal_tempo_unknown),
+                    color = when {
+                        state.tempo == null -> status.textTertiary
+                        state.tempo!! >= 0.6 -> status.success
+                        state.tempo!! >= 0.3 -> status.attention
+                        else -> status.problem
+                    },
+                )
+            }
+            }
 
             // Просроченная цель: новый срок предлагается сразу поправленным (§4.6).
             // Никакой красной метки «провалено» — промах это данные, а не приговор.
@@ -326,14 +333,14 @@ fun GoalDetailScreen(
             // Пока его не позвали, он не занимает экран: по умолчанию всё выключено (§3.1).
             val jar = state.jar
             if (jar == null && !addingBudget) {
-                Text(
+                PillButton(
                     text = stringResource(R.string.goal_budget_add),
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { addingBudget = true }
-                        .padding(horizontal = Spacing.screenPadding, vertical = Spacing.l),
+                    onClick = { addingBudget = true },
+                    icon = R.drawable.ic_plus,
+                    modifier = Modifier.padding(
+                        horizontal = Spacing.screenPadding,
+                        vertical = Spacing.m,
+                    ),
                 )
             } else {
             InfoBlock(
@@ -444,43 +451,62 @@ fun GoalDetailScreen(
                         }
                     }
 
-                    Row(modifier = Modifier.padding(top = Spacing.xs)) {
-                        TextButton(
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(Spacing.s),
+                        modifier = Modifier.padding(top = Spacing.m),
+                    ) {
+                        PillButton(
+                            text = stringResource(R.string.goal_jar_edit),
                             onClick = {
                                 editingJar = !editingJar
                                 if (editingJar) {
                                     jarTarget = (jar.targetMinor / 100).toString()
                                 }
                             },
-                        ) {
-                            Text(stringResource(R.string.goal_jar_edit))
-                        }
-                        TextButton(onClick = viewModel::undoLastContribution) {
-                            Text(stringResource(R.string.goal_jar_undo))
-                        }
-                    }
-                    TextButton(onClick = viewModel::deleteJar) {
-                        Text(
-                            text = stringResource(R.string.goal_jar_delete),
-                            color = status.problem,
+                            modifier = Modifier.weight(1f),
+                        )
+                        PillButton(
+                            text = stringResource(R.string.goal_jar_undo),
+                            onClick = viewModel::undoLastContribution,
+                            color = status.textSecondary,
+                            modifier = Modifier.weight(1f),
                         )
                     }
+                    PillButton(
+                        text = stringResource(R.string.goal_jar_delete),
+                        onClick = viewModel::deleteJar,
+                        color = status.problem,
+                        modifier = Modifier.padding(top = Spacing.s),
+                    )
                 }
             }
             }
 
             Text(
                 text = stringResource(R.string.goal_stages_title),
-                style = MaterialTheme.typography.labelLarge,
-                color = status.textTertiary,
+                style = MaterialTheme.typography.labelMedium,
+                color = status.textSecondary,
                 modifier = Modifier.padding(
                     start = Spacing.screenPadding,
-                    top = Spacing.xl,
-                    bottom = Spacing.s,
+                    top = Spacing.l,
+                    bottom = Spacing.xs,
                 ),
             )
 
             state.stages.forEach { stageState ->
+                BolhCard(
+                    corner = Radius.block,
+                    contentPadding = PaddingValues(
+                        start = Spacing.xs,
+                        end = Spacing.l,
+                        top = Spacing.xs,
+                        bottom = Spacing.s,
+                    ),
+                    modifier = Modifier.padding(
+                        horizontal = Spacing.screenPadding,
+                        vertical = Spacing.xs,
+                    ),
+                ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
@@ -491,8 +517,7 @@ fun GoalDetailScreen(
                                 pendingStage = stageState.stage.id to stageState.stage.name
                             },
                             onLongClickLabel = stringResource(R.string.common_delete),
-                        )
-                        .padding(end = Spacing.screenPadding),
+                        ),
                 ) {
                     Checkbox(
                         checked = stageState.stage.isDone,
@@ -527,7 +552,7 @@ fun GoalDetailScreen(
                                 onLongClick = { pendingTask = task.id to task.name },
                                 onLongClickLabel = stringResource(R.string.common_delete),
                             )
-                            .padding(start = Spacing.xxl, end = Spacing.screenPadding),
+                            .padding(start = Spacing.xl),
                     ) {
                         Checkbox(
                             checked = task.isDone,
@@ -542,29 +567,27 @@ fun GoalDetailScreen(
                     }
                 }
                 AddTaskRow(onAdd = { viewModel.addTask(stageState.stage.id, it) })
-                HorizontalDivider(
-                    color = status.divider,
-                    modifier = Modifier.padding(start = Spacing.screenPadding),
-                )
+                }
             }
 
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
+            BolhCard(
+                corner = Radius.block,
                 modifier = Modifier.padding(
-                    start = Spacing.screenPadding,
-                    end = Spacing.s,
-                    top = Spacing.s,
+                    horizontal = Spacing.screenPadding,
+                    vertical = Spacing.s,
                 ),
             ) {
-                OutlinedTextField(
-                    value = newStage,
-                    onValueChange = viewModel::setNewStage,
-                    label = { Text(stringResource(R.string.goal_stage_hint)) },
-                    singleLine = true,
-                    modifier = Modifier.weight(1f),
-                )
-                TextButton(onClick = viewModel::addStage) {
-                    Text(stringResource(R.string.goal_add_stage))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    OutlinedTextField(
+                        value = newStage,
+                        onValueChange = viewModel::setNewStage,
+                        label = { Text(stringResource(R.string.goal_stage_hint)) },
+                        singleLine = true,
+                        modifier = Modifier.weight(1f),
+                    )
+                    TextButton(onClick = viewModel::addStage) {
+                        Text(stringResource(R.string.goal_add_stage))
+                    }
                 }
             }
 
@@ -660,14 +683,11 @@ private fun InfoBlock(
     titleColor: androidx.compose.ui.graphics.Color,
     content: @Composable () -> Unit,
 ) {
-    val status = LocalStatusColors.current
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = Spacing.screenPadding, vertical = Spacing.m)
-            .clip(RoundedCornerShape(Radius.card))
-            .background(status.surfaceRaised)
-            .padding(Spacing.l),
+    BolhCard(
+        modifier = Modifier.padding(
+            horizontal = Spacing.screenPadding,
+            vertical = Spacing.m,
+        ),
     ) {
         Text(
             text = title,

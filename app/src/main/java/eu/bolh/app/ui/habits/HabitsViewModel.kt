@@ -168,7 +168,7 @@ class HabitsViewModel(private val repository: HabitRepository) : ViewModel() {
             savedMinor = habit.costPerOccurrenceMinor?.let { cost ->
                 HabitAnalytics.avoidedCostMinor(slips, today, habit.startDate, cost)
             },
-            plannedOnDay = plannedOn(habit, selected, pauses),
+            plannedOnDay = plannedOn(habit, selected, pauses, marks),
         )
     }
 
@@ -179,12 +179,36 @@ class HabitsViewModel(private val repository: HabitRepository) : ViewModel() {
      * отметки в четверг. «Каждый день» и «N раз в неделю» спрашиваются всегда:
      * у второго нет закреплённых дней, человек сам решает, когда.
      */
-    private fun plannedOn(habit: Habit, date: LocalDate, pauses: List<Pause>): Boolean {
+    private fun plannedOn(
+        habit: Habit,
+        date: LocalDate,
+        pauses: List<Pause>,
+        marks: List<Mark>,
+    ): Boolean {
         if (pauses.any { it.covers(date) }) return false
         if (date.isBefore(habit.startDate)) return false
+
         return when (habit.schedule.type) {
             ScheduleType.Weekdays -> habit.schedule.plannedOn(date)
-            else -> true
+
+            // «N раз в неделю» спрашивается каждый день, пока норма недели
+            // не набрана. Набрал — привычка уходит с глаз до понедельника
+            // и не мозолит глаза требованием, которого уже нет.
+            ScheduleType.TimesPerWeek -> {
+                val weekStart = date.with(WeekFields.ISO.dayOfWeek(), 1L)
+                val weekEnd = weekStart.plusDays(6)
+                val doneThisWeek = marks
+                    .asSequence()
+                    .filter { it.level != EntryLevel.Slip }
+                    .filter { !it.date.isBefore(weekStart) && !it.date.isAfter(weekEnd) }
+                    .map { it.date }
+                    .distinct()
+                    .count()
+                val doneOnDay = marks.any { it.date == date && it.level != EntryLevel.Slip }
+                doneOnDay || doneThisWeek < (habit.schedule.timesPerWeek ?: 0)
+            }
+
+            ScheduleType.Daily -> true
         }
     }
 
@@ -195,7 +219,8 @@ class HabitsViewModel(private val repository: HabitRepository) : ViewModel() {
         pauses: Map<String, List<Pause>>,
     ): DayProgress {
         val expected = habits.filter { habit ->
-            habit.kind == HabitKind.Good && plannedOn(habit, day, pauses[habit.id].orEmpty())
+            habit.kind == HabitKind.Good &&
+                plannedOn(habit, day, pauses[habit.id].orEmpty(), marks[habit.id].orEmpty())
         }
         val done = expected.count { habit ->
             marks[habit.id].orEmpty().any { it.date == day && it.level != EntryLevel.Slip }

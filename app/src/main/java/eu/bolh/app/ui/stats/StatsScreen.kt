@@ -1,6 +1,7 @@
 package eu.bolh.app.ui.stats
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -9,6 +10,8 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -37,16 +40,21 @@ import eu.bolh.app.R
 import eu.bolh.app.domain.analytics.Insight
 import eu.bolh.app.domain.model.Category
 import eu.bolh.app.domain.templates.SystemCategories
+import eu.bolh.app.ui.common.BolhCard
 import eu.bolh.app.ui.common.Money
+import eu.bolh.app.ui.common.SectionCard
+import eu.bolh.app.ui.common.StatTile
 import eu.bolh.app.ui.common.rememberLocale
 import eu.bolh.app.ui.theme.FinanceBlue
 import eu.bolh.app.ui.theme.GoalsTeal
 import eu.bolh.app.ui.theme.HabitsViolet
+import eu.bolh.app.ui.theme.Ink
 import eu.bolh.app.ui.theme.LocalStatusColors
 import eu.bolh.app.ui.theme.MoneyRow
 import eu.bolh.app.ui.theme.NumberSmall
 import eu.bolh.app.ui.theme.Radius
 import eu.bolh.app.ui.theme.Spacing
+import eu.bolh.app.ui.theme.TextPrimary
 import java.time.format.TextStyle
 import java.util.Locale
 import kotlin.math.abs
@@ -113,19 +121,25 @@ fun StatsScreen(
                     top = Spacing.m,
                 ),
             ) {
+                // Период — переключатель, а не три слова подряд: у выбранного
+                // своя заливка, у остальных обводка, и видно, что это одна группа.
                 StatPeriod.entries.forEach { period ->
+                    val selected = period == state.period
+                    val chip = RoundedCornerShape(Radius.chip)
                     Text(
                         text = stringResource(periodLabel(period)),
                         style = MaterialTheme.typography.labelLarge,
-                        color = if (period == state.period) {
-                            MaterialTheme.colorScheme.onBackground
-                        } else {
-                            status.textTertiary
-                        },
+                        color = if (selected) Ink else status.textSecondary,
                         modifier = Modifier
-                            .clip(RoundedCornerShape(8.dp))
+                            .clip(chip)
+                            .background(if (selected) TextPrimary else status.surfaceRaised)
+                            .border(
+                                width = 1.dp,
+                                color = if (selected) TextPrimary else status.stroke,
+                                shape = chip,
+                            )
                             .clickable { viewModel.setPeriod(period) }
-                            .padding(Spacing.xs),
+                            .padding(horizontal = Spacing.l, vertical = Spacing.s),
                     )
                 }
                 Spacer(modifier = Modifier.weight(1f))
@@ -133,66 +147,81 @@ fun StatsScreen(
                 Icon(
                     painter = painterResource(R.drawable.ic_settings),
                     contentDescription = stringResource(R.string.action_settings),
-                    tint = status.textTertiary,
+                    tint = status.textSecondary,
                     modifier = Modifier
-                        .size(36.dp)
                         .clip(CircleShape)
+                        .background(status.surfaceRaised)
+                        .border(1.dp, status.stroke, CircleShape)
                         .clickable(onClick = onOpenSettings)
-                        .padding(8.dp),
+                        .padding(Spacing.s)
+                        .size(20.dp),
                 )
             }
         }
 
         item(key = "metrics") {
+            // Высота по самой высокой плитке: подписи разной длины
+            // не должны ломать ряд на три разные ступеньки.
             Row(
-                modifier = Modifier.padding(
-                    horizontal = Spacing.screenPadding,
-                    vertical = Spacing.l,
-                ),
+                horizontalArrangement = Arrangement.spacedBy(Spacing.s),
+                modifier = Modifier
+                    .padding(
+                        horizontal = Spacing.screenPadding,
+                        vertical = Spacing.l,
+                    )
+                    .height(IntrinsicSize.Min),
             ) {
-                Metric(
+                StatTile(
                     label = stringResource(R.string.stats_metric_habits),
                     value = state.habitCompletion
                         ?.let { "${(it * 100).roundToInt()}%" }
                         ?: stringResource(R.string.stats_no_value),
-                    color = HabitsViolet,
-                    modifier = Modifier.weight(1f),
+                    valueColor = HabitsViolet,
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight(),
                 )
-                Metric(
+                StatTile(
                     label = stringResource(R.string.stats_metric_spend),
                     value = Money.format(state.spendMinor, state.baseCurrency, locale),
-                    color = FinanceBlue,
-                    modifier = Modifier.weight(1f),
+                    valueColor = FinanceBlue,
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight(),
                 )
-                Metric(
+                StatTile(
                     label = stringResource(R.string.stats_metric_goals),
                     value = stringResource(
                         R.string.stats_goals_value,
                         state.goalsInTempo,
                         state.goalsCounted,
                     ),
-                    color = GoalsTeal,
-                    modifier = Modifier.weight(1f),
+                    valueColor = GoalsTeal,
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight(),
                 )
             }
         }
 
         item(key = "habits-block") {
-            BlockHeader(stringResource(R.string.stats_block_habits), HabitsViolet)
-            if (state.habitRows.isEmpty()) {
-                EmptyLine(stringResource(R.string.stats_no_habits))
-            } else {
-                BarChart(bars = state.bars, color = HabitsViolet)
-                state.habitRows.forEach { row ->
-                    Column(
-                        modifier = Modifier.padding(
-                            horizontal = Spacing.screenPadding,
-                            vertical = Spacing.s,
-                        ),
-                    ) {
+            SectionCard(
+                title = stringResource(R.string.stats_block_habits),
+                titleColor = HabitsViolet,
+                modifier = Modifier.padding(
+                    horizontal = Spacing.screenPadding,
+                    vertical = Spacing.s,
+                ),
+            ) {
+                if (state.habitRows.isEmpty()) {
+                    EmptyLine(stringResource(R.string.stats_no_habits))
+                } else {
+                    BarChart(bars = state.bars, color = HabitsViolet)
+                    state.habitRows.forEachIndexed { index, row ->
+                        if (index > 0) InnerDivider()
                         Text(
                             text = row.name,
-                            style = MaterialTheme.typography.bodyMedium,
+                            style = MaterialTheme.typography.titleMedium,
                             color = MaterialTheme.colorScheme.onBackground,
                         )
                         Text(
@@ -206,8 +235,9 @@ fun StatsScreen(
                                 ),
                                 row.minimumDays,
                             ),
-                            style = NumberSmall,
+                            style = MaterialTheme.typography.bodyMedium,
                             color = status.textSecondary,
+                            modifier = Modifier.padding(top = Spacing.xs),
                         )
                     }
                 }
@@ -215,99 +245,102 @@ fun StatsScreen(
         }
 
         item(key = "goals-block") {
-            BlockHeader(stringResource(R.string.stats_block_goals), GoalsTeal)
-            if (state.goalRows.isEmpty()) {
-                EmptyLine(stringResource(R.string.stats_no_goals))
-            } else {
-                state.goalRows.forEach { row ->
-                    Column(
-                        modifier = Modifier.padding(
-                            horizontal = Spacing.screenPadding,
-                            vertical = Spacing.s,
-                        ),
-                    ) {
+            SectionCard(
+                title = stringResource(R.string.stats_block_goals),
+                titleColor = GoalsTeal,
+                modifier = Modifier.padding(
+                    horizontal = Spacing.screenPadding,
+                    vertical = Spacing.s,
+                ),
+            ) {
+                if (state.goalRows.isEmpty()) {
+                    EmptyLine(stringResource(R.string.stats_no_goals))
+                } else {
+                    state.goalRows.forEachIndexed { index, row ->
+                        if (index > 0) InnerDivider()
                         Text(
                             text = row.name,
-                            style = MaterialTheme.typography.bodyMedium,
+                            style = MaterialTheme.typography.titleMedium,
                             color = MaterialTheme.colorScheme.onBackground,
                         )
                         Text(
                             text = stringResource(
                                 R.string.stats_goal_line,
                                 ((row.progress ?: 0.0) * 100).roundToInt(),
-                                row.tempo?.let { "${(it * 100).roundToInt()}%" }
-                                    ?: stringResource(R.string.stats_goal_no_tempo),
+                                row.tempo?.let {
+                                    stringResource(
+                                        R.string.stats_goal_tempo,
+                                        (it * 100).roundToInt(),
+                                    )
+                                } ?: stringResource(R.string.stats_goal_no_tempo),
                             ),
-                            style = NumberSmall,
+                            style = MaterialTheme.typography.bodyMedium,
                             color = status.textSecondary,
+                            modifier = Modifier.padding(top = Spacing.xs),
                         )
                     }
                 }
             }
         }
 
-        item(key = "finance-header") {
-            BlockHeader(stringResource(R.string.stats_block_finance), FinanceBlue)
-            if (state.categories.isEmpty()) {
-                EmptyLine(stringResource(R.string.stats_no_spend))
-            }
-        }
-
-        if (state.categories.isNotEmpty()) {
-            items(state.categories.size, key = { "cat-$it" }) { index ->
-                val row = state.categories[index]
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(
-                            horizontal = Spacing.screenPadding,
-                            vertical = Spacing.financeRowVertical,
-                        ),
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(8.dp)
-                            .clip(CircleShape)
-                            .background(
-                                when {
+        item(key = "finance-block") {
+            SectionCard(
+                title = stringResource(R.string.stats_block_finance),
+                titleColor = FinanceBlue,
+                modifier = Modifier.padding(
+                    horizontal = Spacing.screenPadding,
+                    vertical = Spacing.s,
+                ),
+            ) {
+                if (state.categories.isEmpty()) {
+                    EmptyLine(stringResource(R.string.stats_no_spend))
+                }
+                state.categories.forEachIndexed { index, row ->
+                    if (index > 0) InnerDivider()
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(10.dp)
+                                .clip(CircleShape)
+                                .background(
+                                    when {
+                                        row.isAnomalous -> status.problem
+                                        row.category != null -> Color(row.category.colorArgb)
+                                        else -> status.textTertiary
+                                    },
+                                ),
+                        )
+                        Text(
+                            text = categoryName(row.category),
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onBackground,
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(start = Spacing.m),
+                        )
+                        row.delta?.let { delta ->
+                            Text(
+                                text = (if (delta > 0) "+" else "−") +
+                                    "${(abs(delta) * 100).roundToInt()}%",
+                                style = NumberSmall,
+                                color = when {
                                     row.isAnomalous -> status.problem
-                                    row.category != null -> Color(row.category.colorArgb)
+                                    delta > 0 -> status.attention
                                     else -> status.textTertiary
                                 },
-                            ),
-                    )
-                    Text(
-                        text = categoryName(row.category),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onBackground,
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(start = Spacing.m),
-                    )
-                    row.delta?.let { delta ->
+                                modifier = Modifier.padding(end = Spacing.m),
+                            )
+                        }
                         Text(
-                            text = (if (delta > 0) "+" else "−") +
-                                "${(abs(delta) * 100).roundToInt()}%",
-                            style = NumberSmall,
-                            color = when {
-                                row.isAnomalous -> status.problem
-                                delta > 0 -> status.attention
-                                else -> status.textTertiary
-                            },
-                            modifier = Modifier.padding(end = Spacing.m),
+                            text = Money.format(row.amountMinor, state.baseCurrency, locale),
+                            style = MoneyRow,
+                            color = MaterialTheme.colorScheme.onBackground,
                         )
                     }
-                    Text(
-                        text = Money.format(row.amountMinor, state.baseCurrency, locale),
-                        style = MoneyRow,
-                        color = MaterialTheme.colorScheme.onBackground,
-                    )
                 }
-                HorizontalDivider(
-                    color = status.divider,
-                    modifier = Modifier.padding(horizontal = Spacing.screenPadding),
-                )
             }
         }
 
@@ -326,36 +359,23 @@ fun StatsScreen(
                     ),
                 )
                 state.insights.forEach { insight ->
-                    Text(
-                        text = insightText(insight, state),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onBackground,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = Spacing.screenPadding, vertical = Spacing.xs)
-                            .clip(RoundedCornerShape(Radius.card))
-                            .background(status.surfaceRaised)
-                            .padding(Spacing.l),
-                    )
+                    BolhCard(
+                        accent = status.attention,
+                        modifier = Modifier.padding(
+                            horizontal = Spacing.screenPadding,
+                            vertical = Spacing.xs,
+                        ),
+                    ) {
+                        Text(
+                            text = insightText(insight, state),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onBackground,
+                        )
+                    }
                 }
             }
         }
     }
-}
-
-/** Заголовок блока цветом своего раздела (§7). */
-@Composable
-private fun BlockHeader(title: String, color: Color) {
-    Text(
-        text = title,
-        style = MaterialTheme.typography.labelLarge,
-        color = color,
-        modifier = Modifier.padding(
-            start = Spacing.screenPadding,
-            top = Spacing.xl,
-            bottom = Spacing.xs,
-        ),
-    )
 }
 
 /** Честная пустая строка вместо спрятанного блока: раздел есть, данных нет. */
@@ -365,37 +385,16 @@ private fun EmptyLine(text: String) {
         text = text,
         style = MaterialTheme.typography.bodyMedium,
         color = LocalStatusColors.current.textTertiary,
-        modifier = Modifier.padding(
-            horizontal = Spacing.screenPadding,
-            vertical = Spacing.s,
-        ),
     )
 }
 
+/** Разделитель внутри карточки: тише обводки, иначе рамки спорят. */
 @Composable
-private fun Metric(
-    label: String,
-    value: String,
-    color: Color,
-    modifier: Modifier = Modifier,
-) {
-    val status = LocalStatusColors.current
-    Column(modifier = modifier.padding(end = Spacing.s)) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelMedium,
-            color = status.textTertiary,
-        )
-        // Сумма вроде «1 227,50 €» в трёх колонках не помещается в одну строку,
-        // поэтому ей разрешено переноситься, а не обрезаться многоточием.
-        Text(
-            text = value,
-            style = MaterialTheme.typography.titleMedium,
-            color = color,
-            maxLines = 2,
-            modifier = Modifier.padding(top = Spacing.xs),
-        )
-    }
+private fun InnerDivider() {
+    HorizontalDivider(
+        color = LocalStatusColors.current.divider,
+        modifier = Modifier.padding(vertical = Spacing.m),
+    )
 }
 
 /** Столбики темнее в прошлом периоде, ярче ближе к сегодня (§7). */
@@ -407,7 +406,7 @@ private fun BarChart(bars: List<StatBar>, color: Color) {
         horizontalArrangement = Arrangement.spacedBy(3.dp),
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = Spacing.screenPadding, vertical = Spacing.m),
+            .padding(bottom = Spacing.l),
     ) {
         bars.forEach { bar ->
             val value = (bar.value ?: 0.0).toFloat()

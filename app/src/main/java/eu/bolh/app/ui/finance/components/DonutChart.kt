@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import eu.bolh.app.ui.theme.MoneyHero
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,8 +29,8 @@ fun DonutChart(
     centerText: String,
     trackColor: Color,
     modifier: Modifier = Modifier,
-    diameter: Dp = 150.dp,
-    thickness: Dp = 18.dp,
+    diameter: Dp = 190.dp,
+    thickness: Dp = 22.dp,
 ) {
     Box(modifier = modifier.size(diameter), contentAlignment = Alignment.Center) {
         Canvas(modifier = Modifier.size(diameter)) {
@@ -68,9 +69,11 @@ fun DonutChart(
                 start += sweep
             }
         }
+        // Главная цифра живёт внутри кольца: человек ищет «сколько всего»,
+        // и не должен искать это где-то сбоку.
         Text(
             text = centerText,
-            style = MaterialTheme.typography.titleMedium,
+            style = MoneyHero,
             color = MaterialTheme.colorScheme.onBackground,
         )
     }

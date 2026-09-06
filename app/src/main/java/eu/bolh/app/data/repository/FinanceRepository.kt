@@ -118,6 +118,21 @@ class FinanceRepository(
         )
     }
 
+    /**
+     * Цвета готовых категорий подтягиваются при каждом заходе в финансы.
+     *
+     * Палитра — часть приложения, а не пользовательские данные: если она
+     * поменялась, старые записи должны догнать её, иначе у человека,
+     * поставившего приложение раньше, кольцо навсегда останется одноцветным.
+     * Свои категории не трогаются — у них isSystem = 0.
+     */
+    suspend fun refreshSystemCategoryColors() {
+        val now = clock.millis()
+        SystemCategories.all.forEach { category ->
+            dao.updateSystemCategoryColor(category.key, category.colorArgb, now)
+        }
+    }
+
     suspend fun createCategory(name: String, icon: String, colorArgb: Int, kind: CategoryKind) {
         val now = clock.millis()
         dao.upsertCategory(

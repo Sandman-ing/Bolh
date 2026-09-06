@@ -22,6 +22,8 @@ data class BolhStatusColors(
     val textSecondary: Color = TextSecondary,
     val textTertiary: Color = TextTertiary,
     val divider: Color = Divider,
+    val stroke: Color = Stroke,
+    val strokeInner: Color = StrokeInner,
     val surfaceRaised: Color = Surface1,
     val surfaceSunken: Color = Surface2,
 )

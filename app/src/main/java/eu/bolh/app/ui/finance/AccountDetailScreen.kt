@@ -46,13 +46,16 @@ import eu.bolh.app.domain.model.Category
 import eu.bolh.app.domain.model.Transaction
 import eu.bolh.app.domain.templates.SystemCategories
 import eu.bolh.app.ui.common.BolhIcons
+import eu.bolh.app.ui.common.BolhCard
 import eu.bolh.app.ui.common.ConfirmDeleteDialog
+import eu.bolh.app.ui.common.MetricChip
 import eu.bolh.app.ui.common.Money
 import eu.bolh.app.ui.common.rememberLocale
 import eu.bolh.app.ui.theme.Ink
 import eu.bolh.app.ui.theme.LocalStatusColors
-import eu.bolh.app.ui.theme.MoneyLarge
+import eu.bolh.app.ui.theme.MoneyHero
 import eu.bolh.app.ui.theme.MoneyRow
+import eu.bolh.app.ui.theme.Radius
 import eu.bolh.app.ui.theme.Spacing
 import java.time.format.DateTimeFormatter
 
@@ -145,30 +148,39 @@ fun AccountDetailScreen(
             contentPadding = PaddingValues(bottom = Spacing.xxl),
         ) {
             item(key = "balance") {
-                Text(
-                    text = Money.format(state.balanceMinor, account.currencyCode, locale),
-                    style = MoneyLarge,
-                    color = if (state.balanceMinor < 0L) {
-                        status.problem
-                    } else {
-                        MaterialTheme.colorScheme.onBackground
-                    },
+                BolhCard(
                     modifier = Modifier.padding(
-                        start = Spacing.screenPadding,
-                        end = Spacing.screenPadding,
-                        bottom = Spacing.m,
+                        horizontal = Spacing.screenPadding,
+                        vertical = Spacing.s,
                     ),
-                )
+                ) {
+                    Text(
+                        text = stringResource(R.string.account_balance_hint),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = status.textTertiary,
+                    )
+                    Text(
+                        text = Money.format(state.balanceMinor, account.currencyCode, locale),
+                        style = MoneyHero,
+                        color = if (state.balanceMinor < 0L) {
+                            status.problem
+                        } else {
+                            MaterialTheme.colorScheme.onBackground
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = Spacing.xs),
+                    )
+                }
             }
 
             if (editing) {
                 item(key = "edit") {
-                    Column(
-                        modifier = Modifier
-                            .padding(horizontal = Spacing.screenPadding)
-                            .clip(RoundedCornerShape(14.dp))
-                            .background(status.surfaceRaised)
-                            .padding(Spacing.l),
+                    BolhCard(
+                        modifier = Modifier.padding(
+                            horizontal = Spacing.screenPadding,
+                            vertical = Spacing.s,
+                        ),
                     ) {
                         OutlinedTextField(
                             value = name,
@@ -257,18 +269,17 @@ private fun androidx.compose.foundation.lazy.LazyListScope.section(
                 start = Spacing.screenPadding,
                 end = Spacing.screenPadding,
                 top = Spacing.xl,
-                bottom = Spacing.xs,
+                bottom = Spacing.s,
             ),
         ) {
             Text(
                 text = title,
-                style = MaterialTheme.typography.labelLarge,
-                color = status.textTertiary,
+                style = MaterialTheme.typography.titleMedium,
+                color = status.textSecondary,
                 modifier = Modifier.weight(1f),
             )
-            Text(
+            MetricChip(
                 text = Money.format(total, currency, locale),
-                style = MoneyRow,
                 color = accent,
             )
         }
@@ -276,15 +287,18 @@ private fun androidx.compose.foundation.lazy.LazyListScope.section(
 
     if (rows.isEmpty()) {
         item(key = "empty-$title") {
-            Text(
-                text = stringResource(R.string.tx_list_empty),
-                style = MaterialTheme.typography.bodyMedium,
-                color = LocalStatusColors.current.textTertiary,
+            BolhCard(
                 modifier = Modifier.padding(
                     horizontal = Spacing.screenPadding,
-                    vertical = Spacing.s,
+                    vertical = Spacing.xs,
                 ),
-            )
+            ) {
+                Text(
+                    text = stringResource(R.string.tx_list_empty),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = LocalStatusColors.current.textTertiary,
+                )
+            }
         }
         return
     }
@@ -295,20 +309,24 @@ private fun androidx.compose.foundation.lazy.LazyListScope.section(
         val locale = rememberLocale()
         val category = transaction.categoryId?.let { categories[it] }
 
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
+        BolhCard(
+            corner = Radius.block,
+            contentPadding = PaddingValues(
+                horizontal = Spacing.l,
+                vertical = Spacing.m,
+            ),
             modifier = Modifier
-                .fillMaxWidth()
+                .padding(
+                    horizontal = Spacing.screenPadding,
+                    vertical = Spacing.xs,
+                )
                 .combinedClickable(
                     onClick = {},
                     onLongClick = { onLongClick(transaction) },
                     onLongClickLabel = stringResource(R.string.common_delete),
-                )
-                .padding(
-                    horizontal = Spacing.screenPadding,
-                    vertical = Spacing.financeRowVertical,
                 ),
         ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(
                 painter = painterResource(BolhIcons.resFor(category?.icon ?: "payments")),
                 contentDescription = null,
@@ -338,10 +356,7 @@ private fun androidx.compose.foundation.lazy.LazyListScope.section(
                 color = accent,
             )
         }
-        HorizontalDivider(
-            color = status.divider,
-            modifier = Modifier.padding(start = Spacing.screenPadding),
-        )
+        }
     }
 }
 

@@ -10,14 +10,11 @@ import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -29,11 +26,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import eu.bolh.app.BolhApplication
 import eu.bolh.app.R
-import eu.bolh.app.data.prefs.SettingsStore
-import eu.bolh.app.ui.common.rememberLocalizedContext
 import eu.bolh.app.ui.finance.AccountDetailScreen
 import eu.bolh.app.ui.finance.AccountDetailViewModel
 import eu.bolh.app.ui.finance.AccountEditorScreen
@@ -79,23 +72,6 @@ object Routes {
 
 @Composable
 fun BolhApp(navController: NavHostController = rememberNavController()) {
-    val application = LocalContext.current.applicationContext as BolhApplication
-    val language by application.container.settings.language
-        .collectAsStateWithLifecycle(initialValue = SettingsStore.LANGUAGE_SYSTEM)
-    val localized = rememberLocalizedContext(language)
-
-    // Контекст и конфигурация подменяются вместе: иначе тексты переключатся,
-    // а даты и суммы останутся на прежнем языке.
-    CompositionLocalProvider(
-        LocalContext provides localized,
-        LocalConfiguration provides localized.resources.configuration,
-    ) {
-        BolhAppContent(navController)
-    }
-}
-
-@Composable
-private fun BolhAppContent(navController: NavHostController) {
     val backStackEntry by navController.currentBackStackEntryAsState()
     val route = backStackEntry?.destination?.route
     val tab = BolhDestination.entries.firstOrNull { it.route == route }

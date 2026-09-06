@@ -30,6 +30,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -49,12 +50,14 @@ import eu.bolh.app.domain.model.Transaction
 import eu.bolh.app.domain.model.TransactionType
 import eu.bolh.app.domain.templates.SystemCategories
 import eu.bolh.app.ui.common.BolhIcons
+import eu.bolh.app.ui.common.BolhCard
 import eu.bolh.app.ui.common.ConfirmDeleteDialog
 import eu.bolh.app.ui.common.Money
 import eu.bolh.app.ui.common.rememberLocale
 import eu.bolh.app.ui.theme.Ink
 import eu.bolh.app.ui.theme.LocalStatusColors
 import eu.bolh.app.ui.theme.MoneyRow
+import eu.bolh.app.ui.theme.Radius
 import eu.bolh.app.ui.theme.Spacing
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -97,6 +100,11 @@ class TransactionsViewModel(private val finance: FinanceRepository) : ViewModel(
         viewModelScope.launch { finance.deleteTransaction(id) }
     }
 
+    /** Удаление пачкой: разбирать список по одной строке — работа, а не решение. */
+    fun delete(ids: Set<String>) {
+        viewModelScope.launch { ids.forEach { finance.deleteTransaction(it) } }
+    }
+
     companion object {
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {
@@ -123,16 +131,24 @@ fun TransactionsScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
     val status = LocalStatusColors.current
     val locale = rememberLocale()
-    var pending by remember { mutableStateOf<Transaction?>(null) }
+    // Выбор живёт на экране, а не во ViewModel: он не переживает уход
+    // с экрана и ничего не значит для данных.
+    var selection by remember { mutableStateOf(emptySet<String>()) }
+    var confirming by remember { mutableStateOf(false) }
+    val selecting = selection.isNotEmpty()
 
-    pending?.let { transaction ->
+    if (confirming) {
         ConfirmDeleteDialog(
-            title = stringResource(
-                R.string.confirm_delete_transaction,
-                Money.format(transaction.amountMinor, transaction.currencyCode, locale),
+            title = pluralStringResource(
+                R.plurals.confirm_delete_transactions,
+                selection.size,
+                selection.size,
             ),
-            onConfirm = { viewModel.delete(transaction.id) },
-            onDismiss = { pending = null },
+            onConfirm = {
+                viewModel.delete(selection)
+                selection = emptySet()
+            },
+            onDismiss = { confirming = false },
         )
     }
 
@@ -143,22 +159,57 @@ fun TransactionsScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = stringResource(R.string.tx_list_title),
+                        text = if (selecting) {
+                            stringResource(R.string.tx_selected, selection.size)
+                        } else {
+                            stringResource(R.string.tx_list_title)
+                        },
                         style = MaterialTheme.typography.titleLarge,
                     )
                 },
                 navigationIcon = {
                     Icon(
-                        painter = painterResource(R.drawable.ic_arrow_back),
+                        painter = painterResource(
+                            if (selecting) R.drawable.ic_close else R.drawable.ic_arrow_back,
+                        ),
                         contentDescription = null,
                         tint = status.textSecondary,
                         modifier = Modifier
                             .padding(start = Spacing.s)
                             .size(40.dp)
                             .clip(CircleShape)
-                            .clickable(onClick = onBack)
+                            .clickable {
+                                if (selecting) selection = emptySet() else onBack()
+                            }
                             .padding(8.dp),
                     )
+                },
+                actions = {
+                    if (selecting) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_select_all),
+                            contentDescription = stringResource(R.string.tx_select_all),
+                            tint = status.textSecondary,
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(CircleShape)
+                                .clickable {
+                                    selection = state.transactions.map { it.id }.toSet()
+                                }
+                                .padding(8.dp),
+                        )
+                        Icon(
+                            painter = painterResource(R.drawable.ic_delete),
+                            contentDescription = stringResource(R.string.common_delete),
+                            tint = status.problem,
+                            modifier = Modifier
+                                .padding(end = Spacing.s)
+                                .size(40.dp)
+                                .clip(CircleShape)
+                                .clickable { confirming = true }
+                                .padding(8.dp),
+                        )
+                    }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Ink,
@@ -207,11 +258,18 @@ fun TransactionsScreen(
                         category = transaction.categoryId?.let { state.categoriesById[it] },
                         account = state.accountsById[transaction.accountId],
                         locale = locale,
-                        onLongClick = { pending = transaction },
-                    )
-                    HorizontalDivider(
-                        color = status.divider,
-                        modifier = Modifier.padding(start = Spacing.screenPadding),
+                        selected = transaction.id in selection,
+                        selecting = selecting,
+                        onClick = {
+                            if (selecting) {
+                                selection = if (transaction.id in selection) {
+                                    selection - transaction.id
+                                } else {
+                                    selection + transaction.id
+                                }
+                            }
+                        },
+                        onLongClick = { selection = selection + transaction.id },
                     )
                 }
             }
@@ -226,24 +284,42 @@ private fun TransactionRow(
     category: Category?,
     account: Account?,
     locale: Locale,
+    selected: Boolean,
+    selecting: Boolean,
+    onClick: () -> Unit,
     onLongClick: () -> Unit,
 ) {
     val status = LocalStatusColors.current
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
+    BolhCard(
+        corner = Radius.block,
+        accent = if (selected) MaterialTheme.colorScheme.primary else null,
+        contentPadding = PaddingValues(
+            horizontal = Spacing.l,
+            vertical = Spacing.m,
+        ),
         modifier = Modifier
-            .fillMaxWidth()
+            .padding(horizontal = Spacing.screenPadding, vertical = Spacing.xs)
             .combinedClickable(
-                onClick = {},
+                onClick = onClick,
                 onLongClick = onLongClick,
                 onLongClickLabel = stringResource(R.string.common_delete),
-            )
-            .padding(horizontal = Spacing.screenPadding, vertical = Spacing.financeRowVertical),
+            ),
     ) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
         Icon(
-            painter = painterResource(BolhIcons.resFor(category?.icon ?: "payments")),
+            painter = painterResource(
+                if (selecting && selected) {
+                    R.drawable.ic_check
+                } else {
+                    BolhIcons.resFor(category?.icon ?: "payments")
+                },
+            ),
             contentDescription = null,
-            tint = status.textSecondary,
+            tint = if (selected) {
+                MaterialTheme.colorScheme.primary
+            } else {
+                status.textSecondary
+            },
             modifier = Modifier.size(18.dp),
         )
         Column(
@@ -273,6 +349,7 @@ private fun TransactionRow(
                 TransactionType.Expense -> MaterialTheme.colorScheme.onBackground
             },
         )
+    }
     }
 }
 
