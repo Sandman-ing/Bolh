@@ -257,6 +257,14 @@ class FinanceRepository(
         dao.upsertRecurring(payment.toEntity(createdAt = now, updatedAt = now))
     }
 
+    /** Правка платежа: дата заведения остаётся прежней, меняется только запись. */
+    suspend fun updateRecurring(payment: RecurringPayment) {
+        val existing = dao.recurringById(payment.id) ?: return
+        dao.upsertRecurring(
+            payment.toEntity(createdAt = existing.createdAt, updatedAt = clock.millis()),
+        )
+    }
+
     /**
      * «Записать» из уведомления (§6.5): операция создаётся только по нажатию,
      * и тогда же платёж уезжает на следующий период. Ничего не появляется

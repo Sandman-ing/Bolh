@@ -64,6 +64,8 @@ fun TransactionSheet(
     onDismiss: () -> Unit,
     onAddAccount: () -> Unit,
     modifier: Modifier = Modifier,
+    /** Счёт, с которого открыли шторку: изнутри счёта выбирать его заново — лишний шаг. */
+    accountId: String? = null,
     viewModel: TransactionEditorViewModel = viewModel(factory = TransactionEditorViewModel.Factory),
 ) {
     val draft by viewModel.draft.collectAsStateWithLifecycle()
@@ -73,9 +75,10 @@ fun TransactionSheet(
     val context = LocalContext.current
     val locale = rememberLocale()
 
-    LaunchedEffect(options.accounts) {
+    LaunchedEffect(options.accounts, accountId) {
         if (draft.accountId == null) {
-            options.accounts.firstOrNull()?.let { viewModel.setAccount(it.id) }
+            val preselected = accountId ?: options.accounts.firstOrNull()?.id
+            preselected?.let { viewModel.setAccount(it) }
         }
     }
 

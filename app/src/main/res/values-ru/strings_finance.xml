@@ -9,8 +9,8 @@
     <string name="finance_view_dynamics">Динамика</string>
     <string name="finance_hide_obligatory">без обязательных</string>
     <string name="finance_next_payment">Ближайший платёж</string>
-    <string name="finance_record">записать</string>
-    <string name="finance_skip">пропустить</string>
+    <string name="finance_record">Записать</string>
+    <string name="finance_skip">Пропустить</string>
     <string name="finance_no_spend">В этом месяце трат ещё не было</string>
     <string name="finance_uncategorised">Без категории</string>
     <string name="finance_jar_progress">%1$s из %2$s</string>
@@ -18,6 +18,9 @@
     <string name="account_new_title">Новый счёт</string>
     <string name="account_name_hint">Название</string>
     <string name="account_balance_hint">Текущий остаток</string>
+    <string name="account_new_balance">Новый остаток</string>
+    <string name="account_balance_edit_hint">поправить</string>
+    <string name="account_add_transaction">Записать</string>
     <string name="account_type_cash">Наличные</string>
     <string name="account_type_card">Карта</string>
     <string name="account_type_bank">Банк</string>
@@ -45,6 +48,7 @@
     <string name="recurring_period_year">год</string>
     <string name="recurring_first_date">Первое списание</string>
     <string name="recurring_add">Добавить регулярный платёж</string>
+    <string name="recurring_edit_title">Платёж</string>
     <string name="recurring_interval">Повторять через</string>
     <string name="account_edit">Изменить</string>
     <string name="account_expenses">Расходы</string>

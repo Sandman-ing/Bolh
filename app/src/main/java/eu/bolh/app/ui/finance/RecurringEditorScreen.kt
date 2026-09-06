@@ -46,12 +46,14 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.viewModelFactory
 import eu.bolh.app.BolhApplication
 import eu.bolh.app.R
@@ -65,6 +67,7 @@ import eu.bolh.app.domain.model.RecurrenceUnit
 import eu.bolh.app.domain.model.RecurringPayment
 import eu.bolh.app.domain.templates.SystemCategories
 import eu.bolh.app.ui.common.BolhIcons
+import eu.bolh.app.ui.common.Money
 import eu.bolh.app.ui.common.rememberLocale
 import eu.bolh.app.ui.theme.Ink
 import eu.bolh.app.ui.theme.LocalStatusColors
@@ -89,10 +92,21 @@ data class RecurringOptions(
 class RecurringEditorViewModel(
     private val finance: FinanceRepository,
     private val reminders: RecurringReminderScheduler,
+    /** Пусто — заводим новый платёж; иначе правим существующий. */
+    private val paymentId: String? = null,
 ) : ViewModel() {
 
     private val _saved = MutableStateFlow(false)
     val saved: StateFlow<Boolean> = _saved.asStateFlow()
+
+    private val _existing = MutableStateFlow<RecurringPayment?>(null)
+    val existing: StateFlow<RecurringPayment?> = _existing.asStateFlow()
+
+    init {
+        if (paymentId != null) {
+            viewModelScope.launch { _existing.value = finance.findRecurring(paymentId) }
+        }
+    }
 
     val options: StateFlow<RecurringOptions> = combine(
         finance.observeAccounts(),
@@ -116,7 +130,7 @@ class RecurringEditorViewModel(
         if (name.isBlank() || amountMinor <= 0L) return
         viewModelScope.launch {
             val payment = RecurringPayment(
-                id = UUID.randomUUID().toString(),
+                id = paymentId ?: UUID.randomUUID().toString(),
                 name = name.trim(),
                 amountMinor = amountMinor,
                 currencyCode = finance.baseCurrency,
@@ -125,19 +139,28 @@ class RecurringEditorViewModel(
                 recurrence = recurrence,
                 nextDate = firstDate,
             )
-            finance.createRecurring(payment)
+            if (paymentId == null) {
+                finance.createRecurring(payment)
+            } else {
+                finance.updateRecurring(payment)
+            }
+            // Напоминание перезаводится по новой дате: иначе оно придёт по старой.
             reminders.schedule(payment)
             _saved.value = true
         }
     }
 
     companion object {
+        const val ARG_PAYMENT_ID = "paymentId"
+
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {
                 val app = this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as BolhApplication
+                val handle: SavedStateHandle = createSavedStateHandle()
                 RecurringEditorViewModel(
                     finance = app.container.financeRepository,
                     reminders = app.container.recurringScheduler,
+                    paymentId = handle.get<String>(ARG_PAYMENT_ID),
                 )
             }
         }
@@ -169,6 +192,22 @@ fun RecurringEditorScreen(
     var unit by remember { mutableStateOf(RecurrenceUnit.Month) }
     var interval by remember { mutableStateOf(1) }
     var firstDate by remember { mutableStateOf(LocalDate.now().plusDays(1)) }
+
+    val existing by viewModel.existing.collectAsStateWithLifecycle()
+
+    // Поля заполняются один раз, когда платёж прочитан: иначе правка
+    // затиралась бы обратно на каждой перерисовке.
+    LaunchedEffect(existing) {
+        existing?.let { payment ->
+            name = payment.name
+            amount = Money.formatPlain(payment.amountMinor, locale = locale)
+            accountId = payment.accountId
+            categoryId = payment.categoryId
+            unit = payment.recurrence.unit
+            interval = payment.recurrence.interval
+            firstDate = payment.nextDate
+        }
+    }
 
     LaunchedEffect(saved) { if (saved) onDone() }
     LaunchedEffect(options.accounts) {

@@ -18,6 +18,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -36,6 +37,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -48,6 +50,7 @@ import eu.bolh.app.domain.templates.SystemCategories
 import eu.bolh.app.ui.common.BolhIcons
 import eu.bolh.app.ui.common.BolhCard
 import eu.bolh.app.ui.common.ConfirmDeleteDialog
+import eu.bolh.app.ui.common.PillButton
 import eu.bolh.app.ui.common.MetricChip
 import eu.bolh.app.ui.common.Money
 import eu.bolh.app.ui.common.rememberLocale
@@ -69,6 +72,7 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun AccountDetailScreen(
     onBack: () -> Unit,
+    onAddAccount: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: AccountDetailViewModel = viewModel(factory = AccountDetailViewModel.Factory),
 ) {
@@ -80,7 +84,12 @@ fun AccountDetailScreen(
     var editing by remember { mutableStateOf(false) }
     var name by remember { mutableStateOf("") }
     var balance by remember { mutableStateOf("") }
-    var pending by remember { mutableStateOf<Transaction?>(null) }
+    // Выбор живёт на экране: он не переживает уход отсюда и ничего не значит
+    // для данных — в отличие от самих операций.
+    var selection by remember { mutableStateOf(emptySet<String>()) }
+    var confirming by remember { mutableStateOf(false) }
+    var showSheet by remember { mutableStateOf(false) }
+    val selecting = selection.isNotEmpty()
     // Строки берутся до списка: внутри LazyColumn композабл-вызовов уже нельзя.
     val expensesTitle = stringResource(R.string.account_expenses)
     val incomeTitle = stringResource(R.string.account_income)
@@ -92,14 +101,29 @@ fun AccountDetailScreen(
         }
     }
 
-    pending?.let { transaction ->
+    if (confirming) {
         ConfirmDeleteDialog(
-            title = stringResource(
-                R.string.confirm_delete_transaction,
-                Money.format(transaction.amountMinor, transaction.currencyCode, locale),
+            title = pluralStringResource(
+                R.plurals.confirm_delete_transactions,
+                selection.size,
+                selection.size,
             ),
-            onConfirm = { viewModel.deleteTransaction(transaction.id) },
-            onDismiss = { pending = null },
+            onConfirm = {
+                viewModel.deleteTransactions(selection)
+                selection = emptySet()
+            },
+            onDismiss = { confirming = false },
+        )
+    }
+
+    if (showSheet && account != null) {
+        TransactionSheet(
+            onDismiss = { showSheet = false },
+            onAddAccount = {
+                showSheet = false
+                onAddAccount()
+            },
+            accountId = account.id,
         )
     }
 
@@ -110,26 +134,58 @@ fun AccountDetailScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = account?.name.orEmpty(),
+                        text = if (selecting) {
+                            stringResource(R.string.tx_selected, selection.size)
+                        } else {
+                            account?.name.orEmpty()
+                        },
                         style = MaterialTheme.typography.titleLarge,
                     )
                 },
                 navigationIcon = {
                     Icon(
-                        painter = painterResource(R.drawable.ic_arrow_back),
+                        painter = painterResource(
+                            if (selecting) R.drawable.ic_close else R.drawable.ic_arrow_back,
+                        ),
                         contentDescription = null,
                         tint = status.textSecondary,
                         modifier = Modifier
                             .padding(start = Spacing.s)
                             .size(40.dp)
                             .clip(CircleShape)
-                            .clickable(onClick = onBack)
+                            .clickable {
+                                if (selecting) selection = emptySet() else onBack()
+                            }
                             .padding(8.dp),
                     )
                 },
                 actions = {
-                    TextButton(onClick = { editing = !editing }) {
-                        Text(stringResource(R.string.account_edit))
+                    if (selecting) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_select_all),
+                            contentDescription = stringResource(R.string.tx_select_all),
+                            tint = status.textSecondary,
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(CircleShape)
+                                .clickable {
+                                    selection = (state.expenses + state.income)
+                                        .map { it.id }
+                                        .toSet()
+                                }
+                                .padding(8.dp),
+                        )
+                        Icon(
+                            painter = painterResource(R.drawable.ic_delete),
+                            contentDescription = stringResource(R.string.common_delete),
+                            tint = status.problem,
+                            modifier = Modifier
+                                .padding(end = Spacing.s)
+                                .size(40.dp)
+                                .clip(CircleShape)
+                                .clickable { confirming = true }
+                                .padding(8.dp),
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -137,6 +193,22 @@ fun AccountDetailScreen(
                     titleContentColor = MaterialTheme.colorScheme.onBackground,
                 ),
             )
+        },
+        floatingActionButton = {
+            // Трату записывают, находясь внутри счёта, а не возвращаясь наружу.
+            if (!selecting) {
+                FloatingActionButton(
+                    onClick = { showSheet = true },
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = Ink,
+                    shape = RoundedCornerShape(Radius.card),
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_plus),
+                        contentDescription = stringResource(R.string.account_add_transaction),
+                    )
+                }
+            }
         },
     ) { innerPadding ->
         if (account == null) return@Scaffold
@@ -148,17 +220,38 @@ fun AccountDetailScreen(
             contentPadding = PaddingValues(bottom = Spacing.xxl),
         ) {
             item(key = "balance") {
+                // Сумма правится нажатием по самой сумме. Слово «Изменить» в углу
+                // экрана искали дольше, чем меняли.
                 BolhCard(
+                    onClick = { editing = !editing },
                     modifier = Modifier.padding(
                         horizontal = Spacing.screenPadding,
                         vertical = Spacing.s,
                     ),
                 ) {
-                    Text(
-                        text = stringResource(R.string.account_balance_hint),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = status.textTertiary,
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = stringResource(R.string.account_balance_hint),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = status.textTertiary,
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(end = Spacing.s),
+                        )
+                        Text(
+                            text = stringResource(R.string.account_balance_edit_hint),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                        Icon(
+                            painter = painterResource(R.drawable.ic_edit_note),
+                            contentDescription = stringResource(R.string.account_edit),
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier
+                                .padding(start = Spacing.xs)
+                                .size(18.dp),
+                        )
+                    }
                     Text(
                         text = Money.format(state.balanceMinor, account.currencyCode, locale),
                         style = MoneyHero,
@@ -192,7 +285,7 @@ fun AccountDetailScreen(
                         OutlinedTextField(
                             value = balance,
                             onValueChange = { balance = it },
-                            label = { Text(stringResource(R.string.account_balance_hint)) },
+                            label = { Text(stringResource(R.string.account_new_balance)) },
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                             modifier = Modifier
@@ -207,21 +300,24 @@ fun AccountDetailScreen(
                             color = status.textTertiary,
                             modifier = Modifier.padding(top = Spacing.xs),
                         )
-                        Row(modifier = Modifier.padding(top = Spacing.s)) {
-                            TextButton(
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(Spacing.s),
+                            modifier = Modifier.padding(top = Spacing.m),
+                        ) {
+                            PillButton(
+                                text = stringResource(R.string.account_save),
                                 onClick = {
                                     viewModel.save(name, balance)
                                     editing = false
                                 },
-                            ) {
-                                Text(stringResource(R.string.account_save))
-                            }
-                            TextButton(onClick = { editing = false }) {
-                                Text(
-                                    text = stringResource(R.string.common_cancel),
-                                    color = status.textSecondary,
-                                )
-                            }
+                                modifier = Modifier.weight(1f),
+                            )
+                            PillButton(
+                                text = stringResource(R.string.common_cancel),
+                                onClick = { editing = false },
+                                color = status.textSecondary,
+                                modifier = Modifier.weight(1f),
+                            )
                         }
                     }
                 }
@@ -234,7 +330,10 @@ fun AccountDetailScreen(
                 rows = state.expenses,
                 categories = state.categoriesById,
                 accent = status.textSecondary,
-                onLongClick = { pending = it },
+                selection = selection,
+                selecting = selecting,
+                onToggle = { selection = selection.toggle(it) },
+                onLongClick = { selection = selection + it.id },
             )
 
             section(
@@ -244,7 +343,10 @@ fun AccountDetailScreen(
                 rows = state.income,
                 categories = state.categoriesById,
                 accent = status.success,
-                onLongClick = { pending = it },
+                selection = selection,
+                selecting = selecting,
+                onToggle = { selection = selection.toggle(it) },
+                onLongClick = { selection = selection + it.id },
             )
         }
     }
@@ -258,6 +360,9 @@ private fun androidx.compose.foundation.lazy.LazyListScope.section(
     rows: List<Transaction>,
     categories: Map<String, Category>,
     accent: androidx.compose.ui.graphics.Color,
+    selection: Set<String>,
+    selecting: Boolean,
+    onToggle: (String) -> Unit,
     onLongClick: (Transaction) -> Unit,
 ) {
     item(key = "header-$title") {
@@ -309,8 +414,10 @@ private fun androidx.compose.foundation.lazy.LazyListScope.section(
         val locale = rememberLocale()
         val category = transaction.categoryId?.let { categories[it] }
 
+        val selected = transaction.id in selection
         BolhCard(
             corner = Radius.block,
+            accent = if (selected) MaterialTheme.colorScheme.primary else null,
             contentPadding = PaddingValues(
                 horizontal = Spacing.l,
                 vertical = Spacing.m,
@@ -321,16 +428,26 @@ private fun androidx.compose.foundation.lazy.LazyListScope.section(
                     vertical = Spacing.xs,
                 )
                 .combinedClickable(
-                    onClick = {},
+                    onClick = { if (selecting) onToggle(transaction.id) },
                     onLongClick = { onLongClick(transaction) },
                     onLongClickLabel = stringResource(R.string.common_delete),
                 ),
         ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(
-                painter = painterResource(BolhIcons.resFor(category?.icon ?: "payments")),
+                painter = painterResource(
+                    if (selecting && selected) {
+                        R.drawable.ic_check
+                    } else {
+                        BolhIcons.resFor(category?.icon ?: "payments")
+                    },
+                ),
                 contentDescription = null,
-                tint = status.textSecondary,
+                tint = if (selected) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    status.textSecondary
+                },
                 modifier = Modifier.size(18.dp),
             )
             Column(
@@ -366,3 +483,7 @@ private fun categoryTitle(category: Category?): String {
     val res = SystemCategories.nameResFor(category.nameKey)
     return if (res != null) stringResource(res) else category.name
 }
+
+/** Переключение выбора одной строки. */
+private fun Set<String>.toggle(id: String): Set<String> =
+    if (id in this) this - id else this + id

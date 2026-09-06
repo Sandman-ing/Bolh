@@ -32,6 +32,7 @@ import eu.bolh.app.ui.finance.AccountDetailViewModel
 import eu.bolh.app.ui.finance.AccountEditorScreen
 import eu.bolh.app.ui.finance.FinanceScreen
 import eu.bolh.app.ui.finance.RecurringEditorScreen
+import eu.bolh.app.ui.finance.RecurringEditorViewModel
 import eu.bolh.app.ui.finance.TransactionSheet
 import eu.bolh.app.ui.finance.TransactionsScreen
 import eu.bolh.app.ui.goals.GoalDetailScreen
@@ -58,10 +59,13 @@ object Routes {
     const val ACCOUNT_NEW = "finance/account/new"
     const val SETTINGS = "settings"
     const val RECURRING_NEW = "finance/recurring/new"
+    const val RECURRING_EDIT = "finance/recurring/edit/{paymentId}"
     const val TRANSACTIONS = "finance/transactions"
     const val ACCOUNT_DETAIL = "finance/account/detail/{accountId}"
 
     fun accountDetail(id: String): String = "finance/account/detail/$id"
+
+    fun recurringEdit(id: String): String = "finance/recurring/edit/$id"
 
     fun habitEdit(id: String): String = "habits/edit/$id"
 
@@ -140,6 +144,9 @@ fun BolhApp(navController: NavHostController = rememberNavController()) {
                         onAddRecurring = { navController.navigate(Routes.RECURRING_NEW) },
                         onOpenTransactions = { navController.navigate(Routes.TRANSACTIONS) },
                         onOpenAccount = { id -> navController.navigate(Routes.accountDetail(id)) },
+                        onOpenRecurring = { id ->
+                            navController.navigate(Routes.recurringEdit(id))
+                        },
                     )
                 }
 
@@ -176,7 +183,10 @@ fun BolhApp(navController: NavHostController = rememberNavController()) {
                         },
                     ),
                 ) {
-                    AccountDetailScreen(onBack = { navController.popBackStack() })
+                    AccountDetailScreen(
+                        onBack = { navController.popBackStack() },
+                        onAddAccount = { navController.navigate(Routes.ACCOUNT_NEW) },
+                    )
                 }
 
                 composable(Routes.TRANSACTIONS) {
@@ -184,6 +194,17 @@ fun BolhApp(navController: NavHostController = rememberNavController()) {
                 }
 
                 composable(Routes.RECURRING_NEW) {
+                    RecurringEditorScreen(onDone = { navController.popBackStack() })
+                }
+
+                composable(
+                    route = Routes.RECURRING_EDIT,
+                    arguments = listOf(
+                        navArgument(RecurringEditorViewModel.ARG_PAYMENT_ID) {
+                            type = NavType.StringType
+                        },
+                    ),
+                ) {
                     RecurringEditorScreen(onDone = { navController.popBackStack() })
                 }
 

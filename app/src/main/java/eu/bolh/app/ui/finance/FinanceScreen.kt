@@ -78,6 +78,7 @@ fun FinanceScreen(
     onAddRecurring: () -> Unit,
     onOpenTransactions: () -> Unit,
     onOpenAccount: (String) -> Unit,
+    onOpenRecurring: (String) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: FinanceViewModel = viewModel(factory = FinanceViewModel.Factory),
 ) {
@@ -273,7 +274,7 @@ fun FinanceScreen(
                             vertical = Spacing.s,
                         )
                         .combinedClickable(
-                            onClick = {},
+                            onClick = { onOpenRecurring(payment.id) },
                             onLongClick = { pendingPayment = payment.id },
                             onLongClickLabel = stringResource(R.string.common_delete),
                         ),

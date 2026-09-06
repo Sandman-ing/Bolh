@@ -98,6 +98,11 @@ class AccountDetailViewModel(
         viewModelScope.launch { finance.deleteTransaction(id) }
     }
 
+    /** Удаление пачкой: разбирать список по одной строке — работа, а не решение. */
+    fun deleteTransactions(ids: Set<String>) {
+        viewModelScope.launch { ids.forEach { finance.deleteTransaction(it) } }
+    }
+
     companion object {
         const val ARG_ACCOUNT_ID = "accountId"
 

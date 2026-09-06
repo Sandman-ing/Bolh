@@ -9,8 +9,8 @@
     <string name="finance_view_dynamics">Trend</string>
     <string name="finance_hide_obligatory">without fixed costs</string>
     <string name="finance_next_payment">Next payment</string>
-    <string name="finance_record">record</string>
-    <string name="finance_skip">skip</string>
+    <string name="finance_record">Record</string>
+    <string name="finance_skip">Skip</string>
     <string name="finance_no_spend">Nothing spent this month yet</string>
     <string name="finance_uncategorised">Without a category</string>
     <string name="finance_jar_progress">%1$s of %2$s</string>
@@ -18,6 +18,9 @@
     <string name="account_new_title">New account</string>
     <string name="account_name_hint">Name</string>
     <string name="account_balance_hint">Current balance</string>
+    <string name="account_new_balance">New balance</string>
+    <string name="account_balance_edit_hint">correct</string>
+    <string name="account_add_transaction">Record</string>
     <string name="account_type_cash">Cash</string>
     <string name="account_type_card">Card</string>
     <string name="account_type_bank">Bank</string>
@@ -45,6 +48,7 @@
     <string name="recurring_period_year">year</string>
     <string name="recurring_first_date">First charge</string>
     <string name="recurring_add">Add a recurring payment</string>
+    <string name="recurring_edit_title">Payment</string>
     <string name="recurring_interval">Repeat every N periods</string>
     <string name="account_edit">Edit</string>
     <string name="account_expenses">Expenses</string>
