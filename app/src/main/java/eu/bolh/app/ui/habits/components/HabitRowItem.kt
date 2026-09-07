@@ -52,13 +52,13 @@ fun HabitRowItem(
 ) {
     val status = LocalStatusColors.current
 
-    Row(
+    Column(
         modifier = modifier
             .fillMaxWidth()
             .clickable(onClick = onOpen)
             .padding(horizontal = Spacing.screenPadding, vertical = Spacing.habitRowVertical),
-        verticalAlignment = Alignment.CenterVertically,
     ) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
         Icon(
             painter = painterResource(BolhIcons.resFor(row.habit.icon)),
             contentDescription = null,
@@ -110,6 +110,32 @@ fun HabitRowItem(
                 onClick = { onMark(EntryLevel.Norm) },
             )
         }
+    }
+
+    // Что здесь минимум, а что норма, человек писал сам — и должен видеть это
+    // под строкой во всю ширину, а не вспоминать при нажатии кнопки (§5.3).
+    if (row.habit.mode == HabitMode.Minimum) {
+        row.habit.minimumLabel?.takeIf { it.isNotBlank() }?.let { label ->
+            Text(
+                text = stringResource(R.string.habit_min_line, label),
+                style = MaterialTheme.typography.labelMedium,
+                color = status.textTertiary,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(top = Spacing.s),
+            )
+        }
+        row.habit.normLabel?.takeIf { it.isNotBlank() }?.let { label ->
+            Text(
+                text = stringResource(R.string.habit_norm_line, label),
+                style = MaterialTheme.typography.labelMedium,
+                color = status.textTertiary,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(top = 2.dp),
+            )
+        }
+    }
     }
 }
 

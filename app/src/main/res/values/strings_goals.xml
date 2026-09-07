@@ -41,6 +41,9 @@
     <string name="goal_tasks_title">Tasks</string>
     <string name="goal_task_hint">Task</string>
     <string name="goal_add_task">Add a task</string>
+    <string name="goal_rename">Rename</string>
+    <string name="goal_task_default">New task</string>
+    <string name="goal_stage_default">New stage</string>
     <string name="goal_save">Save</string>
     <string name="goal_complete">Goal reached</string>
     <string name="goal_delete">Delete</string>

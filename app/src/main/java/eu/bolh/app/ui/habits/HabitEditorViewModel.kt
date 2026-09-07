@@ -135,6 +135,15 @@ class HabitEditorViewModel(
 
     fun setEveningRepeat(value: Boolean) = _draft.update { it.copy(reminderRepeatEvening = value) }
 
+    /**
+     * Дата начала привычки.
+     *
+     * Нужна, чтобы отметить дни до установки приложения: человек читает книгу
+     * третий день, а приложение поставил вчера. Дальше сегодняшнего дня
+     * начало не уезжает — будущее отмечать нечем.
+     */
+    fun setStartDate(value: LocalDate) = _draft.update { it.copy(startDate = value) }
+
     fun toggleAdvanced() = _draft.update { it.copy(advancedExpanded = !it.advancedExpanded) }
 
     fun setGoal(id: String?) = _draft.update { it.copy(goalId = if (it.goalId == id) null else id) }

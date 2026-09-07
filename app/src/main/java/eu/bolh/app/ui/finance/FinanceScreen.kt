@@ -1,5 +1,12 @@
 package eu.bolh.app.ui.finance
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -161,12 +168,29 @@ fun FinanceScreen(
             )
         }
 
+    // Подвкладка меняется со сдвигом в сторону нажатой: резкая подмена
+    // содержимого читается как перезагрузка экрана.
+    AnimatedContent(
+        targetState = tab,
+        transitionSpec = {
+            val forward = targetState.ordinal > initialState.ordinal
+            val shift = if (forward) 1 else -1
+            (
+                slideInHorizontally(tween(TAB_MOVE_MS)) { shift * it / 8 } +
+                    fadeIn(tween(TAB_FADE_MS))
+                ) togetherWith (
+                slideOutHorizontally(tween(TAB_MOVE_MS)) { -shift * it / 8 } +
+                    fadeOut(tween(TAB_FADE_MS))
+                )
+        },
+        label = "finance-tab",
+    ) { shown ->
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         // Запас снизу под плавающую кнопку: иначе она накрывает последнюю строку.
         contentPadding = PaddingValues(bottom = 96.dp),
     ) {
-        if (tab == FinanceTab.Overview) {
+        if (shown == FinanceTab.Overview) {
         item(key = "total") {
             BolhCard(
                 modifier = Modifier.padding(
@@ -477,7 +501,7 @@ fun FinanceScreen(
 
         }
 
-        if (tab == FinanceTab.Payments) {
+        if (shown == FinanceTab.Payments) {
 
         if (state.payments.isEmpty()) {
             item(key = "no-payments") {
@@ -573,7 +597,7 @@ fun FinanceScreen(
 
         }
 
-        if (tab == FinanceTab.Jars) {
+        if (shown == FinanceTab.Jars) {
 
         if (state.jars.isEmpty()) {
             item(key = "no-jars") {
@@ -636,7 +660,12 @@ fun FinanceScreen(
         }
     }
     }
+    }
 }
+
+/** Длительности переключения подвкладки. */
+private const val TAB_MOVE_MS = 220
+private const val TAB_FADE_MS = 150
 
 /**
  * Крупная плитка перехода: значок, название, строка о том, что внутри.

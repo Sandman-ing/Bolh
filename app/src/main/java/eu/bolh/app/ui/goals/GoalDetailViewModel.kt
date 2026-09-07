@@ -220,6 +220,14 @@ class GoalDetailViewModel(
         }
     }
 
+    fun renameStage(stageId: String, name: String) {
+        viewModelScope.launch { goals.renameStage(stageId, name) }
+    }
+
+    fun renameTask(taskId: String, name: String) {
+        viewModelScope.launch { goals.renameTask(taskId, name) }
+    }
+
     fun deleteStage(stageId: String) {
         viewModelScope.launch { goals.deleteStage(stageId) }
     }

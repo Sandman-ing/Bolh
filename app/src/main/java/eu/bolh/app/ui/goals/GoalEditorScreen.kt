@@ -42,11 +42,13 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import eu.bolh.app.R
 import eu.bolh.app.ui.common.BolhIcons
+import eu.bolh.app.ui.common.BolhCard
 import eu.bolh.app.ui.common.rememberLocale
 import eu.bolh.app.ui.theme.Ink
 import eu.bolh.app.ui.theme.LocalStatusColors
 import eu.bolh.app.ui.theme.Radius
 import eu.bolh.app.ui.theme.Spacing
+import java.time.ZoneId
 import java.time.LocalDate
 import java.util.Locale
 
@@ -146,7 +148,10 @@ fun GoalEditorScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable {
-                        val start = draft.deadline ?: LocalDate.now().plusMonths(6)
+                        // Календарь открывается на сегодняшнем месяце, а не через
+                        // полгода: человек ищет свой срок от «сейчас».
+                        val today = LocalDate.now()
+                        val start = draft.deadline ?: today
                         DatePickerDialog(
                             context,
                             { _, year, month, day ->
@@ -155,7 +160,13 @@ fun GoalEditorScreen(
                             start.year,
                             start.monthValue - 1,
                             start.dayOfMonth,
-                        ).show()
+                        ).apply {
+                            // Срок в прошлом бессмыслен: цель к нему уже не успеть.
+                            datePicker.minDate = today
+                                .atStartOfDay(ZoneId.systemDefault())
+                                .toInstant()
+                                .toEpochMilli()
+                        }.show()
                     }
                     .padding(horizontal = Spacing.screenPadding, vertical = Spacing.l),
             ) {
@@ -187,15 +198,23 @@ fun GoalEditorScreen(
 
             if (draft.stagesExpanded) {
                 draft.stageNames.forEachIndexed { index, name ->
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = Spacing.screenPadding, vertical = Spacing.xs),
+                    BolhCard(
+                        corner = Radius.block,
+                        contentPadding = PaddingValues(
+                            start = Spacing.l,
+                            end = Spacing.s,
+                            top = Spacing.xs,
+                            bottom = Spacing.xs,
+                        ),
+                        modifier = Modifier.padding(
+                            horizontal = Spacing.screenPadding,
+                            vertical = Spacing.xs,
+                        ),
                     ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
                             text = name,
-                            style = MaterialTheme.typography.bodyMedium,
+                            style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onBackground,
                             modifier = Modifier.weight(1f),
                         )
@@ -210,20 +229,26 @@ fun GoalEditorScreen(
                                 .padding(8.dp),
                         )
                     }
+                    }
                 }
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(horizontal = Spacing.screenPadding),
+                BolhCard(
+                    corner = Radius.block,
+                    modifier = Modifier.padding(
+                        horizontal = Spacing.screenPadding,
+                        vertical = Spacing.xs,
+                    ),
                 ) {
-                    OutlinedTextField(
-                        value = draft.newStage,
-                        onValueChange = viewModel::setNewStage,
-                        label = { Text(stringResource(R.string.goal_stage_hint)) },
-                        singleLine = true,
-                        modifier = Modifier.weight(1f),
-                    )
-                    TextButton(onClick = viewModel::addStage) {
-                        Text(stringResource(R.string.goal_add_stage))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        OutlinedTextField(
+                            value = draft.newStage,
+                            onValueChange = viewModel::setNewStage,
+                            label = { Text(stringResource(R.string.goal_stage_hint)) },
+                            singleLine = true,
+                            modifier = Modifier.weight(1f),
+                        )
+                        TextButton(onClick = viewModel::addStage) {
+                            Text(stringResource(R.string.goal_add_stage))
+                        }
                     }
                 }
             }

@@ -54,6 +54,11 @@
     <string name="habit_estimate_hint">Минут за раз</string>
     <string name="habit_reminder">Напоминание</string>
     <string name="habit_reminder_evening">Вечерний повтор с предложением минимума</string>
+    <string name="habit_reminder_off">Выключить</string>
+    <string name="habit_start_date">Началась</string>
+    <string name="habit_start_date_note">О днях раньше приложение не спрашивает: привычки тогда ещё не было.</string>
+    <string name="habit_min_line">минимум: %1$s</string>
+    <string name="habit_norm_line">норма: %1$s</string>
     <string name="habit_save">Сохранить</string>
     <string name="habit_delete">Удалить</string>
     <string name="habit_link_goal">Привязать к цели</string>

@@ -1,5 +1,10 @@
 package eu.bolh.app.ui.navigation
 
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -50,6 +55,10 @@ import eu.bolh.app.ui.theme.BolhTheme
 import eu.bolh.app.ui.theme.Ink
 import eu.bolh.app.ui.theme.LocalStatusColors
 import eu.bolh.app.ui.theme.Section
+
+/** Длительности перехода: сдвиг чуть длиннее проявления, иначе движение рвётся. */
+private const val SCREEN_MOVE_MS = 260
+private const val SCREEN_FADE_MS = 180
 
 object Routes {
     const val HABIT_NEW = "habits/new"
@@ -120,10 +129,29 @@ fun BolhApp(navController: NavHostController = rememberNavController()) {
                 }
             },
         ) { innerPadding ->
+            // Экран приезжает сбоку и уходит назад тем же путём. Стандартное
+            // наложение двух экранов друг на друга читается как сбой отрисовки,
+            // а короткий сдвиг сам объясняет, куда человек попал.
             NavHost(
                 navController = navController,
                 startDestination = BolhDestination.start.route,
                 modifier = Modifier.padding(innerPadding),
+                enterTransition = {
+                    slideInHorizontally(tween(SCREEN_MOVE_MS)) { it / 6 } +
+                        fadeIn(tween(SCREEN_FADE_MS))
+                },
+                exitTransition = {
+                    slideOutHorizontally(tween(SCREEN_MOVE_MS)) { -it / 8 } +
+                        fadeOut(tween(SCREEN_FADE_MS))
+                },
+                popEnterTransition = {
+                    slideInHorizontally(tween(SCREEN_MOVE_MS)) { -it / 8 } +
+                        fadeIn(tween(SCREEN_FADE_MS))
+                },
+                popExitTransition = {
+                    slideOutHorizontally(tween(SCREEN_MOVE_MS)) { it / 6 } +
+                        fadeOut(tween(SCREEN_FADE_MS))
+                },
             ) {
                 composable(BolhDestination.Goals.route) {
                     GoalsScreen(

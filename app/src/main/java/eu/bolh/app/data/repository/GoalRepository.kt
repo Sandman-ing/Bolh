@@ -172,6 +172,22 @@ class GoalRepository(
         dao.setStageDone(stageId, if (done) today() else null, clock.millis())
     }
 
+    /**
+     * Переименование этапа и задачи.
+     *
+     * Опечатку исправляют, а не пересоздают цель заново: имя — это подпись
+     * к работе, а не сама работа.
+     */
+    suspend fun renameStage(stageId: String, name: String) {
+        if (name.isBlank()) return
+        dao.renameStage(stageId, name.trim(), clock.millis())
+    }
+
+    suspend fun renameTask(taskId: String, name: String) {
+        if (name.isBlank()) return
+        dao.renameTask(taskId, name.trim(), clock.millis())
+    }
+
     suspend fun deleteStage(stageId: String) {
         dao.softDeleteStage(stageId, clock.millis())
     }

@@ -41,6 +41,9 @@
     <string name="goal_tasks_title">Задачи</string>
     <string name="goal_task_hint">Задача</string>
     <string name="goal_add_task">Добавить задачу</string>
+    <string name="goal_rename">Переименовать</string>
+    <string name="goal_task_default">Новая задача</string>
+    <string name="goal_stage_default">Новый этап</string>
     <string name="goal_save">Сохранить</string>
     <string name="goal_complete">Цель достигнута</string>
     <string name="goal_delete">Удалить</string>

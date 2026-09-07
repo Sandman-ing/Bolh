@@ -55,6 +55,7 @@ import eu.bolh.app.domain.model.GoalStatus
 import eu.bolh.app.ui.common.BolhCard
 import eu.bolh.app.ui.common.MetricChip
 import eu.bolh.app.ui.common.PillButton
+import eu.bolh.app.ui.common.RenameDialog
 import eu.bolh.app.ui.common.BolhIcons
 import eu.bolh.app.ui.common.ConfirmDeleteDialog
 import eu.bolh.app.ui.common.Money
@@ -109,16 +110,18 @@ fun GoalDetailScreen(
     }
 
     pendingStage?.let { (id, name) ->
-        ConfirmDeleteDialog(
-            title = stringResource(R.string.confirm_delete, name),
-            onConfirm = { viewModel.deleteStage(id) },
+        RenameDialog(
+            initial = name,
+            onRename = { viewModel.renameStage(id, it) },
+            onDelete = { viewModel.deleteStage(id) },
             onDismiss = { pendingStage = null },
         )
     }
     pendingTask?.let { (id, name) ->
-        ConfirmDeleteDialog(
-            title = stringResource(R.string.confirm_delete, name),
-            onConfirm = { viewModel.deleteTask(id) },
+        RenameDialog(
+            initial = name,
+            onRename = { viewModel.renameTask(id, it) },
+            onDelete = { viewModel.deleteTask(id) },
             onDismiss = { pendingTask = null },
         )
     }
@@ -608,7 +611,7 @@ fun GoalDetailScreen(
                             onLongClick = {
                                 pendingStage = stageState.stage.id to stageState.stage.name
                             },
-                            onLongClickLabel = stringResource(R.string.common_delete),
+                            onLongClickLabel = stringResource(R.string.goal_rename),
                         ),
                 ) {
                     Checkbox(
@@ -642,7 +645,7 @@ fun GoalDetailScreen(
                             .combinedClickable(
                                 onClick = { viewModel.toggleTask(task) },
                                 onLongClick = { pendingTask = task.id to task.name },
-                                onLongClickLabel = stringResource(R.string.common_delete),
+                                onLongClickLabel = stringResource(R.string.goal_rename),
                             )
                             .padding(start = Spacing.xl),
                     ) {
@@ -766,11 +769,14 @@ private fun AddTaskRow(onAdd: (String) -> Unit) {
             singleLine = true,
             modifier = Modifier.weight(1f),
         )
+        // Поле остаётся открытым, а пустая задача заводится с именем по
+        // умолчанию: человек может набросать пять пустых строк и заполнить их
+        // потом, переименовав долгим нажатием.
+        val fallback = stringResource(R.string.goal_task_default)
         TextButton(
             onClick = {
-                onAdd(text)
+                onAdd(text.ifBlank { fallback })
                 text = ""
-                open = false
             },
         ) {
             Text(stringResource(R.string.goal_add_task))

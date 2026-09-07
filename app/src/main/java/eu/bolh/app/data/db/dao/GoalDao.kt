@@ -61,6 +61,9 @@ interface GoalDao {
     @Query("UPDATE stages SET doneAt = :doneAt, updatedAt = :now WHERE id = :id")
     suspend fun setStageDone(id: String, doneAt: LocalDate?, now: Long)
 
+    @Query("UPDATE stages SET name = :name, updatedAt = :now WHERE id = :id")
+    suspend fun renameStage(id: String, name: String, now: Long)
+
     @Query("UPDATE stages SET deletedAt = :now, updatedAt = :now WHERE id = :id")
     suspend fun softDeleteStage(id: String, now: Long)
 
@@ -74,6 +77,9 @@ interface GoalDao {
 
     @Upsert
     suspend fun upsertTask(task: TaskEntity)
+
+    @Query("UPDATE tasks SET name = :name, updatedAt = :now WHERE id = :id")
+    suspend fun renameTask(id: String, name: String, now: Long)
 
     @Query("UPDATE tasks SET doneAt = :doneAt, updatedAt = :now WHERE id = :id")
     suspend fun setTaskDone(id: String, doneAt: LocalDate?, now: Long)

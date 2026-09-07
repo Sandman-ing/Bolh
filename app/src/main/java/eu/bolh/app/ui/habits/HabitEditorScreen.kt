@@ -463,7 +463,71 @@ private fun AdvancedSection(draft: HabitDraft, viewModel: HabitEditorViewModel) 
             style = MaterialTheme.typography.bodyMedium,
             color = status.textSecondary,
         )
+        // Напоминание — опция, и выключать его нужно так же просто,
+        // как включать. Раньше поставленное время убрать было нечем.
+        if (draft.reminderMinuteOfDay != null) {
+            Icon(
+                painter = painterResource(R.drawable.ic_close),
+                contentDescription = stringResource(R.string.habit_reminder_off),
+                tint = status.textTertiary,
+                modifier = Modifier
+                    .padding(start = Spacing.s)
+                    .size(32.dp)
+                    .clip(CircleShape)
+                    .clickable { viewModel.setReminder(null) }
+                    .padding(8.dp),
+            )
+        }
     }
+
+    // Дата начала: по умолчанию сегодня, назад — сколько угодно, вперёд нельзя.
+    val startDate = draft.startDate ?: java.time.LocalDate.now()
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable {
+                val today = java.time.LocalDate.now()
+                android.app.DatePickerDialog(
+                    context,
+                    { _, year, month, day ->
+                        viewModel.setStartDate(java.time.LocalDate.of(year, month + 1, day))
+                    },
+                    startDate.year,
+                    startDate.monthValue - 1,
+                    startDate.dayOfMonth,
+                ).apply {
+                    datePicker.maxDate = today
+                        .atStartOfDay(java.time.ZoneId.systemDefault())
+                        .toInstant()
+                        .toEpochMilli()
+                }.show()
+            }
+            .padding(horizontal = Spacing.screenPadding, vertical = Spacing.m),
+    ) {
+        Text(
+            text = stringResource(R.string.habit_start_date),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onBackground,
+            modifier = Modifier.weight(1f),
+        )
+        Text(
+            text = startDate.format(
+                java.time.format.DateTimeFormatter.ofPattern("d MMMM yyyy", locale),
+            ),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.primary,
+        )
+    }
+    Text(
+        text = stringResource(R.string.habit_start_date_note),
+        style = MaterialTheme.typography.labelMedium,
+        color = status.textTertiary,
+        modifier = Modifier.padding(
+            horizontal = Spacing.screenPadding,
+            vertical = Spacing.xs,
+        ),
+    )
 
     if (draft.reminderMinuteOfDay != null) {
         Row(
