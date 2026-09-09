@@ -1,4 +1,4 @@
-import java.util.Properties
+﻿import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
@@ -7,9 +7,9 @@ plugins {
 }
 
 /**
- * Ключ подписи лежит рядом с проектом и в репозиторий не едет.
- * Без него собирается только отладочная сборка — релизная просто
- * останется неподписанной, а не сломает сборку.
+ * ÐšÐ»ÑŽÑ‡ Ð¿Ð¾Ð´Ð¿Ð¸ÑÐ¸ Ð»ÐµÐ¶Ð¸Ñ‚ Ñ€ÑÐ´Ð¾Ð¼ Ñ Ð¿Ñ€Ð¾ÐµÐºÑ‚Ð¾Ð¼ Ð¸ Ð² Ñ€ÐµÐ¿Ð¾Ð·Ð¸Ñ‚Ð¾Ñ€Ð¸Ð¹ Ð½Ðµ ÐµÐ´ÐµÑ‚.
+ * Ð‘ÐµÐ· Ð½ÐµÐ³Ð¾ ÑÐ¾Ð±Ð¸Ñ€Ð°ÐµÑ‚ÑÑ Ñ‚Ð¾Ð»ÑŒÐºÐ¾ Ð¾Ñ‚Ð»Ð°Ð´Ð¾Ñ‡Ð½Ð°Ñ ÑÐ±Ð¾Ñ€ÐºÐ° â€” Ñ€ÐµÐ»Ð¸Ð·Ð½Ð°Ñ Ð¿Ñ€Ð¾ÑÑ‚Ð¾
+ * Ð¾ÑÑ‚Ð°Ð½ÐµÑ‚ÑÑ Ð½ÐµÐ¿Ð¾Ð´Ð¿Ð¸ÑÐ°Ð½Ð½Ð¾Ð¹, Ð° Ð½Ðµ ÑÐ»Ð¾Ð¼Ð°ÐµÑ‚ ÑÐ±Ð¾Ñ€ÐºÑƒ.
  */
 val keystorePropertiesFile = rootProject.file("keystore.properties")
 val keystoreProperties = Properties().apply {
@@ -20,11 +20,11 @@ val keystoreProperties = Properties().apply {
 
 android {
     namespace = "eu.bolh.app"
-    // Только выпущенные уровни API. Предварительная платформа (android-37,
-    // Android 17) оставляет в манифесте свою метку — compileSdkVersionCodename
-    // и platformBuildVersionName, — и установщики обычных телефонов такой пакет
-    // не разбирают: «Не удалось обработать пакет». Версии библиотек в
-    // libs.versions.toml подобраны так, чтобы им хватало 36.
+    // Ð¢Ð¾Ð»ÑŒÐºÐ¾ Ð²Ñ‹Ð¿ÑƒÑ‰ÐµÐ½Ð½Ñ‹Ðµ ÑƒÑ€Ð¾Ð²Ð½Ð¸ API. ÐŸÑ€ÐµÐ´Ð²Ð°Ñ€Ð¸Ñ‚ÐµÐ»ÑŒÐ½Ð°Ñ Ð¿Ð»Ð°Ñ‚Ñ„Ð¾Ñ€Ð¼Ð° (android-37,
+    // Android 17) Ð¾ÑÑ‚Ð°Ð²Ð»ÑÐµÑ‚ Ð² Ð¼Ð°Ð½Ð¸Ñ„ÐµÑÑ‚Ðµ ÑÐ²Ð¾ÑŽ Ð¼ÐµÑ‚ÐºÑƒ â€” compileSdkVersionCodename
+    // Ð¸ platformBuildVersionName, â€” Ð¸ ÑƒÑÑ‚Ð°Ð½Ð¾Ð²Ñ‰Ð¸ÐºÐ¸ Ð¾Ð±Ñ‹Ñ‡Ð½Ñ‹Ñ… Ñ‚ÐµÐ»ÐµÑ„Ð¾Ð½Ð¾Ð² Ñ‚Ð°ÐºÐ¾Ð¹ Ð¿Ð°ÐºÐµÑ‚
+    // Ð½Ðµ Ñ€Ð°Ð·Ð±Ð¸Ñ€Ð°ÑŽÑ‚: Â«ÐÐµ ÑƒÐ´Ð°Ð»Ð¾ÑÑŒ Ð¾Ð±Ñ€Ð°Ð±Ð¾Ñ‚Ð°Ñ‚ÑŒ Ð¿Ð°ÐºÐµÑ‚Â». Ð’ÐµÑ€ÑÐ¸Ð¸ Ð±Ð¸Ð±Ð»Ð¸Ð¾Ñ‚ÐµÐº Ð²
+    // libs.versions.toml Ð¿Ð¾Ð´Ð¾Ð±Ñ€Ð°Ð½Ñ‹ Ñ‚Ð°Ðº, Ñ‡Ñ‚Ð¾Ð±Ñ‹ Ð¸Ð¼ Ñ…Ð²Ð°Ñ‚Ð°Ð»Ð¾ 36.
     compileSdk = 36
     buildToolsVersion = "36.0.0"
 
@@ -32,8 +32,8 @@ android {
         applicationId = "eu.bolh.app"
         minSdk = 26
         targetSdk = 36
-        versionCode = 4
-        versionName = "0.1.4"
+        versionCode = 5
+        versionName = "0.1.5"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -45,9 +45,9 @@ android {
                 keyAlias = keystoreProperties.getProperty("keyAlias")
                 keyPassword = keystoreProperties.getProperty("keyPassword")
             }
-            // Все схемы подписи сразу. По умолчанию при minSdk 26 остаётся
-            // только v2, и установщики некоторых прошивок такой пакет
-            // отказываются разбирать — «Не удалось обработать пакет».
+            // Ð’ÑÐµ ÑÑ…ÐµÐ¼Ñ‹ Ð¿Ð¾Ð´Ð¿Ð¸ÑÐ¸ ÑÑ€Ð°Ð·Ñƒ. ÐŸÐ¾ ÑƒÐ¼Ð¾Ð»Ñ‡Ð°Ð½Ð¸ÑŽ Ð¿Ñ€Ð¸ minSdk 26 Ð¾ÑÑ‚Ð°Ñ‘Ñ‚ÑÑ
+            // Ñ‚Ð¾Ð»ÑŒÐºÐ¾ v2, Ð¸ ÑƒÑÑ‚Ð°Ð½Ð¾Ð²Ñ‰Ð¸ÐºÐ¸ Ð½ÐµÐºÐ¾Ñ‚Ð¾Ñ€Ñ‹Ñ… Ð¿Ñ€Ð¾ÑˆÐ¸Ð²Ð¾Ðº Ñ‚Ð°ÐºÐ¾Ð¹ Ð¿Ð°ÐºÐµÑ‚
+            // Ð¾Ñ‚ÐºÐ°Ð·Ñ‹Ð²Ð°ÑŽÑ‚ÑÑ Ñ€Ð°Ð·Ð±Ð¸Ñ€Ð°Ñ‚ÑŒ â€” Â«ÐÐµ ÑƒÐ´Ð°Ð»Ð¾ÑÑŒ Ð¾Ð±Ñ€Ð°Ð±Ð¾Ñ‚Ð°Ñ‚ÑŒ Ð¿Ð°ÐºÐµÑ‚Â».
             enableV1Signing = true
             enableV2Signing = true
             enableV3Signing = true
