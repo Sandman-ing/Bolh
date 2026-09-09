@@ -148,7 +148,11 @@ class FinanceViewModel(
         Extras(recurring, goalList, choices)
     }
 
-    val state: StateFlow<FinanceUiState> = combine(moneyFlow, extrasFlow) { money, extras ->
+    val state: StateFlow<FinanceUiState> = combine(
+        moneyFlow,
+        extrasFlow,
+        finance.currency,
+    ) { money, extras, currency ->
         val today = finance.today()
         val month = YearMonth.from(today)
         val choices = extras.choices
@@ -245,7 +249,7 @@ class FinanceViewModel(
             selectedAccountId = choices.accountId
                 ?.takeIf { id -> money.accounts.any { it.id == id } },
             hideObligatory = choices.hideObligatory,
-            baseCurrency = finance.baseCurrency,
+            baseCurrency = currency,
             loaded = true,
         )
     }.stateIn(

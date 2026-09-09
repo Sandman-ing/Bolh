@@ -23,6 +23,7 @@ import java.time.Clock
 import java.time.LocalDate
 import java.util.UUID
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 
 /**
@@ -32,12 +33,22 @@ import kotlinx.coroutines.flow.map
 class FinanceRepository(
     private val dao: FinanceDao,
     private val clock: Clock = Clock.systemDefaultZone(),
-    /**
-     * Валюта приложения. Меняется в настройках и действует сразу: пересчёта нет,
-     * поэтому менять её после первых записей — решение человека, а не наше.
-     */
-    var baseCurrency: String = "EUR",
+    initialCurrency: String = "EUR",
 ) {
+
+    /**
+     * Валюта приложения потоком.
+     *
+     * Смена валюты не должна дёргать экран пересозданием: суммы перерисуются
+     * сами, как перерисовываются при любом другом изменении данных.
+     */
+    val currency = MutableStateFlow(initialCurrency)
+
+    var baseCurrency: String
+        get() = currency.value
+        set(value) {
+            currency.value = value
+        }
 
     fun today(): LocalDate = LocalDate.now(clock)
 

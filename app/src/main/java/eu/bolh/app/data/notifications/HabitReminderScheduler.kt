@@ -7,6 +7,8 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import eu.bolh.app.domain.model.Habit
 import eu.bolh.app.domain.model.ScheduleType
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.time.Clock
 import java.time.Duration
 import java.time.LocalDate
@@ -26,9 +28,14 @@ class HabitReminderScheduler(
     private val clock: Clock = Clock.systemDefaultZone(),
 ) {
 
-    fun schedule(habit: Habit) {
+    /**
+     * Первое обращение к WorkManager поднимает всю его подсистему, и на главном
+     * потоке это заметная задержка — кнопка «Сохранить» отвечала с запозданием.
+     * Планирование ничего не возвращает, поэтому уезжает в фон целиком.
+     */
+    suspend fun schedule(habit: Habit) = withContext(Dispatchers.IO) {
         cancel(habit.id)
-        val minuteOfDay = habit.reminderMinuteOfDay ?: return
+        val minuteOfDay = habit.reminderMinuteOfDay ?: return@withContext
 
         enqueue(habit, minuteOfDay, evening = false)
 
@@ -47,7 +54,7 @@ class HabitReminderScheduler(
         BolhNotifications.cancel(context, habitId)
     }
 
-    fun rescheduleAll(habits: List<Habit>) {
+    suspend fun rescheduleAll(habits: List<Habit>) {
         habits.forEach { schedule(it) }
     }
 

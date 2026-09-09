@@ -41,7 +41,8 @@ class AccountDetailViewModel(
         finance.observeAccounts(),
         finance.observeTransactions(),
         finance.observeCategories(),
-    ) { accounts, transactions, categories ->
+        finance.currency,
+    ) { accounts, transactions, categories, currency ->
         val account = accounts.firstOrNull { it.id == accountId }
             ?: return@combine AccountDetailUiState(categoriesById = categories.associateBy { it.id })
 
@@ -58,7 +59,7 @@ class AccountDetailViewModel(
         }
 
         AccountDetailUiState(
-            baseCurrency = finance.baseCurrency,
+            baseCurrency = currency,
             account = account,
             balanceMinor = FinanceAnalytics.balanceOf(account, transactions),
             expenses = expenses,

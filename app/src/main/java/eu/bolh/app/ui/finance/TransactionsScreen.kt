@@ -82,12 +82,13 @@ class TransactionsViewModel(private val finance: FinanceRepository) : ViewModel(
         finance.observeTransactions(),
         finance.observeCategories(),
         finance.observeAccounts(),
-    ) { transactions, categories, accounts ->
+        finance.currency,
+    ) { transactions, categories, accounts, currency ->
         TransactionsUiState(
             transactions = transactions,
             categoriesById = categories.associateBy { it.id },
             accountsById = accounts.associateBy { it.id },
-            baseCurrency = finance.baseCurrency,
+            baseCurrency = currency,
             loaded = true,
         )
     }.stateIn(

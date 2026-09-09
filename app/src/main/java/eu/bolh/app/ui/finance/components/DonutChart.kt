@@ -55,12 +55,14 @@ fun DonutChart(
             )
 
             // Зазор между секторами делает соседние категории различимыми
-            // без подписей — но только когда сектор достаточно велик.
+            // без подписей — но только когда секторов больше одного. У
+            // единственного зазор превращался в серый клин, похожий на сбой.
+            val visible = slices.count { it.fraction > 0f }
             var start = -90f
             slices.forEach { slice ->
                 val sweep = slice.fraction * 360f
                 if (sweep > 0f) {
-                    val gap = if (sweep > 6f) 1.5f else 0f
+                    val gap = if (visible > 1 && sweep > 6f) 1.5f else 0f
                     drawArc(
                         color = slice.color,
                         startAngle = start + gap / 2f,

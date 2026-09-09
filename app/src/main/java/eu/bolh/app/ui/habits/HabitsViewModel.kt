@@ -116,7 +116,11 @@ class HabitsViewModel(private val repository: HabitRepository) : ViewModel() {
                 selectedDate = selected,
                 weekDays = weekDays,
                 good = rows.filter { it.habit.kind == HabitKind.Good },
-                bad = rows.filter { it.habit.kind == HabitKind.Bad },
+                // Вредная привычка тоже начинается когда-то: до этой даты
+                // спрашивать о срывах не о чем, её ещё не отслеживали.
+                bad = rows.filter {
+                    it.habit.kind == HabitKind.Bad && !selected.isBefore(it.habit.startDate)
+                },
                 weekProgress = weekDays.associateWith { day ->
                     progressOn(day, habits, marks, pauses)
                 },

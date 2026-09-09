@@ -138,6 +138,22 @@ class GoalEditorViewModel(
         )
     }
 
+    fun renameTask(stageIndex: Int, taskIndex: Int, name: String) = _draft.update { current ->
+        current.copy(
+            stages = current.stages.mapIndexed { i, stage ->
+                if (i != stageIndex) {
+                    stage
+                } else {
+                    stage.copy(
+                        tasks = stage.tasks.mapIndexed { j, task ->
+                            if (j == taskIndex) name else task
+                        },
+                    )
+                }
+            },
+        )
+    }
+
     fun removeTask(stageIndex: Int, taskIndex: Int) = _draft.update { current ->
         current.copy(
             stages = current.stages.mapIndexed { i, stage ->

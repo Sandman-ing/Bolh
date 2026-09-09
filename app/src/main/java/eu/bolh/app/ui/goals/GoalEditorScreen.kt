@@ -1,6 +1,11 @@
 package eu.bolh.app.ui.goals
 
 import android.app.DatePickerDialog
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -46,6 +51,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import eu.bolh.app.R
 import eu.bolh.app.ui.common.BolhIcons
+import eu.bolh.app.ui.common.Motion
 import eu.bolh.app.ui.common.PillButton
 import eu.bolh.app.ui.common.BolhCard
 import eu.bolh.app.ui.common.rememberLocale
@@ -207,7 +213,18 @@ fun GoalEditorScreen(
                     val stageFallback = stringResource(R.string.goal_stage_default)
                     val taskFallback = stringResource(R.string.goal_task_default)
 
-                    draft.stages.forEachIndexed { index, stage ->
+                    // Порядок меняется переходом, а не подменой: этап, прыгнувший
+                    // на место соседа мгновенно, читается как сбой отрисовки.
+                    AnimatedContent(
+                        targetState = draft.stages,
+                        transitionSpec = {
+                            fadeIn(tween(Motion.CONTENT_MS)) togetherWith
+                                fadeOut(tween(Motion.CONTENT_MS / 2))
+                        },
+                        label = "stages-order",
+                    ) { stages ->
+                    Column {
+                    stages.forEachIndexed { index, stage ->
                         BolhCard(
                             corner = Radius.block,
                             modifier = Modifier.padding(
@@ -281,10 +298,15 @@ fun GoalEditorScreen(
                                         tint = status.textTertiary,
                                         modifier = Modifier.size(16.dp),
                                     )
-                                    Text(
-                                        text = task,
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = status.textSecondary,
+                                    // Имя задачи правится здесь же: набросал
+                                    // пустую строку — назвал, когда придумал.
+                                    OutlinedTextField(
+                                        value = task,
+                                        onValueChange = {
+                                            viewModel.renameTask(index, taskIndex, it)
+                                        },
+                                        singleLine = true,
+                                        textStyle = MaterialTheme.typography.bodyMedium,
                                         modifier = Modifier
                                             .weight(1f)
                                             .padding(start = Spacing.s),
@@ -316,6 +338,9 @@ fun GoalEditorScreen(
                                 ),
                             )
                         }
+                    }
+
+                    }
                     }
 
                     BolhCard(

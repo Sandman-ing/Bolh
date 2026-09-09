@@ -154,7 +154,8 @@ class StatsViewModel(
         dataFlow,
         period,
         hidden,
-    ) { data, currentPeriod, hiddenBlocks ->
+        finance.currency,
+    ) { data, currentPeriod, hiddenBlocks, currency ->
         val today = habits.today()
         val current = boundsFor(currentPeriod, today)
         val previous = previousBounds(currentPeriod, current)
@@ -268,7 +269,7 @@ class StatsViewModel(
             habitsById = data.habits.associateBy { it.id },
             goalsById = data.goals.associateBy { it.id },
             categoriesById = categoriesById,
-            baseCurrency = finance.baseCurrency,
+            baseCurrency = currency,
             hiddenBlocks = hiddenBlocks,
             loaded = true,
         )

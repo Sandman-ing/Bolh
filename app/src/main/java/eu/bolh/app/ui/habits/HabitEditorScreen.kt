@@ -7,6 +7,7 @@ import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -35,6 +36,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
+import androidx.compose.material3.ripple
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -61,6 +63,9 @@ import eu.bolh.app.domain.templates.HabitTemplate
 import eu.bolh.app.domain.templates.HabitTemplates
 import eu.bolh.app.ui.common.BolhIcons
 import eu.bolh.app.ui.common.Hint
+import eu.bolh.app.ui.common.Motion
+import eu.bolh.app.ui.common.pressScale
+import eu.bolh.app.ui.common.rememberPressSource
 import eu.bolh.app.ui.common.rememberLocale
 import eu.bolh.app.ui.theme.Ink
 import eu.bolh.app.ui.theme.LocalStatusColors
@@ -587,14 +592,28 @@ private fun IconRow(icons: List<String>, selected: String, onSelect: (String) ->
     ) {
         items(icons) { key ->
             val isSelected = key == selected
+            val press = rememberPressSource()
+            val tint by animateColorAsState(
+                targetValue = if (isSelected) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    status.textTertiary
+                },
+                animationSpec = Motion.color,
+                label = "icon-tint",
+            )
             Icon(
                 painter = painterResource(BolhIcons.resFor(key)),
                 contentDescription = null,
-                tint = if (isSelected) MaterialTheme.colorScheme.primary else status.textTertiary,
+                tint = tint,
                 modifier = Modifier
                     .size(44.dp)
+                    .pressScale(press, pressedScale = 0.88f)
                     .clip(CircleShape)
-                    .clickable { onSelect(key) }
+                    .clickable(
+                        interactionSource = press,
+                        indication = ripple(),
+                    ) { onSelect(key) }
                     .padding(10.dp),
             )
         }
@@ -700,9 +719,12 @@ private fun BolhChip(
     icon: String? = null,
 ) {
     val status = LocalStatusColors.current
+    val press = rememberPressSource()
     FilterChip(
         selected = selected,
         onClick = onClick,
+        interactionSource = press,
+        modifier = Modifier.pressScale(press),
         label = { Text(text, style = MaterialTheme.typography.labelLarge) },
         leadingIcon = icon?.let {
             {

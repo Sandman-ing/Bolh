@@ -126,6 +126,30 @@ fun HabitRowItem(
         }
     }
 
+    // Правило вредной привычки написано словами: без него «срыв» — просто
+    // кнопка, и непонятно, что она ломает и что считает (§5.4).
+    if (row.habit.kind == HabitKind.Bad) {
+        Text(
+            text = when (row.habit.mode) {
+                HabitMode.Limit -> stringResource(
+                    R.string.habits_bad_hint_limit,
+                    row.habit.limitPerWeek ?: 0,
+                )
+
+                HabitMode.Counter -> stringResource(R.string.habits_bad_hint_counter)
+                else -> stringResource(R.string.habits_bad_hint_game)
+            },
+            style = MaterialTheme.typography.labelMedium,
+            color = status.textTertiary,
+            modifier = Modifier.padding(top = Spacing.s),
+        )
+        Text(
+            text = stringResource(R.string.habits_bad_action_hint),
+            style = MaterialTheme.typography.labelMedium,
+            color = status.textTertiary,
+        )
+    }
+
     // Отмеченный уровень называется словом: круг с галочкой не отличает
     // минимум от нормы, а разница между ними и есть смысл режима (§5.3).
     if (row.habit.mode == HabitMode.Minimum && row.selectedLevel != null) {

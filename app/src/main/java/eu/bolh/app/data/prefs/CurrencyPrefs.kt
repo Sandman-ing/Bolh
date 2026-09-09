@@ -12,8 +12,25 @@ import android.content.Context
  */
 object CurrencyPrefs {
 
-    /** Валюты без пересчёта: выбор один раз и на всё приложение. */
-    val supported: List<String> = listOf("EUR", "USD", "GBP", "RUB", "AMD")
+    /**
+     * Часто выбираемые — они же первые в списке. Остальные валюты мира
+     * берутся из системы: держать свой перечень значит однажды его забыть.
+     */
+    val frequent: List<String> = listOf("EUR", "USD", "GBP", "RUB", "AMD")
+
+    /** Все валюты, известные системе, с частыми наверху. */
+    fun all(): List<String> {
+        val rest = java.util.Currency.getAvailableCurrencies()
+            .map { it.currencyCode }
+            .filter { it.length == 3 && it !in frequent }
+            .sorted()
+        return frequent + rest
+    }
+
+    /** Человеческое имя валюты на языке интерфейса. */
+    fun nameOf(code: String, locale: java.util.Locale): String =
+        runCatching { java.util.Currency.getInstance(code).getDisplayName(locale) }
+            .getOrDefault(code)
 
     const val DEFAULT = "EUR"
 

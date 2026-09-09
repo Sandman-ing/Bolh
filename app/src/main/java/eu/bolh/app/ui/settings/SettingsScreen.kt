@@ -1,10 +1,16 @@
 package eu.bolh.app.ui.settings
 
 import android.content.Context
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.unit.dp
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -13,9 +19,15 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -23,12 +35,17 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import android.content.Intent
+import android.provider.Settings
 import androidx.activity.compose.LocalActivity
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -58,9 +75,14 @@ import eu.bolh.app.ui.common.pressScale
 import eu.bolh.app.ui.common.rememberPressSource
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.material3.ripple
+import eu.bolh.app.ui.common.BolhCard
+import eu.bolh.app.ui.common.PillButton
+import eu.bolh.app.ui.common.rememberLocale
 import eu.bolh.app.ui.common.Hint
 import eu.bolh.app.ui.theme.Ink
 import eu.bolh.app.ui.theme.LocalStatusColors
+import eu.bolh.app.ui.theme.NumberSmall
+import eu.bolh.app.ui.theme.Radius
 import eu.bolh.app.ui.theme.Spacing
 import java.time.LocalDate
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -141,6 +163,42 @@ fun SettingsScreen(
     val stamp = LocalDate.now().toString()
     var language by remember { mutableStateOf(LanguagePrefs.get(context)) }
     var currency by remember { mutableStateOf(CurrencyPrefs.get(context)) }
+    var currencyPicker by remember { mutableStateOf(false) }
+    var switchingLanguage by remember { mutableStateOf(false) }
+
+    if (switchingLanguage) {
+        val fade = remember { Animatable(0f) }
+        LaunchedEffect(Unit) {
+            fade.animateTo(1f, tween(200))
+            activity?.recreate()
+        }
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .alpha(fade.value)
+                .background(Ink),
+        )
+    }
+    val locale = rememberLocale()
+
+    if (currencyPicker) {
+        CurrencySheet(
+            current = currency,
+            locale = locale,
+            onDismiss = { currencyPicker = false },
+            onSelect = { code ->
+                CurrencyPrefs.set(context, code)
+                // Репозиторий живёт дольше экрана, и валюта в нём — поток:
+                // суммы перерисуются сами, без рывка от пересоздания Activity.
+                (context.applicationContext as BolhApplication)
+                    .container
+                    .financeRepository
+                    .baseCurrency = code
+                currency = code
+                currencyPicker = false
+            },
+        )
+    }
 
     val exportJson = rememberLauncherForActivityResult(
         ActivityResultContracts.CreateDocument("application/json"),
@@ -189,7 +247,15 @@ fun SettingsScreen(
             )
         },
     ) { innerPadding ->
-        Column(modifier = Modifier.padding(innerPadding)) {
+        // Экран длиннее телефона: без прокрутки нижние строки — экспорт и
+        // отчёт — оставались недосягаемыми.
+        Column(
+            modifier = Modifier
+                .padding(innerPadding)
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(bottom = Spacing.xxl),
+        ) {
             SectionTitle(stringResource(R.string.settings_language))
             LanguageRow(
                 current = language,
@@ -197,32 +263,23 @@ fun SettingsScreen(
                     if (code != language) {
                         LanguagePrefs.set(context, code)
                         language = code
-                        // Экран пересоздаётся: язык применяется при его создании,
-                        // и это единственный момент, когда его можно поменять честно.
-                        activity?.recreate()
+                        // Экран гаснет и только потом пересоздаётся: язык
+                        // применяется при создании Activity, и без затемнения
+                        // подмена всего экрана читается как рывок.
+                        switchingLanguage = true
                     }
                 },
             )
 
             SectionTitle(stringResource(R.string.settings_currency))
-            ChipRow(
-                options = CurrencyPrefs.supported.map { it to it },
-                current = currency,
-                onSelect = { code ->
-                    if (code != currency) {
-                        CurrencyPrefs.set(context, code)
-                        // Репозиторий живёт дольше экрана: пересоздание Activity
-                        // его не трогает, поэтому валюту меняем и в нём.
-                        (context.applicationContext as BolhApplication)
-                            .container
-                            .financeRepository
-                            .baseCurrency = code
-                        currency = code
-                        // Экран пересоздаётся: репозиторий читает валюту при
-                        // сборке, и живые суммы должны перерисоваться сразу.
-                        activity?.recreate()
-                    }
-                },
+            // Валют в мире больше сотни, полосой чипов их не разложить —
+            // выбор живёт в листе с поиском.
+            PillButton(
+                text = "$currency · " + CurrencyPrefs.nameOf(currency, locale),
+                onClick = { currencyPicker = true },
+                icon = R.drawable.ic_chevron_down,
+                iconAtEnd = true,
+                modifier = Modifier.padding(horizontal = Spacing.screenPadding),
             )
             Hint(
             text = stringResource(R.string.settings_currency_note),
@@ -230,6 +287,27 @@ fun SettingsScreen(
                     horizontal = Spacing.screenPadding,
                     vertical = Spacing.s,
         ),
+            )
+
+            SectionTitle(stringResource(R.string.settings_reminders))
+            SettingsRow(
+                icon = R.drawable.ic_settings,
+                text = stringResource(R.string.settings_reminders_open),
+                onClick = {
+                    // Ведём в системные настройки уведомлений приложения:
+                    // разрешения и режим сна живут там, а не у нас.
+                    val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+                        .putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    runCatching { context.startActivity(intent) }
+                },
+            )
+            Hint(
+                text = stringResource(R.string.settings_reminders_note),
+                modifier = Modifier.padding(
+                    horizontal = Spacing.screenPadding,
+                    vertical = Spacing.s,
+                ),
             )
 
             SectionTitle(stringResource(R.string.settings_appearance))
@@ -447,5 +525,88 @@ private fun SettingsRow(icon: Int, text: String, onClick: () -> Unit) {
             color = MaterialTheme.colorScheme.onBackground,
             modifier = Modifier.padding(start = Spacing.m),
         )
+    }
+}
+
+/**
+ * Выбор валюты: поиск по коду и названию.
+ *
+ * Частые валюты стоят первыми, остальные — как их знает система. Пересчёта
+ * нет, поэтому выбор здесь означает «в чём я считаю», а не «сколько это в…».
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun CurrencySheet(
+    current: String,
+    locale: java.util.Locale,
+    onDismiss: () -> Unit,
+    onSelect: (String) -> Unit,
+) {
+    val status = LocalStatusColors.current
+    var query by remember { mutableStateOf("") }
+    val all = remember { CurrencyPrefs.all() }
+    val visible = remember(query, all) {
+        if (query.isBlank()) {
+            all
+        } else {
+            val needle = query.trim().lowercase(locale)
+            all.filter { code ->
+                code.lowercase(locale).contains(needle) ||
+                    CurrencyPrefs.nameOf(code, locale).lowercase(locale).contains(needle)
+            }
+        }
+    }
+
+    ModalBottomSheet(onDismissRequest = onDismiss, containerColor = status.surfaceRaised) {
+        OutlinedTextField(
+            value = query,
+            onValueChange = { query = it },
+            label = { Text(stringResource(R.string.settings_currency_search)) },
+            singleLine = true,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = Spacing.screenPadding),
+        )
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(max = 420.dp),
+            contentPadding = PaddingValues(
+                start = Spacing.screenPadding,
+                end = Spacing.screenPadding,
+                top = Spacing.s,
+                bottom = Spacing.xxl,
+            ),
+            verticalArrangement = Arrangement.spacedBy(Spacing.xs),
+        ) {
+            items(visible.size) { index ->
+                val code = visible[index]
+                BolhCard(
+                    corner = Radius.block,
+                    accent = if (code == current) MaterialTheme.colorScheme.primary else null,
+                    contentPadding = PaddingValues(
+                        horizontal = Spacing.l,
+                        vertical = Spacing.m,
+                    ),
+                    onClick = { onSelect(code) },
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = code,
+                            style = NumberSmall,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                        Text(
+                            text = CurrencyPrefs.nameOf(code, locale),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onBackground,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.padding(start = Spacing.m),
+                        )
+                    }
+                }
+            }
+        }
     }
 }

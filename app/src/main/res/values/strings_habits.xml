@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="habits_bad_section">Bad habits</string>
+    <string name="habits_bad_hint_game">A slip resets the streak of clean days to zero.</string>
+    <string name="habits_bad_hint_counter">Clean days are counted; a slip starts the count again.</string>
+    <string name="habits_bad_hint_limit">Up to %1$d slips a week; above that the week counts as broken.</string>
+    <string name="habits_bad_action_hint">The button records a slip. A long press undoes the last one.</string>
     <string name="habits_week_previous">Previous week</string>
     <string name="habits_week_next">Next week</string>
     <string name="habits_mark_minimum">min</string>

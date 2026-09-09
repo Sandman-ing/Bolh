@@ -33,7 +33,7 @@ class BolhContainer(context: Context, val clock: Clock = Clock.systemDefaultZone
     val financeRepository: FinanceRepository = FinanceRepository(
         dao = database.financeDao(),
         clock = clock,
-        baseCurrency = CurrencyPrefs.get(context),
+        initialCurrency = CurrencyPrefs.get(context),
     )
 
     val settings: SettingsStore = SettingsStore(context.applicationContext)
