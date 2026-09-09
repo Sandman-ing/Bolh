@@ -66,6 +66,11 @@ import eu.bolh.app.ui.common.Money
 import eu.bolh.app.ui.common.Motion
 import eu.bolh.app.ui.common.pressScale
 import eu.bolh.app.ui.common.rememberPressSource
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.material3.ripple
 import eu.bolh.app.ui.common.PillButton
@@ -227,6 +232,18 @@ fun CategoriesScreen(
                 )
             }
 
+            // Переход между расходами и доходами — сменой содержимого, а не
+            // подменой на месте: сетка целиком другая, и мгновенная замена
+            // читалась как сбой. Состояние здесь меняется только по нажатию
+            // вкладки, поэтому пересоздание содержимого ничему не мешает.
+            AnimatedContent(
+                targetState = kind,
+                transitionSpec = {
+                    fadeIn(tween(Motion.CONTENT_MS)) togetherWith
+                        fadeOut(tween(Motion.CONTENT_MS / 2))
+                },
+                label = "categories-kind",
+            ) { _ ->
             LazyVerticalGrid(
                 columns = GridCells.Fixed(3),
                 contentPadding = PaddingValues(
@@ -257,6 +274,7 @@ fun CategoriesScreen(
                         onClick = { creating = true },
                     )
                 }
+            }
             }
         }
     }
@@ -326,6 +344,13 @@ private fun KindTab(
         animationSpec = Motion.color,
         label = "kind-label",
     )
+    // Обводка меняется тем же переходом, что и заливка: раньше она щёлкала,
+    // и вкладка выглядела дёрганой даже при плавном фоне.
+    val outline by animateColorAsState(
+        targetValue = if (selected) accent else status.strokeInner,
+        animationSpec = Motion.color,
+        label = "kind-outline",
+    )
 
     Text(
         text = text,
@@ -336,11 +361,7 @@ private fun KindTab(
             .pressScale(press)
             .clip(shape)
             .background(fill)
-            .border(
-                width = 1.dp,
-                color = if (selected) accent else status.strokeInner,
-                shape = shape,
-            )
+            .border(width = 1.dp, color = outline, shape = shape)
             .clickable(interactionSource = press, indication = ripple(), onClick = onClick)
             .padding(horizontal = Spacing.l, vertical = Spacing.s),
     )

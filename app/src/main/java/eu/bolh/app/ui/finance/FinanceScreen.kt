@@ -1,8 +1,11 @@
 package eu.bolh.app.ui.finance
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
@@ -13,6 +16,8 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -66,6 +71,7 @@ import eu.bolh.app.ui.common.EmptyState
 import eu.bolh.app.ui.common.Motion
 import eu.bolh.app.ui.common.pressScale
 import eu.bolh.app.ui.common.rememberPressSource
+import eu.bolh.app.ui.common.tappable
 import eu.bolh.app.ui.common.Money
 import eu.bolh.app.ui.common.rememberLocale
 import eu.bolh.app.ui.finance.components.DonutChart
@@ -346,7 +352,7 @@ fun FinanceScreen(
                         },
                         centerText = Money.format(
                             state.headlineMinor,
-                            state.baseCurrency,
+                            state.analysedCurrency,
                             locale,
                         ),
                         centerCaption = flowCaption(state, locale),
@@ -365,7 +371,7 @@ fun FinanceScreen(
                     Text(
                         text = stringResource(
                             R.string.finance_reserved,
-                            Money.format(state.reservedMinor, state.baseCurrency, locale),
+                            Money.format(state.reservedMinor, state.analysedCurrency, locale),
                         ),
                         style = NumberSmall,
                         color = GoalsTeal,
@@ -374,7 +380,7 @@ fun FinanceScreen(
                     Text(
                         text = stringResource(
                             R.string.finance_available,
-                            Money.format(state.availableMinor, state.baseCurrency, locale),
+                            Money.format(state.availableMinor, state.analysedCurrency, locale),
                         ),
                         style = NumberSmall,
                         color = status.textSecondary,
@@ -421,6 +427,36 @@ fun FinanceScreen(
                         )
                     }
                 }
+                // Валюты нет смысла предлагать, пока она одна: строка чипов с
+                // единственным выбором — это не выбор, а шум.
+                AnimatedVisibility(
+                    visible = state.currencies.size > 1,
+                    enter = fadeIn(tween(Motion.CONTENT_MS)) + expandVertically(Motion.resize),
+                    exit = fadeOut(tween(Motion.CONTENT_MS / 2)) + shrinkVertically(Motion.resize),
+                ) {
+                    Column {
+                        Text(
+                            text = stringResource(R.string.finance_currency_scope),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = status.textTertiary,
+                            modifier = Modifier.padding(top = Spacing.m),
+                        )
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
+                            modifier = Modifier
+                                .horizontalScroll(rememberScrollState())
+                                .padding(top = Spacing.xs),
+                        ) {
+                            state.currencies.forEach { code ->
+                                ToggleChip(
+                                    text = code,
+                                    selected = state.analysedCurrency == code,
+                                    onClick = { viewModel.selectCurrency(code) },
+                                )
+                            }
+                        }
+                    }
+                }
             }
         }
 
@@ -434,10 +470,10 @@ fun FinanceScreen(
                         horizontal = Spacing.screenPadding,
                         vertical = Spacing.xs,
                     )
-                    .combinedClickable(
+                    .tappable(
                         onClick = { onOpenAccount(row.account.id) },
                         onLongClick = { pendingAccount = row.account.id },
-                        onLongClickLabel = stringResource(R.string.common_delete),
+                        longClickLabel = stringResource(R.string.common_delete),
                     ),
                 contentPadding = PaddingValues(
                     horizontal = Spacing.l,
@@ -462,7 +498,9 @@ fun FinanceScreen(
                             .padding(start = Spacing.m),
                     )
                     Text(
-                        text = Money.format(row.balanceMinor, state.baseCurrency, locale),
+                        // Валюта берётся у самого счёта: Wise в евро и
+                        // наличные в драмах стоят в одном списке рядом.
+                        text = Money.format(row.balanceMinor, row.account.currencyCode, locale),
                         style = MoneyRow,
                         color = if (row.balanceMinor < 0L) {
                             status.problem
@@ -551,10 +589,10 @@ fun FinanceScreen(
                             horizontal = Spacing.screenPadding,
                             vertical = Spacing.xs,
                         )
-                        .combinedClickable(
+                        .tappable(
                             onClick = { onOpenRecurring(payment.id) },
                             onLongClick = { pendingPayment = payment.id },
-                            onLongClickLabel = stringResource(R.string.common_delete),
+                            longClickLabel = stringResource(R.string.common_delete),
                         ),
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -573,7 +611,7 @@ fun FinanceScreen(
                             )
                         }
                         Text(
-                            text = Money.format(payment.amountMinor, state.baseCurrency, locale),
+                            text = Money.format(payment.amountMinor, payment.currencyCode, locale),
                             style = MoneyLarge,
                             color = MaterialTheme.colorScheme.onBackground,
                         )
@@ -641,10 +679,10 @@ fun FinanceScreen(
                     )
                     // Копилка без своей цели остаётся строкой без имени —
                     // и её должно быть чем убрать.
-                    .combinedClickable(
+                    .tappable(
                         onClick = {},
                         onLongClick = { pendingJar = row.jar.id },
-                        onLongClickLabel = stringResource(R.string.common_delete),
+                        longClickLabel = stringResource(R.string.common_delete),
                     ),
                 contentPadding = PaddingValues(
                     horizontal = Spacing.l,
@@ -670,8 +708,8 @@ fun FinanceScreen(
                 Text(
                     text = stringResource(
                         R.string.finance_jar_progress,
-                        Money.format(row.currentMinor, state.baseCurrency, locale),
-                        Money.format(row.jar.targetMinor, state.baseCurrency, locale),
+                        Money.format(row.currentMinor, row.jar.currencyCode, locale),
+                        Money.format(row.jar.targetMinor, row.jar.currencyCode, locale),
                     ),
                     style = MoneyRow,
                     color = GoalsTeal,
@@ -937,7 +975,7 @@ private fun RingLegend(state: FinanceUiState, locale: Locale) {
                         .padding(start = Spacing.m),
                 )
                 Text(
-                    text = Money.format(spend.amountMinor, state.baseCurrency, locale),
+                    text = Money.format(spend.amountMinor, state.analysedCurrency, locale),
                     style = NumberSmall,
                     color = MaterialTheme.colorScheme.onBackground,
                     maxLines = 1,
@@ -994,7 +1032,7 @@ private fun ListBlock(state: FinanceUiState, locale: Locale) {
                     )
                 }
                 Text(
-                    text = Money.format(spend.amountMinor, state.baseCurrency, locale),
+                    text = Money.format(spend.amountMinor, state.analysedCurrency, locale),
                     style = MoneyRow,
                     // Перебор лимита — статус, а не оттенок: цвет перебивает
                     // цвет категории, потому что «вышел за план» важнее (§9.3).
@@ -1010,8 +1048,8 @@ private fun ListBlock(state: FinanceUiState, locale: Locale) {
                 Text(
                     text = stringResource(
                         R.string.category_plan_of,
-                        Money.format(spend.amountMinor, state.baseCurrency, locale),
-                        Money.format(planned, state.baseCurrency, locale),
+                        Money.format(spend.amountMinor, state.analysedCurrency, locale),
+                        Money.format(planned, state.analysedCurrency, locale),
                     ),
                     style = NumberSmall,
                     color = when {
@@ -1103,7 +1141,7 @@ private fun flowCaption(state: FinanceUiState, locale: Locale): String {
     } else {
         stringResource(R.string.finance_flow_income)
     }
-    val amount = Money.format(state.periodTotalMinor, state.baseCurrency, locale)
+    val amount = Money.format(state.periodTotalMinor, state.analysedCurrency, locale)
     return "$label · $amount"
 }
 

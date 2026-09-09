@@ -5,7 +5,16 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.foundation.layout.Box
 import eu.bolh.app.data.prefs.LanguagePrefs
+import eu.bolh.app.ui.common.Motion
 import eu.bolh.app.ui.navigation.BolhApp
 
 class MainActivity : ComponentActivity() {
@@ -22,6 +31,17 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
-        setContent { BolhApp() }
+        setContent {
+            // Появление приложения — вторая половина перехода. Смена языка
+            // пересоздаёт Activity, и без этого затухания новый экран
+            // возникал рывком: настройки гасли плавно, а возвращались щелчком.
+            val appear = remember { Animatable(0f) }
+            LaunchedEffect(Unit) {
+                appear.animateTo(1f, tween(Motion.CONTENT_MS))
+            }
+            Box(modifier = Modifier.fillMaxSize().alpha(appear.value)) {
+                BolhApp()
+            }
+        }
     }
 }

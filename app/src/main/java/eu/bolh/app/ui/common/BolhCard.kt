@@ -32,6 +32,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import eu.bolh.app.ui.theme.Ink
 import eu.bolh.app.ui.theme.LocalStatusColors
 import eu.bolh.app.ui.theme.NumberSmall
 import eu.bolh.app.ui.theme.NumberTile
@@ -343,6 +344,110 @@ fun Hint(
             text = text,
             style = MaterialTheme.typography.labelMedium,
             color = status.textTertiary,
+        )
+    }
+}
+
+/**
+ * Заголовок группы: мелкая надпись над блоком.
+ *
+ * Значок необязателен, но там, где он есть, он и есть опознавательный знак
+ * группы: глаз находит «задачи» по значку быстрее, чем по слову (§9.2).
+ */
+@Composable
+fun SectionTitle(
+    text: String,
+    modifier: Modifier = Modifier,
+    icon: Int? = null,
+) {
+    val status = LocalStatusColors.current
+
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Spacing.s),
+        modifier = modifier.padding(
+            start = Spacing.screenPadding,
+            top = Spacing.l,
+            bottom = Spacing.xs,
+        ),
+    ) {
+        if (icon != null) {
+            Icon(
+                painter = painterResource(icon),
+                contentDescription = null,
+                tint = status.textTertiary,
+                modifier = Modifier.size(16.dp),
+            )
+        }
+        Text(
+            text = text,
+            style = MaterialTheme.typography.labelMedium,
+            color = status.textTertiary,
+        )
+    }
+}
+
+/**
+ * Чип выбора: залит, когда выбран.
+ *
+ * Заменяет FilterChip из Material. Тот менял заливку и обводку скачком, и на
+ * переключении «полезная / вредная» рамка дёргалась. Здесь все три цвета
+ * переезжают одним и тем же переходом, а нажатие проминает чип (§9.2).
+ */
+@Composable
+fun SelectChip(
+    text: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    icon: Int? = null,
+    accent: Color = MaterialTheme.colorScheme.primary,
+) {
+    val status = LocalStatusColors.current
+    val shape = RoundedCornerShape(percent = 50)
+    val press = rememberPressSource()
+
+    val fill by animateColorAsState(
+        targetValue = if (selected) accent else Color.Transparent,
+        animationSpec = Motion.color,
+        label = "select-fill",
+    )
+    val border by animateColorAsState(
+        targetValue = if (selected) accent else status.divider,
+        animationSpec = Motion.color,
+        label = "select-border",
+    )
+    val content by animateColorAsState(
+        targetValue = if (selected) Ink else status.textSecondary,
+        animationSpec = Motion.color,
+        label = "select-content",
+    )
+
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Spacing.s),
+        modifier = modifier
+            .pressScale(press)
+            .clip(shape)
+            .background(fill)
+            .border(width = 1.dp, color = border, shape = shape)
+            .clickable(interactionSource = press, indication = ripple(), onClick = onClick)
+            .padding(horizontal = Spacing.m, vertical = Spacing.s),
+    ) {
+        if (icon != null) {
+            Icon(
+                painter = painterResource(icon),
+                contentDescription = null,
+                tint = content,
+                modifier = Modifier.size(18.dp),
+            )
+        }
+        Text(
+            text = text,
+            style = MaterialTheme.typography.labelLarge,
+            color = content,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
         )
     }
 }

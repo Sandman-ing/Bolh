@@ -52,6 +52,7 @@ import eu.bolh.app.domain.templates.SystemCategories
 import eu.bolh.app.ui.common.BolhIcons
 import eu.bolh.app.ui.common.BolhCard
 import eu.bolh.app.ui.common.ConfirmDeleteDialog
+import eu.bolh.app.ui.common.tappable
 import eu.bolh.app.ui.common.Money
 import eu.bolh.app.ui.common.rememberLocale
 import eu.bolh.app.ui.theme.Ink
@@ -259,7 +260,9 @@ fun TransactionsScreen(
                         category = transaction.categoryId?.let { state.categoriesById[it] },
                         account = state.accountsById[transaction.accountId],
                         locale = locale,
-                        currency = state.baseCurrency,
+                        // Валюта у операции своя: список сводит вместе счета
+                        // в разных валютах, и общий знак тут соврал бы.
+                        currency = transaction.currencyCode.ifBlank { state.baseCurrency },
                         selected = transaction.id in selection,
                         selecting = selecting,
                         onClick = {
@@ -302,10 +305,10 @@ private fun TransactionRow(
         ),
         modifier = Modifier
             .padding(horizontal = Spacing.screenPadding, vertical = Spacing.xs)
-            .combinedClickable(
+            .tappable(
                 onClick = onClick,
                 onLongClick = onLongClick,
-                onLongClickLabel = stringResource(R.string.common_delete),
+                longClickLabel = stringResource(R.string.common_delete),
             ),
     ) {
     Row(verticalAlignment = Alignment.CenterVertically) {

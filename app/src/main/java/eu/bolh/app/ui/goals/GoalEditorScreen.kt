@@ -6,6 +6,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -213,18 +214,13 @@ fun GoalEditorScreen(
                     val stageFallback = stringResource(R.string.goal_stage_default)
                     val taskFallback = stringResource(R.string.goal_task_default)
 
-                    // Порядок меняется переходом, а не подменой: этап, прыгнувший
-                    // на место соседа мгновенно, читается как сбой отрисовки.
-                    AnimatedContent(
-                        targetState = draft.stages,
-                        transitionSpec = {
-                            fadeIn(tween(Motion.CONTENT_MS)) togetherWith
-                                fadeOut(tween(Motion.CONTENT_MS / 2))
-                        },
-                        label = "stages-order",
-                    ) { stages ->
-                    Column {
-                    stages.forEachIndexed { index, stage ->
+                    // Список этапов НЕ заворачивается в AnimatedContent: он
+                    // сравнивает состояние целиком, а состояние здесь меняется
+                    // на каждый набранный символ. Поле пересоздавалось, теряло
+                    // фокус, и клавиатура закрывалась после каждой буквы.
+                    // Перестановка и так видна: в полях просто меняется текст.
+                    Column(modifier = Modifier.animateContentSize(Motion.resize)) {
+                    draft.stages.forEachIndexed { index, stage ->
                         BolhCard(
                             corner = Radius.block,
                             modifier = Modifier.padding(
@@ -341,7 +337,6 @@ fun GoalEditorScreen(
                     }
 
                     }
-                    }
 
                     BolhCard(
                         corner = Radius.block,
@@ -358,9 +353,14 @@ fun GoalEditorScreen(
                                 singleLine = true,
                                 modifier = Modifier.weight(1f),
                             )
-                            TextButton(onClick = { viewModel.addStage(stageFallback) }) {
-                                Text(stringResource(R.string.goal_add_stage))
-                            }
+                            // Раньше это была голая надпись, и на фоне поля
+                            // ввода она не читалась как кнопка (§9.2).
+                            PillButton(
+                                text = stringResource(R.string.goal_add_stage),
+                                onClick = { viewModel.addStage(stageFallback) },
+                                icon = R.drawable.ic_flag,
+                                modifier = Modifier.padding(start = Spacing.s),
+                            )
                         }
                     }
                 }

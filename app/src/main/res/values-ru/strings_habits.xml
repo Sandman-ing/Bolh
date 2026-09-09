@@ -6,6 +6,7 @@
     <string name="habits_bad_hint_limit">До %1$d срывов в неделю; сверх того неделя считается сорванной.</string>
     <string name="habits_bad_action_hint">Кнопка записывает срыв. Долгое нажатие отменяет последний.</string>
     <string name="habits_week_previous">Прошлая неделя</string>
+    <string name="habits_today">Сегодня</string>
     <string name="habits_week_next">Следующая неделя</string>
     <string name="habits_mark_minimum">мин</string>
     <string name="habits_mark_norm">норма</string>
@@ -45,12 +46,12 @@
     <string name="habit_schedule_weekdays">Выбранные дни</string>
     <string name="habit_schedule_times">N раз в неделю</string>
     <string name="habit_advanced">Расширенные настройки</string>
-    <string name="habit_mode_title">При пропуске</string>
-    <string name="habit_mode_game">Серия обнуляется</string>
-    <string name="habit_mode_skips">Два дня отдыха в месяц не ломают счёт</string>
-    <string name="habit_mode_minimum">Плохой день не обнуляет прогресс</string>
-    <string name="habit_mode_counter">Считать дни без срыва</string>
-    <string name="habit_mode_limit">Не больше N раз в неделю</string>
+    <string name="habit_mode_title">При пропуске:</string>
+    <string name="habit_mode_game">серия обнуляется</string>
+    <string name="habit_mode_skips">два дня отдыха в месяц не ломают счёт</string>
+    <string name="habit_mode_minimum">плохой день не обнуляет прогресс</string>
+    <string name="habit_mode_counter">считать дни без срыва</string>
+    <string name="habit_mode_limit">не больше N раз в неделю</string>
     <string name="habit_minimum_hint">Минимум: то, что невозможно не сделать</string>
     <string name="habit_norm_hint">Норма: то, ради чего привычка заведена</string>
     <string name="habit_limit_hint">Раз в неделю</string>
@@ -66,6 +67,8 @@
     <string name="habit_done_minimum">Сделано: минимум</string>
     <string name="habit_done_norm">Сделано: норма</string>
     <string name="habit_save">Сохранить</string>
+    <string name="habit_blocked_name">Назовите привычку — больше ничего не нужно.</string>
+    <string name="habit_blocked_days">Отметьте хотя бы один день недели, иначе привычку не ждут никогда.</string>
     <string name="habit_delete">Удалить</string>
     <string name="habit_link_goal">Привязать к цели</string>
     <string name="habit_pause">Пауза</string>

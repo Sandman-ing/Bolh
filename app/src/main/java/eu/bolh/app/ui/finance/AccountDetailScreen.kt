@@ -48,11 +48,14 @@ import eu.bolh.app.domain.model.Category
 import eu.bolh.app.domain.model.Transaction
 import eu.bolh.app.domain.templates.SystemCategories
 import eu.bolh.app.ui.common.BolhIcons
+import eu.bolh.app.data.prefs.CurrencyPrefs
 import eu.bolh.app.ui.common.BolhCard
 import eu.bolh.app.ui.common.ConfirmDeleteDialog
 import eu.bolh.app.ui.common.PillButton
+import eu.bolh.app.ui.common.CurrencySheet
 import eu.bolh.app.ui.common.Hint
 import eu.bolh.app.ui.common.MetricChip
+import eu.bolh.app.ui.common.tappable
 import eu.bolh.app.ui.common.Money
 import eu.bolh.app.ui.common.rememberLocale
 import eu.bolh.app.ui.theme.Ink
@@ -85,6 +88,20 @@ fun AccountDetailScreen(
     var editing by remember { mutableStateOf(false) }
     var name by remember { mutableStateOf("") }
     var balance by remember { mutableStateOf("") }
+    var currency by remember { mutableStateOf(state.baseCurrency) }
+    var currencyPicker by remember { mutableStateOf(false) }
+
+    if (currencyPicker) {
+        CurrencySheet(
+            current = currency,
+            locale = locale,
+            onDismiss = { currencyPicker = false },
+            onSelect = {
+                currency = it
+                currencyPicker = false
+            },
+        )
+    }
     // Выбор живёт на экране: он не переживает уход отсюда и ничего не значит
     // для данных — в отличие от самих операций.
     var selection by remember { mutableStateOf(emptySet<String>()) }
@@ -98,7 +115,12 @@ fun AccountDetailScreen(
     LaunchedEffect(account?.id, state.balanceMinor) {
         if (!editing) {
             name = account?.name.orEmpty()
-            balance = Money.formatPlain(state.balanceMinor, locale = locale)
+            balance = Money.formatPlain(
+                state.balanceMinor,
+                Money.fractionDigitsOf(state.baseCurrency),
+                locale,
+            )
+            currency = state.baseCurrency
         }
     }
 
@@ -293,12 +315,19 @@ fun AccountDetailScreen(
                                 .fillMaxWidth()
                                 .padding(top = Spacing.s),
                         )
+                        PillButton(
+                            text = "$currency · " + CurrencyPrefs.nameOf(currency, locale),
+                            onClick = { currencyPicker = true },
+                            icon = R.drawable.ic_chevron_down,
+                            iconAtEnd = true,
+                            modifier = Modifier.padding(top = Spacing.s),
+                        )
                         // Остаток правится начальной суммой, а не подчисткой истории:
                         // операции остаются на месте, меняется точка отсчёта.
                         Hint(
-            text = stringResource(R.string.account_balance_note),
+                            text = stringResource(R.string.account_balance_note),
                             modifier = Modifier.padding(top = Spacing.xs),
-        )
+                        )
                         Row(
                             horizontalArrangement = Arrangement.spacedBy(Spacing.s),
                             modifier = Modifier.padding(top = Spacing.m),
@@ -306,7 +335,7 @@ fun AccountDetailScreen(
                             PillButton(
                                 text = stringResource(R.string.account_save),
                                 onClick = {
-                                    viewModel.save(name, balance)
+                                    viewModel.save(name, balance, currency)
                                     editing = false
                                 },
                                 modifier = Modifier.weight(1f),
@@ -426,10 +455,10 @@ private fun androidx.compose.foundation.lazy.LazyListScope.section(
                     horizontal = Spacing.screenPadding,
                     vertical = Spacing.xs,
                 )
-                .combinedClickable(
+                .tappable(
                     onClick = { if (selecting) onToggle(transaction.id) },
                     onLongClick = { onLongClick(transaction) },
-                    onLongClickLabel = stringResource(R.string.common_delete),
+                    longClickLabel = stringResource(R.string.common_delete),
                 ),
         ) {
         Row(verticalAlignment = Alignment.CenterVertically) {

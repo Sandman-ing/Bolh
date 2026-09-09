@@ -49,6 +49,9 @@
     <string name="finance_jar_progress">%1$s из %2$s</string>
 
     <string name="account_new_title">Новый счёт</string>
+    <string name="account_currency">Валюта счёта</string>
+    <string name="account_currency_note">Суммы на этом счете считаются в его собственной валюте. Пересчёта нет: итоги показываются по каждой валюте отдельно.</string>
+    <string name="finance_currency_scope">Валюта</string>
     <string name="account_name_hint">Название</string>
     <string name="account_balance_hint">Текущий остаток</string>
     <string name="account_new_balance">Новый остаток</string>

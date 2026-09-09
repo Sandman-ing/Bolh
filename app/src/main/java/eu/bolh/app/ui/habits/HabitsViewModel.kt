@@ -61,10 +61,21 @@ data class HabitsUiState(
     val weekProgress: Map<LocalDate, DayProgress> = emptyMap(),
     val loaded: Boolean = false,
 ) {
+    /**
+     * Пусто — значит привычек нет вовсе.
+     *
+     * Раньше сюда попадал и день, на который ничего не приходится: экран
+     * подменялся приглашением завести привычку вместе с календарём, и вернуться
+     * в сегодня было нечем — календарь-то исчез (§5.5).
+     */
     val isEmpty: Boolean get() = loaded && good.isEmpty() && bad.isEmpty()
 
     /** Полезные привычки, которых сегодня ждут. */
     val goodToday: List<HabitRowState> get() = good.filter { it.plannedOnDay }
+
+    /** Вредная привычка тоже начинается когда-то: до этой даты её не отслеживали. */
+    val badToday: List<HabitRowState>
+        get() = bad.filterNot { selectedDate.isBefore(it.habit.startDate) }
 
     /** Остальные — они не пропали, просто сегодня их никто не спрашивает. */
     val goodOtherDays: List<HabitRowState> get() = good.filterNot { it.plannedOnDay }
@@ -116,11 +127,7 @@ class HabitsViewModel(private val repository: HabitRepository) : ViewModel() {
                 selectedDate = selected,
                 weekDays = weekDays,
                 good = rows.filter { it.habit.kind == HabitKind.Good },
-                // Вредная привычка тоже начинается когда-то: до этой даты
-                // спрашивать о срывах не о чем, её ещё не отслеживали.
-                bad = rows.filter {
-                    it.habit.kind == HabitKind.Bad && !selected.isBefore(it.habit.startDate)
-                },
+                bad = rows.filter { it.habit.kind == HabitKind.Bad },
                 weekProgress = weekDays.associateWith { day ->
                     progressOn(day, habits, marks, pauses)
                 },
@@ -246,6 +253,11 @@ class HabitsViewModel(private val repository: HabitRepository) : ViewModel() {
 
     fun showPreviousWeek() {
         selectedDate.value = selectedDate.value.minusWeeks(1)
+    }
+
+    /** Вернуться в сегодня одним касанием, из какой бы дали ни забрели. */
+    fun showToday() {
+        selectedDate.value = repository.today()
     }
 
     fun showNextWeek() {

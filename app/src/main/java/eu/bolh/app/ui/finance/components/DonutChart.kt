@@ -2,12 +2,18 @@ package eu.bolh.app.ui.finance.components
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import eu.bolh.app.ui.theme.Spacing
 import eu.bolh.app.ui.theme.MoneyHero
 import eu.bolh.app.ui.theme.NumberSmall
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -16,7 +22,11 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.dp
+
+/** Ниже этого кегля сумма перестаёт быть заголовком и её незачем ужимать. */
+private val MIN_HERO_SIZE = 20.sp
 
 /** Один сектор кольца: доля от целого и цвет. */
 data class DonutSlice(val fraction: Float, val color: Color)
@@ -80,10 +90,33 @@ fun DonutChart(
         // и не должен искать это где-то сбоку. Кольцо вокруг — то, куда
         // эти деньги уходят, и связь читается без единой подписи.
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            // Сумма ужимается под внутренний круг. «26 850 AMD» в драмах длиннее
+            // «300 €», и при жёстком кегле она переносилась по слогам прямо на
+            // кольцо: получалось «26 850 AM / D». Кегль подбирается замером.
+            val room = diameter - thickness * 2 - Spacing.m * 2
+            var fontSize by remember(centerText) { mutableStateOf(MoneyHero.fontSize) }
+            var fitted by remember(centerText) { mutableStateOf(false) }
+
             Text(
                 text = centerText,
-                style = MoneyHero,
-                color = MaterialTheme.colorScheme.onBackground,
+                style = MoneyHero.copy(fontSize = fontSize, lineHeight = fontSize * 1.15f),
+                maxLines = 1,
+                softWrap = false,
+                // До подбора текст невидим: иначе на первом кадре мелькает
+                // крупный вариант и число «дёргается».
+                color = if (fitted) {
+                    MaterialTheme.colorScheme.onBackground
+                } else {
+                    Color.Transparent
+                },
+                modifier = Modifier.widthIn(max = room),
+                onTextLayout = { result ->
+                    if (result.hasVisualOverflow && fontSize > MIN_HERO_SIZE) {
+                        fontSize *= 0.92f
+                    } else {
+                        fitted = true
+                    }
+                },
             )
             if (centerCaption != null) {
                 Text(

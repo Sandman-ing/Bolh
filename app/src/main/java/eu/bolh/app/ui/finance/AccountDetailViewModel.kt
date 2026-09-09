@@ -59,7 +59,8 @@ class AccountDetailViewModel(
         }
 
         AccountDetailUiState(
-            baseCurrency = currency,
+            // Валюта счёта, а не приложения: внутри счёта всё считается в ней.
+            baseCurrency = account.currencyCode.ifBlank { currency },
             account = account,
             balanceMinor = FinanceAnalytics.balanceOf(account, transactions),
             expenses = expenses,
@@ -79,13 +80,17 @@ class AccountDetailViewModel(
      * начальной суммы: история операций при этом не трогается — иначе цифра
      * сошлась бы ценой вранья в прошлом.
      */
-    fun save(name: String, balanceText: String) {
+    fun save(name: String, balanceText: String, currencyCode: String) {
         val account = state.value.account ?: return
-        val desired = Money.parseSignedMinor(balanceText)
+        val desired = Money.parseSignedMinor(
+            balanceText,
+            Money.fractionDigitsOf(currencyCode),
+        )
 
         viewModelScope.launch {
             finance.updateAccount(
                 accountId = account.id,
+                currencyCode = currencyCode,
                 name = name.trim().ifBlank { account.name },
                 initialBalanceMinor = if (desired == null) {
                     account.initialBalanceMinor

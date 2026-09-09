@@ -54,13 +54,17 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import eu.bolh.app.R
 import eu.bolh.app.domain.model.GoalStatus
+import androidx.compose.animation.animateColorAsState
 import eu.bolh.app.ui.common.BolhCard
 import eu.bolh.app.ui.common.MetricChip
 import eu.bolh.app.ui.common.PillButton
 import eu.bolh.app.ui.common.RenameDialog
 import eu.bolh.app.ui.common.BolhIcons
+import eu.bolh.app.ui.common.completionPop
+import eu.bolh.app.ui.common.Motion
 import eu.bolh.app.ui.common.CompletionPulse
 import eu.bolh.app.ui.common.ConfirmDeleteDialog
+import eu.bolh.app.ui.common.tappable
 import eu.bolh.app.ui.common.Money
 import eu.bolh.app.ui.common.rememberLocale
 import eu.bolh.app.ui.theme.HabitsViolet
@@ -610,12 +614,12 @@ fun GoalDetailScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .combinedClickable(
+                        .tappable(
                             onClick = { viewModel.toggleStage(stageState.stage) },
                             onLongClick = {
                                 pendingStage = stageState.stage.id to stageState.stage.name
                             },
-                            onLongClickLabel = stringResource(R.string.goal_rename),
+                            longClickLabel = stringResource(R.string.goal_rename),
                         ),
                 ) {
                     // Номер этапа: порядок — часть смысла, без него список
@@ -637,6 +641,7 @@ fun GoalDetailScreen(
                             .wrapContentHeight(),
                     )
                     Checkbox(
+                        modifier = Modifier.completionPop(stageState.stage.isDone, peak = 1.28f),
                         checked = stageState.stage.isDone,
                         onCheckedChange = { viewModel.toggleStage(stageState.stage) },
                     )
@@ -664,21 +669,31 @@ fun GoalDetailScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .combinedClickable(
+                            .tappable(
                                 onClick = { viewModel.toggleTask(task) },
                                 onLongClick = { pendingTask = task.id to task.name },
-                                onLongClickLabel = stringResource(R.string.goal_rename),
+                                longClickLabel = stringResource(R.string.goal_rename),
                             )
                             .padding(start = Spacing.xl),
                     ) {
                         Checkbox(
                             checked = task.isDone,
                             onCheckedChange = { viewModel.toggleTask(task) },
+                            modifier = Modifier.completionPop(task.isDone),
+                        )
+                        val taskColor by animateColorAsState(
+                            targetValue = if (task.isDone) {
+                                status.textTertiary
+                            } else {
+                                status.textSecondary
+                            },
+                            animationSpec = Motion.color,
+                            label = "task-color",
                         )
                         Text(
                             text = task.name,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = if (task.isDone) status.textTertiary else status.textSecondary,
+                            color = taskColor,
                             textDecoration = if (task.isDone) TextDecoration.LineThrough else null,
                         )
                     }

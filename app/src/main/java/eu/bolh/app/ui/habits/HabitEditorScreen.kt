@@ -8,6 +8,13 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -61,6 +68,7 @@ import eu.bolh.app.domain.model.HabitMode
 import eu.bolh.app.domain.model.ScheduleType
 import eu.bolh.app.domain.templates.HabitTemplate
 import eu.bolh.app.domain.templates.HabitTemplates
+import eu.bolh.app.ui.common.SelectChip
 import eu.bolh.app.ui.common.BolhIcons
 import eu.bolh.app.ui.common.Hint
 import eu.bolh.app.ui.common.Motion
@@ -126,10 +134,15 @@ fun HabitEditorScreen(
             )
         },
     ) { innerPadding ->
+        // Смена вида привычки и расписания меняет состав экрана: подписи,
+        // выбор дней, набор режимов. Без этого высота скакала, и рамки под
+        // пальцем прыгали. animateContentSize, а не AnimatedContent: последний
+        // пересоздаёт содержимое и отбирает фокус у полей ввода.
         Column(
             modifier = Modifier
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
+                .animateContentSize(Motion.resize)
                 .padding(bottom = Spacing.xxl),
         ) {
             if (!draft.isEditing) {
@@ -253,6 +266,23 @@ fun HabitEditorScreen(
                     .padding(horizontal = Spacing.screenPadding, vertical = Spacing.m),
             ) {
                 Text(stringResource(R.string.habit_save))
+            }
+
+            // Гасшая без объяснений кнопка читалась как поломка приложения.
+            AnimatedVisibility(
+                visible = draft.blocker != null,
+                enter = fadeIn(tween(Motion.CONTENT_MS)) + expandVertically(Motion.resize),
+                exit = fadeOut(tween(Motion.CONTENT_MS / 2)) + shrinkVertically(Motion.resize),
+            ) {
+                Hint(
+                    text = stringResource(
+                        when (draft.blocker) {
+                            SaveBlocker.Days -> R.string.habit_blocked_days
+                            else -> R.string.habit_blocked_name
+                        },
+                    ),
+                    modifier = Modifier.padding(horizontal = Spacing.screenPadding),
+                )
             }
 
             if (draft.isEditing) {
@@ -720,33 +750,11 @@ private fun BolhChip(
 ) {
     val status = LocalStatusColors.current
     val press = rememberPressSource()
-    FilterChip(
+    SelectChip(
+        text = text,
         selected = selected,
         onClick = onClick,
-        interactionSource = press,
-        modifier = Modifier.pressScale(press),
-        label = { Text(text, style = MaterialTheme.typography.labelLarge) },
-        leadingIcon = icon?.let {
-            {
-                Icon(
-                    painter = painterResource(BolhIcons.resFor(it)),
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp),
-                )
-            }
-        },
-        colors = FilterChipDefaults.filterChipColors(
-            containerColor = Color.Transparent,
-            labelColor = status.textSecondary,
-            selectedContainerColor = MaterialTheme.colorScheme.primary,
-            selectedLabelColor = Ink,
-        ),
-        border = FilterChipDefaults.filterChipBorder(
-            enabled = true,
-            selected = selected,
-            borderColor = status.divider,
-            selectedBorderColor = MaterialTheme.colorScheme.primary,
-        ),
+        icon = icon?.let { BolhIcons.resFor(it) },
     )
 }
 

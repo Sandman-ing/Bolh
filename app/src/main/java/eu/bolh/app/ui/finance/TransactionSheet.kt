@@ -44,6 +44,7 @@ import eu.bolh.app.R
 import eu.bolh.app.domain.model.Category
 import eu.bolh.app.domain.model.TransactionType
 import eu.bolh.app.domain.templates.SystemCategories
+import eu.bolh.app.ui.common.SelectChip
 import eu.bolh.app.ui.common.BolhIcons
 import eu.bolh.app.ui.common.rememberLocale
 import eu.bolh.app.ui.theme.Ink
@@ -192,7 +193,14 @@ fun TransactionSheet(
                     contentPadding = PaddingValues(horizontal = Spacing.screenPadding),
                 ) {
                     items(
-                        options.accounts.filter { it.id != draft.accountId },
+                        // Счета чужой валюты в получатели не годятся: без курса
+                        // перевод в них означал бы, что драмы стали евро сами собой.
+                        options.accounts.filter { candidate ->
+                            candidate.id != draft.accountId &&
+                                candidate.currencyCode == options.accounts
+                                    .firstOrNull { it.id == draft.accountId }
+                                    ?.currencyCode
+                        },
                         key = { it.id },
                     ) { account ->
                         SheetChip(
@@ -324,34 +332,12 @@ private fun SheetChip(
 ) {
     val status = LocalStatusColors.current
     val selectedColor = accent ?: MaterialTheme.colorScheme.primary
-    FilterChip(
+    SelectChip(
+        text = text,
         selected = selected,
         onClick = onClick,
-        shape = RoundedCornerShape(percent = 50),
-        label = { Text(text, style = MaterialTheme.typography.labelLarge) },
-        leadingIcon = icon?.let {
-            {
-                Icon(
-                    painter = painterResource(BolhIcons.resFor(it)),
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp),
-                )
-            }
-        },
-        colors = FilterChipDefaults.filterChipColors(
-            containerColor = Color.Transparent,
-            labelColor = status.textSecondary,
-            selectedContainerColor = selectedColor,
-            selectedLabelColor = Ink,
-            selectedLeadingIconColor = Ink,
-        ),
-        border = FilterChipDefaults.filterChipBorder(
-            enabled = true,
-            selected = selected,
-            borderColor = status.divider,
-            selectedBorderColor = selectedColor,
-        ),
-        modifier = Modifier.clip(RoundedCornerShape(percent = 50)),
+        icon = icon?.let { BolhIcons.resFor(it) },
+        accent = selectedColor,
     )
 }
 

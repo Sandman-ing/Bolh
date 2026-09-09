@@ -1,5 +1,11 @@
 package eu.bolh.app.ui.habits
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -30,6 +36,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import eu.bolh.app.R
 import androidx.compose.foundation.layout.PaddingValues
+import eu.bolh.app.ui.common.Motion
 import eu.bolh.app.ui.common.BolhCard
 import eu.bolh.app.ui.common.PillButton
 import eu.bolh.app.ui.common.EmptyState
@@ -86,6 +93,8 @@ fun HabitsScreen(
                 onPrevious = viewModel::showPreviousWeek,
                 onNext = viewModel::showNextWeek,
                 nextEnabled = state.weekDays.lastOrNull()?.isBefore(state.today) == true,
+                onToday = viewModel::showToday,
+                todayVisible = state.selectedDate != state.today,
             )
             WeekStrip(
                 days = state.weekDays,
@@ -167,7 +176,7 @@ fun HabitsScreen(
                 }
             }
 
-            if (state.bad.isNotEmpty()) {
+            if (state.badToday.isNotEmpty()) {
                 item(key = "bad-header") {
                     Text(
                         text = stringResource(R.string.habits_bad_section),
@@ -180,7 +189,7 @@ fun HabitsScreen(
                         ),
                     )
                 }
-                items(state.bad, key = { it.habit.id }) { row ->
+                items(state.badToday, key = { it.habit.id }) { row ->
                     BolhCard(corner = Radius.block, contentPadding = PaddingValues(0.dp)) {
                         HabitRowItem(
                             row = row,
@@ -201,6 +210,8 @@ private fun WeekHeader(
     onPrevious: () -> Unit,
     onNext: () -> Unit,
     nextEnabled: Boolean,
+    onToday: () -> Unit,
+    todayVisible: Boolean,
     modifier: Modifier = Modifier,
 ) {
     val status = LocalStatusColors.current
@@ -217,6 +228,19 @@ private fun WeekHeader(
             color = MaterialTheme.colorScheme.onBackground,
             modifier = Modifier.weight(1f),
         )
+        // Дорога назад в сегодня должна быть одна и короткая: шагать
+        // стрелкой через недели — не путь, а наказание.
+        AnimatedVisibility(
+            visible = todayVisible,
+            enter = fadeIn(tween(Motion.CONTENT_MS)) + expandHorizontally(Motion.resize),
+            exit = fadeOut(tween(Motion.CONTENT_MS / 2)) + shrinkHorizontally(Motion.resize),
+        ) {
+            PillButton(
+                text = stringResource(R.string.habits_today),
+                onClick = onToday,
+                modifier = Modifier.padding(end = Spacing.xs),
+            )
+        }
         Row(horizontalArrangement = Arrangement.spacedBy(Spacing.xs)) {
             Icon(
                 painter = painterResource(R.drawable.ic_chevron_left),

@@ -30,6 +30,9 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /** Черновик привычки. Быстрый путь трогает три верхних поля, остальное живёт под кнопкой. */
+/** Причина, по которой привычку пока нельзя сохранить. */
+enum class SaveBlocker { Name, Days }
+
 data class HabitDraft(
     val id: String? = null,
     val name: String = "",
@@ -55,9 +58,20 @@ data class HabitDraft(
 ) {
     val isEditing: Boolean get() = id != null
 
-    val canSave: Boolean
-        get() = name.isNotBlank() &&
-            (scheduleType != ScheduleType.Weekdays || days.isNotEmpty())
+    val canSave: Boolean get() = blocker == null
+
+    /**
+     * Что мешает сохранить.
+     *
+     * Кнопка гасла молча, и человек жал в неё снова и снова, не понимая, почему
+     * ничего не происходит. Причина должна быть названа вслух (§9.4).
+     */
+    val blocker: SaveBlocker?
+        get() = when {
+            name.isBlank() -> SaveBlocker.Name
+            scheduleType == ScheduleType.Weekdays && days.isEmpty() -> SaveBlocker.Days
+            else -> null
+        }
 
     /** Режимы, доступные этому виду привычки: у вредных своя логика счёта (§5.4). */
     val availableModes: List<HabitMode>
@@ -199,7 +213,10 @@ class HabitEditorViewModel(
         viewModelScope.launch {
             val habit = draft.toHabit(today = repository.today())
             if (draft.isEditing) repository.update(habit) else repository.create(habit)
-            reminders.schedule(habit)
+            // Привычка уже сохранена. Если планировщик споткнётся, экран всё
+            // равно должен закрыться: иначе кнопка выглядит сломанной, хотя
+            // данные на месте. Напоминание перезаведётся при следующей правке.
+            runCatching { reminders.schedule(habit) }
             _draft.update { it.copy(saved = true) }
         }
     }

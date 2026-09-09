@@ -89,6 +89,7 @@ class FinanceRepository(
         initialBalanceMinor: Long,
         icon: String? = null,
         type: AccountType? = null,
+        currencyCode: String? = null,
     ) {
         val existing = dao.accountById(accountId) ?: return
         dao.upsertAccount(
@@ -96,6 +97,7 @@ class FinanceRepository(
                 name = name,
                 icon = icon ?: existing.icon,
                 type = type?.name ?: existing.type,
+                currencyCode = currencyCode ?: existing.currencyCode,
                 initialBalanceMinor = initialBalanceMinor,
                 updatedAt = clock.millis(),
             ),

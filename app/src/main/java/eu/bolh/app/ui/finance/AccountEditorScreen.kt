@@ -38,6 +38,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
@@ -52,8 +53,15 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import eu.bolh.app.BolhApplication
 import eu.bolh.app.R
 import eu.bolh.app.data.repository.FinanceRepository
+import eu.bolh.app.data.prefs.CurrencyPrefs
 import eu.bolh.app.domain.model.AccountType
 import eu.bolh.app.ui.common.BolhIcons
+import eu.bolh.app.ui.common.SelectChip
+import eu.bolh.app.ui.common.CurrencySheet
+import eu.bolh.app.ui.common.Hint
+import eu.bolh.app.ui.common.PillButton
+import eu.bolh.app.ui.common.SectionTitle
+import eu.bolh.app.ui.common.rememberLocale
 import eu.bolh.app.ui.common.Money
 import eu.bolh.app.ui.theme.Ink
 import eu.bolh.app.ui.theme.LocalStatusColors
@@ -68,17 +76,28 @@ class AccountEditorViewModel(private val finance: FinanceRepository) : ViewModel
     private val _saved = MutableStateFlow(false)
     val saved: StateFlow<Boolean> = _saved.asStateFlow()
 
-    fun save(name: String, icon: String, type: AccountType, balanceText: String) {
+    fun save(
+        name: String,
+        icon: String,
+        type: AccountType,
+        balanceText: String,
+        currencyCode: String,
+    ) {
         if (name.isBlank()) return
-        val minor = Money.parseMinor(balanceText)?.let {
-            Math.round(it * 100.0)
-        } ?: 0L
+        // parseSignedMinor уже возвращает минорные единицы. Домножение на сто
+        // раздувало начальный остаток ровно в сто раз, и счёт с самого начала
+        // показывал не ту сумму. Ноль и минус допустимы: остаток бывает и таким.
+        val minor = Money.parseSignedMinor(
+            balanceText,
+            Money.fractionDigitsOf(currencyCode),
+        ) ?: 0L
         viewModelScope.launch {
             finance.createAccount(
                 name = name,
                 icon = icon,
                 type = type,
                 initialBalanceMinor = minor,
+                currencyCode = currencyCode,
             )
             _saved.value = true
         }
@@ -108,6 +127,25 @@ fun AccountEditorScreen(
     var icon by remember { mutableStateOf("credit_card") }
     var type by remember { mutableStateOf(AccountType.Card) }
     var balance by remember { mutableStateOf("") }
+
+    val context = LocalContext.current
+    val locale = rememberLocale()
+    // Новый счёт начинает с валюты по умолчанию, но она не приговор:
+    // Wise в евро и наличные в драмах — обычный случай, а не редкость.
+    var currency by remember { mutableStateOf(CurrencyPrefs.get(context)) }
+    var currencyPicker by remember { mutableStateOf(false) }
+
+    if (currencyPicker) {
+        CurrencySheet(
+            current = currency,
+            locale = locale,
+            onDismiss = { currencyPicker = false },
+            onSelect = {
+                currency = it
+                currencyPicker = false
+            },
+        )
+    }
 
     LaunchedEffect(saved) { if (saved) onDone() }
 
@@ -186,31 +224,38 @@ fun AccountEditorScreen(
                 modifier = Modifier.padding(horizontal = Spacing.screenPadding),
             ) {
                 AccountType.entries.forEach { option ->
-                    FilterChip(
+                    SelectChip(
+                        text = stringResource(typeLabel(option)),
                         selected = type == option,
                         onClick = { type = option },
-                        shape = RoundedCornerShape(percent = 50),
-                        label = {
-                            Text(
-                                text = stringResource(typeLabel(option)),
-                                style = MaterialTheme.typography.labelLarge,
-                            )
-                        },
-                        colors = FilterChipDefaults.filterChipColors(
-                            containerColor = Color.Transparent,
-                            labelColor = status.textSecondary,
-                            selectedContainerColor = MaterialTheme.colorScheme.primary,
-                            selectedLabelColor = Ink,
-                        ),
-                        border = FilterChipDefaults.filterChipBorder(
-                            enabled = true,
-                            selected = type == option,
-                            borderColor = status.divider,
-                            selectedBorderColor = MaterialTheme.colorScheme.primary,
-                        ),
                     )
                 }
             }
+
+            SectionTitle(
+                text = stringResource(R.string.account_currency),
+                modifier = Modifier.padding(
+                    start = Spacing.screenPadding,
+                    top = Spacing.l,
+                ),
+            )
+            PillButton(
+                text = "$currency · " + CurrencyPrefs.nameOf(currency, locale),
+                onClick = { currencyPicker = true },
+                icon = R.drawable.ic_chevron_down,
+                iconAtEnd = true,
+                modifier = Modifier.padding(
+                    horizontal = Spacing.screenPadding,
+                    vertical = Spacing.s,
+                ),
+            )
+            Hint(
+                text = stringResource(R.string.account_currency_note),
+                modifier = Modifier.padding(
+                    horizontal = Spacing.screenPadding,
+                    vertical = Spacing.xs,
+                ),
+            )
 
             OutlinedTextField(
                 value = balance,
@@ -224,7 +269,7 @@ fun AccountEditorScreen(
             )
 
             Button(
-                onClick = { viewModel.save(name, icon, type, balance) },
+                onClick = { viewModel.save(name, icon, type, balance, currency) },
                 enabled = name.isNotBlank(),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary,

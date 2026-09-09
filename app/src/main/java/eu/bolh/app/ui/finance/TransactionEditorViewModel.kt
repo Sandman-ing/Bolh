@@ -116,8 +116,24 @@ class TransactionEditorViewModel(
 
     fun record(onDone: () -> Unit) {
         val draft = _draft.value
-        val amount = draft.amountMinor ?: return
         val accountId = draft.accountId ?: return
+        // Операция записывается в валюте своего счёта, а не приложения: на
+        // счёте в драмах «300» — это триста драмов, и никакого пересчёта.
+        val account = options.value.accounts.firstOrNull { it.id == accountId } ?: return
+        val amount = Money.parseMinor(
+            draft.amountText,
+            Money.fractionDigitsOf(account.currencyCode),
+        ) ?: return
+        // Перевод между разными валютами без курса — просто перенос числа из
+        // одних единиц в другие. Пока курсов нет, такой перевод не пишется.
+        val target = draft.toAccountId
+            ?.let { id -> options.value.accounts.firstOrNull { it.id == id } }
+        if (draft.type == TransactionType.Transfer &&
+            target != null &&
+            target.currencyCode != account.currencyCode
+        ) {
+            return
+        }
         viewModelScope.launch {
             finance.record(
                 Transaction(
@@ -126,8 +142,8 @@ class TransactionEditorViewModel(
                     toAccountId = draft.toAccountId.takeIf { draft.type == TransactionType.Transfer },
                     type = draft.type,
                     amountMinor = amount,
-                    currencyCode = finance.baseCurrency,
-                    // Базовая валюта к самой себе — единица, и она не меняется никогда.
+                    currencyCode = account.currencyCode,
+                    // Валюта к самой себе — единица, и она не меняется никогда.
                     rateToBase = 1.0,
                     date = draft.date,
                     categoryId = draft.categoryId.takeIf { draft.type != TransactionType.Transfer },

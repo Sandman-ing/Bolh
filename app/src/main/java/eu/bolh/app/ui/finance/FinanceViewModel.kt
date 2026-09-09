@@ -94,6 +94,16 @@ data class FinanceUiState(
     val selectedAccountId: String? = null,
     val hideObligatory: Boolean = false,
     val baseCurrency: String = "EUR",
+    /** Валюты, встречающиеся среди счетов. Одна — выбирать нечего. */
+    val currencies: List<String> = emptyList(),
+    /**
+     * Валюта, в которой сейчас считается разбор.
+     *
+     * Курсов приложение не тянет, поэтому складывать драмы с евро оно не
+     * вправе: итог, кольцо и категории показывают одну валюту за раз, а
+     * список счетов — все, каждый в своей (§6.3).
+     */
+    val analysedCurrency: String = "EUR",
     val loaded: Boolean = false,
 ) {
     val isEmpty: Boolean get() = loaded && accounts.isEmpty()
@@ -119,6 +129,12 @@ class FinanceViewModel(
     private val flow = MutableStateFlow(MoneyFlow.Expense)
     private val period = MutableStateFlow(FinancePeriod.Month)
     private val selectedAccount = MutableStateFlow<String?>(null)
+    private val analysedCurrency = MutableStateFlow<String?>(null)
+
+    /** Счёт и валюта ходят парой: выбранный счёт задаёт валюту разбора сам. */
+    private val scopeFlow = combine(selectedAccount, analysedCurrency) { id, code ->
+        id to code
+    }
 
     private val moneyFlow = combine(
         finance.observeAccounts(),
@@ -135,9 +151,9 @@ class FinanceViewModel(
         hideObligatory,
         flow,
         period,
-        selectedAccount,
-    ) { currentView, hidden, currentFlow, currentPeriod, accountId ->
-        Choices(currentView, hidden, currentFlow, currentPeriod, accountId)
+        scopeFlow,
+    ) { currentView, hidden, currentFlow, currentPeriod, scope ->
+        Choices(currentView, hidden, currentFlow, currentPeriod, scope.first, scope.second)
     }
 
     private val extrasFlow = combine(
@@ -158,6 +174,23 @@ class FinanceViewModel(
         val choices = extras.choices
         val (rangeStart, rangeEnd) = choices.period.rangeAt(today)
 
+        // Валюты счетов, частая — первой: по ней и считаем, пока не сказано иначе.
+        val currencies = money.accounts
+            .map { it.currencyCode }
+            .distinct()
+            .sortedByDescending { code -> money.accounts.count { it.currencyCode == code } }
+        val chosenAccount = money.accounts.firstOrNull { it.id == choices.accountId }
+        val analysed = chosenAccount?.currencyCode
+            ?: choices.currency?.takeIf { it in currencies }
+            ?: currency.takeIf { it in currencies }
+            ?: currencies.firstOrNull()
+            ?: currency
+        val accountsHere = money.accounts.filter { it.currencyCode == analysed }
+        val idsHere = accountsHere.map { it.id }.toSet()
+        // Операции чужих валют в разбор не идут вовсе: без курса их сумма
+        // была бы просто сложением разных единиц.
+        val txHere = money.transactions.filter { it.accountId in idsHere }
+
         val categoriesById = money.categories.associateBy { it.id }
         val obligatoryIds = money.categories
             .filter { it.nameKey != null && it.nameKey in SystemCategories.obligatoryKeys }
@@ -166,8 +199,8 @@ class FinanceViewModel(
 
         // Выбранный счёт сужает разбор, но не остаток: остаток берётся отдельно.
         val ofAccount = choices.accountId
-            ?.let { id -> money.transactions.filter { it.accountId == id } }
-            ?: money.transactions
+            ?.let { id -> txHere.filter { it.accountId == id } }
+            ?: txHere
 
         val visible = if (choices.hideObligatory && choices.flow == MoneyFlow.Expense) {
             ofAccount.filter { it.categoryId !in obligatoryIds }
@@ -190,8 +223,11 @@ class FinanceViewModel(
             accounts = money.accounts.map {
                 AccountBalance(it, FinanceAnalytics.balanceOf(it, money.transactions))
             },
-            totalMinor = FinanceAnalytics.totalBalance(money.accounts, money.transactions),
-            reservedMinor = FinanceAnalytics.reservedInJars(money.jars, money.contributions),
+            totalMinor = FinanceAnalytics.totalBalance(accountsHere, txHere),
+            reservedMinor = FinanceAnalytics.reservedInJars(
+                money.jars.filter { it.currencyCode == analysed },
+                money.contributions,
+            ),
             periodTotalMinor = periodTotal,
             spendByCategory = spend.entries
                 .sortedByDescending { it.value }
@@ -202,7 +238,7 @@ class FinanceViewModel(
                         share = if (periodTotal > 0L) amount.toDouble() / periodTotal else 0.0,
                         isAnomalous = comparable && FinanceAnalytics.isAnomalous(
                             currentMinor = amount,
-                            historyMonthly = historyFor(categoryId, money.transactions, month),
+                            historyMonthly = historyFor(categoryId, txHere, month),
                         ),
                         // Лимит помесячный, поэтому и сравнивать его можно
                         // только с месяцем: за день или год «из 300 €» соврёт.
@@ -216,7 +252,7 @@ class FinanceViewModel(
                                 currentMinor = amount,
                                 previousMinor = spendIn(
                                     categoryId,
-                                    money.transactions,
+                                    txHere,
                                     month.minusMonths(1),
                                 ),
                             )
@@ -228,7 +264,7 @@ class FinanceViewModel(
                 MonthSpend(
                     month = target,
                     amountMinor = FinanceAnalytics.totalSpend(
-                        money.transactions,
+                        txHere,
                         target.atDay(1),
                         target.atEndOfMonth(),
                     ),
@@ -250,6 +286,8 @@ class FinanceViewModel(
                 ?.takeIf { id -> money.accounts.any { it.id == id } },
             hideObligatory = choices.hideObligatory,
             baseCurrency = currency,
+            currencies = currencies,
+            analysedCurrency = analysed,
             loaded = true,
         )
     }.stateIn(
@@ -288,6 +326,13 @@ class FinanceViewModel(
     /** Пусто — смотреть все счета сразу. */
     fun selectAccount(id: String?) {
         selectedAccount.value = id
+    }
+
+    /** В какой валюте считать разбор, когда счетов несколько и они разные. */
+    fun selectCurrency(code: String) {
+        analysedCurrency.value = code
+        // Выбранный счёт задавал бы валюту сам и перебивал бы выбор.
+        selectedAccount.value = null
     }
 
     /** Копилка без цели — сирота: удалить её больше нечем, кроме как здесь. */
@@ -340,6 +385,7 @@ class FinanceViewModel(
         val flow: MoneyFlow,
         val period: FinancePeriod,
         val accountId: String?,
+        val currency: String?,
     )
 
     private data class Extras(

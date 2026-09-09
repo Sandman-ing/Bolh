@@ -6,6 +6,7 @@
     <string name="habits_bad_hint_limit">Up to %1$d slips a week; above that the week counts as broken.</string>
     <string name="habits_bad_action_hint">The button records a slip. A long press undoes the last one.</string>
     <string name="habits_week_previous">Previous week</string>
+    <string name="habits_today">Today</string>
     <string name="habits_week_next">Next week</string>
     <string name="habits_mark_minimum">min</string>
     <string name="habits_mark_norm">norm</string>
@@ -41,7 +42,7 @@
     <string name="habit_schedule_weekdays">Chosen days</string>
     <string name="habit_schedule_times">Times a week</string>
     <string name="habit_advanced">Advanced settings</string>
-    <string name="habit_mode_title">On a missed day</string>
+    <string name="habit_mode_title">On a missed day:</string>
     <string name="habit_mode_game">the streak resets</string>
     <string name="habit_mode_skips">two rest days a month keep the count</string>
     <string name="habit_mode_minimum">a bad day does not reset progress</string>
@@ -62,6 +63,8 @@
     <string name="habit_done_minimum">Done: minimum</string>
     <string name="habit_done_norm">Done: norm</string>
     <string name="habit_save">Save</string>
+    <string name="habit_blocked_name">Give the habit a name — that is all that is missing.</string>
+    <string name="habit_blocked_days">Pick at least one day of the week, otherwise the habit is never expected.</string>
     <string name="habit_delete">Delete</string>
     <string name="habit_link_goal">Link to a goal</string>
     <string name="habit_pause">Pause</string>

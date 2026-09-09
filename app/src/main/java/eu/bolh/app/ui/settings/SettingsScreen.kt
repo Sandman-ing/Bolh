@@ -78,6 +78,8 @@ import androidx.compose.material3.ripple
 import eu.bolh.app.ui.common.BolhCard
 import eu.bolh.app.ui.common.PillButton
 import eu.bolh.app.ui.common.rememberLocale
+import eu.bolh.app.ui.common.SectionTitle
+import eu.bolh.app.ui.common.CurrencySheet
 import eu.bolh.app.ui.common.Hint
 import eu.bolh.app.ui.theme.Ink
 import eu.bolh.app.ui.theme.LocalStatusColors
@@ -166,19 +168,6 @@ fun SettingsScreen(
     var currencyPicker by remember { mutableStateOf(false) }
     var switchingLanguage by remember { mutableStateOf(false) }
 
-    if (switchingLanguage) {
-        val fade = remember { Animatable(0f) }
-        LaunchedEffect(Unit) {
-            fade.animateTo(1f, tween(200))
-            activity?.recreate()
-        }
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .alpha(fade.value)
-                .background(Ink),
-        )
-    }
     val locale = rememberLocale()
 
     if (currencyPicker) {
@@ -418,20 +407,23 @@ fun SettingsScreen(
             )
         }
     }
-}
 
-@Composable
-private fun SectionTitle(text: String) {
-    Text(
-        text = text,
-        style = MaterialTheme.typography.labelMedium,
-        color = LocalStatusColors.current.textTertiary,
-        modifier = Modifier.padding(
-            start = Spacing.screenPadding,
-            top = Spacing.l,
-            bottom = Spacing.xs,
-        ),
-    )
+    // Затемнение рисуется ПОСЛЕ Scaffold: сиблингом до него оно оказывалось
+    // под экраном, и смена языка выглядела рывком без всякого перехода.
+    // Обратный переход — появление — живёт в MainActivity.
+    if (switchingLanguage) {
+        val fade = remember { Animatable(0f) }
+        LaunchedEffect(Unit) {
+            fade.animateTo(1f, tween(Motion.CONTENT_MS))
+            activity?.recreate()
+        }
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .alpha(fade.value)
+                .background(Ink),
+        )
+    }
 }
 
 /** Язык переключается здесь же, не выходя в настройки телефона (§9.6). */
@@ -525,88 +517,5 @@ private fun SettingsRow(icon: Int, text: String, onClick: () -> Unit) {
             color = MaterialTheme.colorScheme.onBackground,
             modifier = Modifier.padding(start = Spacing.m),
         )
-    }
-}
-
-/**
- * Выбор валюты: поиск по коду и названию.
- *
- * Частые валюты стоят первыми, остальные — как их знает система. Пересчёта
- * нет, поэтому выбор здесь означает «в чём я считаю», а не «сколько это в…».
- */
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun CurrencySheet(
-    current: String,
-    locale: java.util.Locale,
-    onDismiss: () -> Unit,
-    onSelect: (String) -> Unit,
-) {
-    val status = LocalStatusColors.current
-    var query by remember { mutableStateOf("") }
-    val all = remember { CurrencyPrefs.all() }
-    val visible = remember(query, all) {
-        if (query.isBlank()) {
-            all
-        } else {
-            val needle = query.trim().lowercase(locale)
-            all.filter { code ->
-                code.lowercase(locale).contains(needle) ||
-                    CurrencyPrefs.nameOf(code, locale).lowercase(locale).contains(needle)
-            }
-        }
-    }
-
-    ModalBottomSheet(onDismissRequest = onDismiss, containerColor = status.surfaceRaised) {
-        OutlinedTextField(
-            value = query,
-            onValueChange = { query = it },
-            label = { Text(stringResource(R.string.settings_currency_search)) },
-            singleLine = true,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = Spacing.screenPadding),
-        )
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(max = 420.dp),
-            contentPadding = PaddingValues(
-                start = Spacing.screenPadding,
-                end = Spacing.screenPadding,
-                top = Spacing.s,
-                bottom = Spacing.xxl,
-            ),
-            verticalArrangement = Arrangement.spacedBy(Spacing.xs),
-        ) {
-            items(visible.size) { index ->
-                val code = visible[index]
-                BolhCard(
-                    corner = Radius.block,
-                    accent = if (code == current) MaterialTheme.colorScheme.primary else null,
-                    contentPadding = PaddingValues(
-                        horizontal = Spacing.l,
-                        vertical = Spacing.m,
-                    ),
-                    onClick = { onSelect(code) },
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = code,
-                            style = NumberSmall,
-                            color = MaterialTheme.colorScheme.primary,
-                        )
-                        Text(
-                            text = CurrencyPrefs.nameOf(code, locale),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onBackground,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.padding(start = Spacing.m),
-                        )
-                    }
-                }
-            }
-        }
     }
 }

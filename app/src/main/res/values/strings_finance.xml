@@ -49,6 +49,9 @@
     <string name="finance_jar_progress">%1$s of %2$s</string>
 
     <string name="account_new_title">New account</string>
+    <string name="account_currency">Account currency</string>
+    <string name="account_currency_note">Amounts on this account are counted in its own currency. There is no conversion: totals are shown per currency.</string>
+    <string name="finance_currency_scope">Currency</string>
     <string name="account_name_hint">Name</string>
     <string name="account_balance_hint">Current balance</string>
     <string name="account_new_balance">New balance</string>

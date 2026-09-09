@@ -14,6 +14,17 @@ import java.util.Locale
  */
 object Money {
 
+    /**
+     * Сколько знаков после запятой у валюты. У иены и драма их не столько же,
+     * сколько у евро, и разбирать ввод «на глазок по двум» значит ошибиться
+     * в сто раз на первой же сумме.
+     */
+    fun fractionDigitsOf(currencyCode: String): Int =
+        runCatching { Currency.getInstance(currencyCode).defaultFractionDigits }
+            .getOrNull()
+            ?.coerceAtLeast(0)
+            ?: 2
+
     fun format(minor: Long, currencyCode: String, locale: Locale = Locale.getDefault()): String {
         val currency = runCatching { Currency.getInstance(currencyCode) }.getOrNull()
         val fraction = currency?.defaultFractionDigits?.coerceAtLeast(0) ?: 2

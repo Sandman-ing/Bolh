@@ -66,6 +66,7 @@ import eu.bolh.app.domain.model.Recurrence
 import eu.bolh.app.domain.model.RecurrenceUnit
 import eu.bolh.app.domain.model.RecurringPayment
 import eu.bolh.app.domain.templates.SystemCategories
+import eu.bolh.app.ui.common.SelectChip
 import eu.bolh.app.ui.common.BolhIcons
 import eu.bolh.app.ui.common.Money
 import eu.bolh.app.ui.common.rememberLocale
@@ -427,33 +428,12 @@ private fun Chip(
 ) {
     val status = LocalStatusColors.current
     val selectedColor = accent ?: MaterialTheme.colorScheme.primary
-    FilterChip(
+    SelectChip(
+        text = text,
         selected = selected,
         onClick = onClick,
-        shape = RoundedCornerShape(percent = 50),
-        label = { Text(text, style = MaterialTheme.typography.labelLarge) },
-        leadingIcon = icon?.let {
-            {
-                Icon(
-                    painter = painterResource(BolhIcons.resFor(it)),
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp),
-                )
-            }
-        },
-        colors = FilterChipDefaults.filterChipColors(
-            containerColor = Color.Transparent,
-            labelColor = status.textSecondary,
-            selectedContainerColor = selectedColor,
-            selectedLabelColor = Ink,
-            selectedLeadingIconColor = Ink,
-        ),
-        border = FilterChipDefaults.filterChipBorder(
-            enabled = true,
-            selected = selected,
-            borderColor = status.divider,
-            selectedBorderColor = selectedColor,
-        ),
+        icon = icon?.let { BolhIcons.resFor(it) },
+        accent = selectedColor,
     )
 }
 

@@ -49,6 +49,7 @@ import eu.bolh.app.ui.common.rememberPressSource
 import eu.bolh.app.ui.common.Money
 import eu.bolh.app.ui.habits.HabitRowState
 import eu.bolh.app.ui.theme.LocalStatusColors
+import eu.bolh.app.ui.theme.Radius
 import eu.bolh.app.ui.theme.Spacing
 import eu.bolh.app.ui.theme.TapTargetMin
 
@@ -170,27 +171,92 @@ fun HabitRowItem(
     // Что здесь минимум, а что норма, человек писал сам — и должен видеть это
     // под строкой во всю ширину, а не вспоминать при нажатии кнопки (§5.3).
     if (row.habit.mode == HabitMode.Minimum) {
-        row.habit.minimumLabel?.takeIf { it.isNotBlank() }?.let { label ->
-            Text(
-                text = stringResource(R.string.habit_min_line, label),
-                style = MaterialTheme.typography.labelMedium,
-                color = status.textTertiary,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(top = Spacing.s),
-            )
-        }
-        row.habit.normLabel?.takeIf { it.isNotBlank() }?.let { label ->
-            Text(
-                text = stringResource(R.string.habit_norm_line, label),
-                style = MaterialTheme.typography.labelMedium,
-                color = status.textTertiary,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(top = 2.dp),
-            )
+        val minimum = row.habit.minimumLabel?.takeIf { it.isNotBlank() }
+        val norm = row.habit.normLabel?.takeIf { it.isNotBlank() }
+        if (minimum != null || norm != null) {
+            LevelLegend(minimum = minimum, norm = norm)
         }
     }
+    }
+}
+
+/**
+ * Подрамка с расшифровкой уровней.
+ *
+ * Двумя серыми строками подряд это читалось как случайная приписка. В своей
+ * рамке — как справка к кнопкам рядом, а значки повторяют вид самих отметок:
+ * точка это минимум, галочка — норма (§5.3).
+ */
+@Composable
+private fun LevelLegend(
+    minimum: String?,
+    norm: String?,
+    modifier: Modifier = Modifier,
+) {
+    val status = LocalStatusColors.current
+    val accent = MaterialTheme.colorScheme.primary
+
+    Column(
+        modifier = modifier
+            .padding(top = Spacing.s)
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(Radius.block))
+            .background(status.surfaceSunken)
+            .padding(horizontal = Spacing.m, vertical = Spacing.s),
+        verticalArrangement = Arrangement.spacedBy(Spacing.xs),
+    ) {
+        if (minimum != null) {
+            LevelLine(
+                text = stringResource(R.string.habit_min_line, minimum),
+                color = status.textSecondary,
+            ) {
+                // Половинная заливка: день засчитан, но не полностью.
+                Box(
+                    modifier = Modifier
+                        .size(8.dp)
+                        .clip(CircleShape)
+                        .background(accent),
+                )
+            }
+        }
+        if (norm != null) {
+            LevelLine(
+                text = stringResource(R.string.habit_norm_line, norm),
+                color = status.textSecondary,
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_check),
+                    contentDescription = null,
+                    tint = accent,
+                    modifier = Modifier.size(12.dp),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun LevelLine(
+    text: String,
+    color: Color,
+    mark: @Composable () -> Unit,
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Spacing.s),
+    ) {
+        Box(
+            modifier = Modifier.size(14.dp),
+            contentAlignment = Alignment.Center,
+            content = { mark() },
+        )
+        Text(
+            text = text,
+            style = MaterialTheme.typography.labelMedium,
+            color = color,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+        )
     }
 }
 
