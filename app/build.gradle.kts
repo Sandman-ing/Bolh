@@ -20,18 +20,20 @@ val keystoreProperties = Properties().apply {
 
 android {
     namespace = "eu.bolh.app"
-    // Компилируемся под 37: этого требуют библиотеки AndroidX.
-    compileSdk = 37
+    // Только выпущенные уровни API. Предварительная платформа (android-37,
+    // Android 17) оставляет в манифесте свою метку — compileSdkVersionCodename
+    // и platformBuildVersionName, — и установщики обычных телефонов такой пакет
+    // не разбирают: «Не удалось обработать пакет». Версии библиотек в
+    // libs.versions.toml подобраны так, чтобы им хватало 36.
+    compileSdk = 36
+    buildToolsVersion = "36.0.0"
 
     defaultConfig {
         applicationId = "eu.bolh.app"
         minSdk = 26
-        // А целимся в выпущенный уровень. APK, нацеленный на невыпущенный
-        // API, несёт в манифесте кодовое имя предварительной версии, и обычные
-        // телефоны отказываются его разбирать: «Не удалось обработать пакет».
         targetSdk = 36
-        versionCode = 3
-        versionName = "0.1.3"
+        versionCode = 4
+        versionName = "0.1.4"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
