@@ -20,14 +20,18 @@ val keystoreProperties = Properties().apply {
 
 android {
     namespace = "eu.bolh.app"
+    // Компилируемся под 37: этого требуют библиотеки AndroidX.
     compileSdk = 37
 
     defaultConfig {
         applicationId = "eu.bolh.app"
         minSdk = 26
-        targetSdk = 37
-        versionCode = 1
-        versionName = "0.1.0"
+        // А целимся в выпущенный уровень. APK, нацеленный на невыпущенный
+        // API, несёт в манифесте кодовое имя предварительной версии, и обычные
+        // телефоны отказываются его разбирать: «Не удалось обработать пакет».
+        targetSdk = 36
+        versionCode = 3
+        versionName = "0.1.3"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -39,6 +43,12 @@ android {
                 keyAlias = keystoreProperties.getProperty("keyAlias")
                 keyPassword = keystoreProperties.getProperty("keyPassword")
             }
+            // Все схемы подписи сразу. По умолчанию при minSdk 26 остаётся
+            // только v2, и установщики некоторых прошивок такой пакет
+            // отказываются разбирать — «Не удалось обработать пакет».
+            enableV1Signing = true
+            enableV2Signing = true
+            enableV3Signing = true
         }
     }
 
