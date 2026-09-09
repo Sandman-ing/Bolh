@@ -2,11 +2,13 @@ package eu.bolh.app.data.repository
 
 import eu.bolh.app.data.db.dao.GoalDao
 import eu.bolh.app.data.db.entity.DeadlineRecordEntity
+import eu.bolh.app.data.db.entity.GoalCostItemEntity
 import eu.bolh.app.data.db.entity.GoalEntity
 import eu.bolh.app.data.db.entity.StageEntity
 import eu.bolh.app.data.db.entity.TaskEntity
 import eu.bolh.app.domain.model.DeadlineRecord
 import eu.bolh.app.domain.model.Goal
+import eu.bolh.app.domain.model.GoalCostItem
 import eu.bolh.app.domain.model.GoalStatus
 import eu.bolh.app.domain.model.Stage
 import eu.bolh.app.domain.model.Task
@@ -150,6 +152,43 @@ class GoalRepository(
         dao.setStatus(goalId, GoalStatus.Active, null, clock.millis())
     }
 
+    // --- Смета -------------------------------------------------------------
+
+    fun observeCostItems(goalId: String): Flow<List<GoalCostItem>> =
+        dao.observeCostItems(goalId).map { rows -> rows.map { it.toDomain() } }
+
+    /** Возвращает id заведённой статьи: сразу после создания её правят. */
+    suspend fun addCostItem(goalId: String, name: String, plannedMinor: Long): String {
+        val now = clock.millis()
+        val id = UUID.randomUUID().toString()
+        dao.upsertCostItem(
+            GoalCostItemEntity(
+                id = id,
+                goalId = goalId,
+                name = name.trim(),
+                plannedMinor = plannedMinor,
+                sortOrder = dao.costItemsForGoal(goalId).size,
+                createdAt = now,
+                updatedAt = now,
+            ),
+        )
+        return id
+    }
+
+    suspend fun renameCostItem(itemId: String, name: String) {
+        if (name.isBlank()) return
+        dao.renameCostItem(itemId, name.trim(), clock.millis())
+    }
+
+    suspend fun setCostItemPlanned(itemId: String, plannedMinor: Long) {
+        if (plannedMinor < 0L) return
+        dao.setCostItemPlanned(itemId, plannedMinor, clock.millis())
+    }
+
+    suspend fun deleteCostItem(itemId: String) {
+        dao.softDeleteCostItem(itemId, clock.millis())
+    }
+
     // --- Этапы и задачи ---------------------------------------------------
 
     /** Возвращает id заведённого этапа: к нему сразу цепляются задачи. */
@@ -239,6 +278,14 @@ private fun Goal.toEntity(createdAt: Long, updatedAt: Long) = GoalEntity(
     sortOrder = sortOrder,
     createdAt = createdAt,
     updatedAt = updatedAt,
+)
+
+private fun GoalCostItemEntity.toDomain() = GoalCostItem(
+    id = id,
+    goalId = goalId,
+    name = name,
+    plannedMinor = plannedMinor,
+    sortOrder = sortOrder,
 )
 
 private fun StageEntity.toDomain() = Stage(

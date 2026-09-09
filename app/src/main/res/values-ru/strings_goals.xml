@@ -21,6 +21,18 @@
     <string name="goal_cost_time">%1$s в неделю</string>
     <string name="goal_cost_time_hours">%1$d ч %2$02d мин</string>
     <string name="goal_cost_no_estimate">У %1$d привязанных привычек не задана длительность</string>
+    <string name="goal_estimate_title">Смета</string>
+    <string name="goal_estimate_note">Из чего складывается цена. Взнос закрывает статью, и всегда видно, за что ещё платить.</string>
+    <string name="goal_estimate_item_hint">За что</string>
+    <string name="goal_estimate_amount_hint">Сколько</string>
+    <string name="goal_estimate_add">Добавить статью</string>
+    <string name="goal_estimate_total">Закрыто %1$s из %2$s</string>
+    <string name="goal_estimate_paid_of">%1$s из %2$s</string>
+    <string name="goal_estimate_pay">Закрыть</string>
+    <string name="goal_estimate_closed">Закрыто</string>
+    <string name="goal_estimate_unassigned">%1$s в копилке не расписаны по статьям</string>
+    <string name="goal_estimate_empty">Статей пока нет. Распишите цену — и станет видно, что осталось.</string>
+    <string name="goal_estimate_rename">Переименовать статью</string>
 
     <string name="goal_deadline_check_title">Проверка срока</string>
     <string name="goal_deadline_check_text">Твой коэффициент — %1$s×. Из %2$d поставленных сроков ты уложился в %3$d.</string>

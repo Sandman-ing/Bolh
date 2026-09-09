@@ -14,7 +14,26 @@ enum class JarMode {
 }
 
 /** Пополнение копилки. Без истории пополнений прогноз по копилке считать не из чего. */
-data class Contribution(val date: LocalDate, val amountMinor: Long)
+data class Contribution(
+    val date: LocalDate,
+    val amountMinor: Long,
+    /** Какую статью сметы закрыл взнос. Пусто — шёл в общий счёт цели (§4.5). */
+    val costItemId: String? = null,
+)
+
+/**
+ * Статья сметы: за что именно платим и сколько это стоит.
+ *
+ * Оплаченное не хранится полем, а считается по взносам, привязанным к статье:
+ * поле рассинхронизировалось бы с историей при первой же отмене взноса.
+ */
+data class GoalCostItem(
+    val id: String,
+    val goalId: String,
+    val name: String,
+    val plannedMinor: Long,
+    val sortOrder: Int = 0,
+)
 
 /** Цель так, как её видит остальное приложение. */
 data class Goal(

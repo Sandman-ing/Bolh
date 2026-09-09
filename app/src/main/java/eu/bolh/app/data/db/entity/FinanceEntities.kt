@@ -162,6 +162,8 @@ data class JarContributionEntity(
     val date: LocalDate,
     /** Операция, которой пополнение оформлено, если оно шло через счёт. */
     val transactionId: String? = null,
+    /** Статья сметы, которую закрывает этот взнос. Пусто — взнос в общий котёл. */
+    val costItemId: String? = null,
     val note: String? = null,
     val createdAt: Long,
     val updatedAt: Long,

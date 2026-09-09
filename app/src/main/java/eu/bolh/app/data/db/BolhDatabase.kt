@@ -15,6 +15,7 @@ import eu.bolh.app.data.db.entity.AccountEntity
 import eu.bolh.app.data.db.entity.CategoryEntity
 import eu.bolh.app.data.db.entity.CurrencyRateEntity
 import eu.bolh.app.data.db.entity.DeadlineRecordEntity
+import eu.bolh.app.data.db.entity.GoalCostItemEntity
 import eu.bolh.app.data.db.entity.GoalEntity
 import eu.bolh.app.data.db.entity.HabitEntity
 import eu.bolh.app.data.db.entity.HabitEntryEntity
@@ -41,6 +42,7 @@ import eu.bolh.app.data.db.entity.TransactionEntity
         JarContributionEntity::class,
         CurrencyRateEntity::class,
         GoalEntity::class,
+        GoalCostItemEntity::class,
         StageEntity::class,
         TaskEntity::class,
         DeadlineRecordEntity::class,
@@ -48,7 +50,7 @@ import eu.bolh.app.data.db.entity.TransactionEntity
         HabitEntryEntity::class,
         HabitPauseEntity::class,
     ],
-    version = 2,
+    version = 3,
     exportSchema = true,
 )
 @TypeConverters(Converters::class)
@@ -75,6 +77,43 @@ abstract class BolhDatabase : RoomDatabase() {
             }
         }
 
+        /**
+         * Смета цели (§4.5): статьи расходов и привязка взноса к статье.
+         *
+         * Снова миграция, а не пересоздание: у людей уже есть цели, копилки и
+         * история пополнений, и терять их ради двух новых полей недопустимо.
+         */
+        private val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(connection: SQLiteConnection) {
+                connection.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS goal_cost_items (
+                        id TEXT NOT NULL PRIMARY KEY,
+                        goalId TEXT NOT NULL,
+                        name TEXT NOT NULL,
+                        plannedMinor INTEGER NOT NULL,
+                        sortOrder INTEGER NOT NULL DEFAULT 0,
+                        createdAt INTEGER NOT NULL,
+                        updatedAt INTEGER NOT NULL,
+                        deletedAt INTEGER,
+                        FOREIGN KEY(goalId) REFERENCES goals(id) ON DELETE CASCADE
+                    )
+                    """.trimIndent(),
+                )
+                connection.execSQL(
+                    "CREATE INDEX IF NOT EXISTS index_goal_cost_items_goalId " +
+                        "ON goal_cost_items(goalId)",
+                )
+                connection.execSQL(
+                    "CREATE INDEX IF NOT EXISTS index_goal_cost_items_deletedAt " +
+                        "ON goal_cost_items(deletedAt)",
+                )
+                connection.execSQL(
+                    "ALTER TABLE jar_contributions ADD COLUMN costItemId TEXT",
+                )
+            }
+        }
+
         @Volatile
         private var instance: BolhDatabase? = null
 
@@ -84,7 +123,7 @@ abstract class BolhDatabase : RoomDatabase() {
 
         private fun build(context: Context): BolhDatabase =
             Room.databaseBuilder(context.applicationContext, BolhDatabase::class.java, NAME)
-                .addMigrations(MIGRATION_1_2)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
                 .build()
     }
 }

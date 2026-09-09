@@ -108,3 +108,36 @@ data class DeadlineRecordEntity(
     val updatedAt: Long,
     val deletedAt: Long? = null,
 )
+
+/**
+ * Статья сметы — из чего складывается цена цели (§4.5).
+ *
+ * «Переезд стоит 3000» не говорит ничего о том, за что именно платить и что
+ * уже закрыто. «Бухгалтеру 500, налоги 900, грузчики 400» говорит: видно и
+ * общую сумму, и что осталось.
+ *
+ * Валюты у статьи своей нет: смета живёт в валюте копилки цели, а без курсов
+ * складывать разные валюты в один итог всё равно нельзя.
+ */
+@Entity(
+    tableName = "goal_cost_items",
+    foreignKeys = [
+        ForeignKey(
+            entity = GoalEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["goalId"],
+            onDelete = ForeignKey.CASCADE,
+        ),
+    ],
+    indices = [Index("goalId"), Index("deletedAt")],
+)
+data class GoalCostItemEntity(
+    @PrimaryKey val id: String,
+    val goalId: String,
+    val name: String,
+    val plannedMinor: Long,
+    val sortOrder: Int = 0,
+    val createdAt: Long,
+    val updatedAt: Long,
+    val deletedAt: Long? = null,
+)

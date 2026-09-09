@@ -7,6 +7,7 @@ import androidx.room.Query
 import androidx.room.Update
 import androidx.room.Upsert
 import eu.bolh.app.data.db.entity.DeadlineRecordEntity
+import eu.bolh.app.data.db.entity.GoalCostItemEntity
 import eu.bolh.app.data.db.entity.GoalEntity
 import eu.bolh.app.data.db.entity.StageEntity
 import eu.bolh.app.data.db.entity.TaskEntity
@@ -45,6 +46,29 @@ interface GoalDao {
     suspend fun setDeadline(id: String, deadline: LocalDate?, now: Long)
 
     // --- Этапы ------------------------------------------------------------
+
+    // --- Смета цели -------------------------------------------------------
+
+    @Query(
+        "SELECT * FROM goal_cost_items WHERE goalId = :goalId AND deletedAt IS NULL " +
+            "ORDER BY sortOrder, createdAt",
+    )
+    fun observeCostItems(goalId: String): Flow<List<GoalCostItemEntity>>
+
+    @Query("SELECT * FROM goal_cost_items WHERE goalId = :goalId AND deletedAt IS NULL")
+    suspend fun costItemsForGoal(goalId: String): List<GoalCostItemEntity>
+
+    @Upsert
+    suspend fun upsertCostItem(item: GoalCostItemEntity)
+
+    @Query("UPDATE goal_cost_items SET name = :name, updatedAt = :now WHERE id = :id")
+    suspend fun renameCostItem(id: String, name: String, now: Long)
+
+    @Query("UPDATE goal_cost_items SET plannedMinor = :minor, updatedAt = :now WHERE id = :id")
+    suspend fun setCostItemPlanned(id: String, minor: Long, now: Long)
+
+    @Query("UPDATE goal_cost_items SET deletedAt = :now, updatedAt = :now WHERE id = :id")
+    suspend fun softDeleteCostItem(id: String, now: Long)
 
     @Query("SELECT * FROM stages WHERE deletedAt IS NULL ORDER BY sortOrder, createdAt")
     fun observeStages(): Flow<List<StageEntity>>

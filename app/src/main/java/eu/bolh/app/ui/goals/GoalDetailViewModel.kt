@@ -22,6 +22,8 @@ import eu.bolh.app.domain.model.GoalSnapshot
 import eu.bolh.app.domain.model.Habit
 import eu.bolh.app.domain.model.LinkedHabitCost
 import eu.bolh.app.domain.model.Mark
+import eu.bolh.app.domain.model.Contribution
+import eu.bolh.app.domain.model.GoalCostItem
 import eu.bolh.app.domain.model.SavingsJar
 import eu.bolh.app.domain.model.Stage
 import eu.bolh.app.domain.model.Task
@@ -50,12 +52,47 @@ data class GoalDetailUiState(
     val jar: SavingsJar? = null,
     val jarCurrentMinor: Long = 0L,
     val moneyPerMonthMinor: Long = 0L,
+    /** Смета: из чего складывается цена цели и что уже закрыто (§4.5). */
+    val costItems: List<CostItemState> = emptyList(),
     val baseCurrency: String = "EUR",
     val today: LocalDate = LocalDate.now(),
 ) {
     val isOverdue: Boolean
         get() = goal?.deadline?.isBefore(today) == true
+
+    /** Сколько стоит цель по смете. */
+    val costPlannedMinor: Long get() = costItems.sumOf { it.item.plannedMinor }
+
+    /** Сколько по смете уже закрыто. */
+    val costPaidMinor: Long get() = costItems.sumOf { it.paidMinor }
+
+    /**
+     * Взносы, не привязанные ни к одной статье.
+     *
+     * Их видно отдельно: иначе «в копилке 500, по смете закрыто 0» выглядит
+     * как потеря денег, хотя деньги на месте — просто не расписаны.
+     */
+    val unassignedMinor: Long get() = (jarCurrentMinor - costPaidMinor).coerceAtLeast(0L)
 }
+
+/** Статья сметы вместе с тем, сколько по ней уже внесено. */
+data class CostItemState(val item: GoalCostItem, val paidMinor: Long) {
+    val isClosed: Boolean get() = item.plannedMinor > 0L && paidMinor >= item.plannedMinor
+
+    val share: Float
+        get() = if (item.plannedMinor <= 0L) {
+            0f
+        } else {
+            (paidMinor.toFloat() / item.plannedMinor).coerceIn(0f, 1f)
+        }
+}
+
+/** Всё про деньги цели одним снимком: копилка, её история и смета. */
+private data class JarSnapshot(
+    val jar: SavingsJar?,
+    val contributions: List<Contribution>,
+    val costItems: List<GoalCostItem>,
+)
 
 class GoalDetailViewModel(
     private val goals: GoalRepository,
@@ -79,9 +116,14 @@ class GoalDetailViewModel(
     private val jarData = combine(
         finance.observeJars(),
         finance.observeContributions(),
-    ) { jars, contributions ->
+        goals.observeCostItems(goalId),
+    ) { jars, contributions, costItems ->
         val jar = jars.firstOrNull { it.goalId == goalId }
-        jar to (jar?.let { contributions[it.id] }.orEmpty())
+        JarSnapshot(
+            jar = jar,
+            contributions = jar?.let { contributions[it.id] }.orEmpty(),
+            costItems = costItems,
+        )
     }
 
     val state: StateFlow<GoalDetailUiState> = combine(
@@ -90,9 +132,10 @@ class GoalDetailViewModel(
         goals.observeTasks(),
         habitData,
         jarData,
-    ) { goal, stages, tasksByStage, habitPair, jarPair ->
+    ) { goal, stages, tasksByStage, habitPair, jarSnapshot ->
         val (habitList, marks) = habitPair
-        val (jar, contributions) = jarPair
+        val jar = jarSnapshot.jar
+        val contributions = jarSnapshot.contributions
         val today = goals.today()
         val window = DayWindow.lastDays(today, 30)
         val ordered = stages.sortedBy { it.sortOrder }
@@ -128,7 +171,18 @@ class GoalDetailViewModel(
             jar = jar,
             jarCurrentMinor = jarCurrent,
             moneyPerMonthMinor = jar?.plannedMonthlyMinor ?: 0L,
-            baseCurrency = finance.baseCurrency,
+            costItems = jarSnapshot.costItems.map { item ->
+                CostItemState(
+                    item = item,
+                    // Закрытое по статье — это сумма привязанных к ней взносов.
+                    paidMinor = contributions
+                        .filter { it.costItemId == item.id }
+                        .sumOf { it.amountMinor },
+                )
+            },
+            // Смета живёт в валюте копилки: цель стоит столько, сколько на неё
+            // собирают, а не столько же в валюте приложения.
+            baseCurrency = jar?.currencyCode ?: finance.baseCurrency,
             today = today,
         )
     }.stateIn(
@@ -272,6 +326,42 @@ class GoalDetailViewModel(
     fun undoLastContribution() {
         val jarId = state.value.jar?.id ?: return
         viewModelScope.launch { finance.undoLastContribution(jarId) }
+    }
+
+    // --- Смета ---------------------------------------------------------
+
+    fun addCostItem(name: String, plannedMinor: Long) {
+        if (name.isBlank()) return
+        viewModelScope.launch { goals.addCostItem(goalId, name, plannedMinor) }
+    }
+
+    fun renameCostItem(itemId: String, name: String) {
+        viewModelScope.launch { goals.renameCostItem(itemId, name) }
+    }
+
+    fun setCostItemPlanned(itemId: String, plannedMinor: Long) {
+        viewModelScope.launch { goals.setCostItemPlanned(itemId, plannedMinor) }
+    }
+
+    fun deleteCostItem(itemId: String) {
+        viewModelScope.launch { goals.deleteCostItem(itemId) }
+    }
+
+    /**
+     * Закрыть статью: взнос ровно на недостающую сумму.
+     *
+     * Без копилки закрывать нечем — смета считает внесённое, а внесённое живёт
+     * в копилке. Поэтому копилка заводится сама, с целью на сумму сметы.
+     */
+    fun payCostItem(itemId: String) {
+        val row = state.value.costItems.firstOrNull { it.item.id == itemId } ?: return
+        val rest = row.item.plannedMinor - row.paidMinor
+        if (rest <= 0L) return
+        viewModelScope.launch {
+            val jarId = state.value.jar?.id
+                ?: finance.createJar(goalId = goalId, targetMinor = state.value.costPlannedMinor)
+            finance.addContribution(jarId, rest, costItemId = itemId)
+        }
     }
 
     fun addContribution(amountMinor: Long) {

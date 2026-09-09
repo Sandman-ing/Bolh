@@ -21,6 +21,18 @@
     <string name="goal_cost_time">%1$s a week</string>
     <string name="goal_cost_time_hours">%1$dh %2$02dm</string>
     <string name="goal_cost_no_estimate">%1$d linked habits have no duration set</string>
+    <string name="goal_estimate_title">Cost breakdown</string>
+    <string name="goal_estimate_note">What the price is made of. A contribution closes a line, so it is always clear what is left to pay.</string>
+    <string name="goal_estimate_item_hint">What for</string>
+    <string name="goal_estimate_amount_hint">How much</string>
+    <string name="goal_estimate_add">Add a line</string>
+    <string name="goal_estimate_total">%1$s of %2$s closed</string>
+    <string name="goal_estimate_paid_of">%1$s of %2$s</string>
+    <string name="goal_estimate_pay">Close</string>
+    <string name="goal_estimate_closed">Closed</string>
+    <string name="goal_estimate_unassigned">%1$s in the jar is not spread over the lines</string>
+    <string name="goal_estimate_empty">No lines yet. Break the price down and you will see what is left.</string>
+    <string name="goal_estimate_rename">Rename the line</string>
 
     <string name="goal_deadline_check_title">Deadline check</string>
     <string name="goal_deadline_check_text">Your factor is %1$s×. Of %2$d deadlines you set, you met %3$d.</string>

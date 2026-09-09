@@ -233,7 +233,13 @@ class FinanceRepository(
         dao.observeContributions().map { rows ->
             rows.groupBy(
                 keySelector = { it.jarId },
-                valueTransform = { Contribution(date = it.date, amountMinor = it.amountMinor) },
+                valueTransform = {
+                    Contribution(
+                        date = it.date,
+                        amountMinor = it.amountMinor,
+                        costItemId = it.costItemId,
+                    )
+                },
             )
         }
 
@@ -263,7 +269,19 @@ class FinanceRepository(
         return id
     }
 
-    suspend fun addContribution(jarId: String, amountMinor: Long, date: LocalDate = today()) {
+    /**
+     * Пополнение копилки.
+     *
+     * [costItemId] говорит, какую статью сметы закрыл взнос. Оплаченное по
+     * статье считается по этим записям, а не отдельным полем: поле разошлось
+     * бы с историей при первой же отмене взноса (§4.5).
+     */
+    suspend fun addContribution(
+        jarId: String,
+        amountMinor: Long,
+        date: LocalDate = today(),
+        costItemId: String? = null,
+    ) {
         val now = clock.millis()
         dao.upsertContribution(
             JarContributionEntity(
@@ -271,6 +289,7 @@ class FinanceRepository(
                 jarId = jarId,
                 amountMinor = amountMinor,
                 date = date,
+                costItemId = costItemId,
                 createdAt = now,
                 updatedAt = now,
             ),
@@ -294,7 +313,9 @@ class FinanceRepository(
     }
 
     suspend fun contributionsFor(jarId: String): List<Contribution> =
-        dao.contributionsForJar(jarId).map { Contribution(it.date, it.amountMinor) }
+        dao.contributionsForJar(jarId).map {
+            Contribution(it.date, it.amountMinor, it.costItemId)
+        }
 
     // --- Регулярные платежи -----------------------------------------------
 

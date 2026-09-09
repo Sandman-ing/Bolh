@@ -55,6 +55,17 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import eu.bolh.app.R
 import eu.bolh.app.domain.model.GoalStatus
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextOverflow
 import eu.bolh.app.ui.common.BolhCard
 import eu.bolh.app.ui.common.MetricChip
 import eu.bolh.app.ui.common.PillButton
@@ -65,6 +76,8 @@ import eu.bolh.app.ui.common.Motion
 import eu.bolh.app.ui.common.CompletionPulse
 import eu.bolh.app.ui.common.ConfirmDeleteDialog
 import eu.bolh.app.ui.common.tappable
+import eu.bolh.app.ui.common.Hint
+import eu.bolh.app.ui.common.SectionTitle
 import eu.bolh.app.ui.common.Money
 import eu.bolh.app.ui.common.rememberLocale
 import eu.bolh.app.ui.theme.HabitsViolet
@@ -105,6 +118,7 @@ fun GoalDetailScreen(
     var pendingGoal by remember { mutableStateOf(false) }
     var celebrating by remember { mutableStateOf(false) }
     var pendingTask by remember { mutableStateOf<Pair<String, String>?>(null) }
+    var pendingCostItem by remember { mutableStateOf<Pair<String, String>?>(null) }
 
     if (pendingGoal && goal != null) {
         ConfirmDeleteDialog(
@@ -125,6 +139,15 @@ fun GoalDetailScreen(
             onDismiss = { pendingStage = null },
         )
     }
+    pendingCostItem?.let { (id, name) ->
+        RenameDialog(
+            initial = name,
+            onRename = { viewModel.renameCostItem(id, it) },
+            onDelete = { viewModel.deleteCostItem(id) },
+            onDismiss = { pendingCostItem = null },
+        )
+    }
+
     pendingTask?.let { (id, name) ->
         RenameDialog(
             initial = name,
@@ -563,7 +586,13 @@ fun GoalDetailScreen(
                             onClick = {
                                 editingJar = !editingJar
                                 if (editingJar) {
-                                    jarTarget = (jar.targetMinor / 100).toString()
+                                    // Деление на сто теряло копейки и врало
+                                    // в валютах без дробной части.
+                                    jarTarget = Money.formatPlain(
+                                        jar.targetMinor,
+                                        Money.fractionDigitsOf(state.baseCurrency),
+                                        locale,
+                                    )
                                 }
                             },
                             modifier = Modifier.weight(1f),
@@ -584,6 +613,14 @@ fun GoalDetailScreen(
                 }
             }
             }
+
+            EstimateCard(
+                state = state,
+                locale = locale,
+                onAdd = viewModel::addCostItem,
+                onPay = viewModel::payCostItem,
+                onEdit = { id, name -> pendingCostItem = id to name },
+            )
 
             Text(
                 text = stringResource(R.string.goal_stages_title),
@@ -859,5 +896,261 @@ private fun InfoBlock(
             modifier = Modifier.padding(bottom = Spacing.s),
         )
         content()
+    }
+}
+
+/**
+ * Смета цели (§4.5).
+ *
+ * «Переезд стоит 3000» не отвечает на вопрос, за что платить и что уже
+ * закрыто. Список статей отвечает: у каждой своя сумма, взнос закрывает
+ * конкретную статью, и остаток виден без арифметики в уме.
+ */
+@Composable
+private fun EstimateCard(
+    state: GoalDetailUiState,
+    locale: Locale,
+    onAdd: (String, Long) -> Unit,
+    onPay: (String) -> Unit,
+    onEdit: (String, String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val status = LocalStatusColors.current
+    var name by remember { mutableStateOf("") }
+    var amount by remember { mutableStateOf("") }
+    val digits = Money.fractionDigitsOf(state.baseCurrency)
+
+    BolhCard(
+        modifier = modifier.padding(
+            horizontal = Spacing.screenPadding,
+            vertical = Spacing.s,
+        ),
+    ) {
+        SectionTitle(
+            text = stringResource(R.string.goal_estimate_title),
+            icon = R.drawable.ic_receipt_long,
+            modifier = Modifier.padding(start = 0.dp, top = 0.dp),
+        )
+
+        // Итог сметы стоит наверху: он отвечает на «сколько ещё» одним числом.
+        AnimatedVisibility(
+            visible = state.costItems.isNotEmpty(),
+            enter = fadeIn(tween(Motion.CONTENT_MS)) + expandVertically(Motion.resize),
+            exit = fadeOut(tween(Motion.CONTENT_MS / 2)) + shrinkVertically(Motion.resize),
+        ) {
+            Column {
+                Text(
+                    text = stringResource(
+                        R.string.goal_estimate_total,
+                        Money.format(state.costPaidMinor, state.baseCurrency, locale),
+                        Money.format(state.costPlannedMinor, state.baseCurrency, locale),
+                    ),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+                ProgressLine(
+                    fraction = if (state.costPlannedMinor > 0L) {
+                        (state.costPaidMinor.toFloat() / state.costPlannedMinor)
+                            .coerceIn(0f, 1f)
+                    } else {
+                        0f
+                    },
+                    color = MaterialTheme.colorScheme.primary,
+                    track = status.surfaceSunken,
+                    modifier = Modifier.padding(top = Spacing.s),
+                )
+            }
+        }
+
+        state.costItems.forEach { row ->
+            CostItemRow(
+                row = row,
+                currency = state.baseCurrency,
+                locale = locale,
+                onPay = { onPay(row.item.id) },
+                onEdit = { onEdit(row.item.id, row.item.name) },
+            )
+        }
+
+        // Деньги в копилке, не расписанные по статьям, — не потеря, и это
+        // должно быть сказано, иначе «закрыто 0 из 900» пугает зря.
+        AnimatedVisibility(
+            visible = state.unassignedMinor > 0L && state.costItems.isNotEmpty(),
+            enter = fadeIn(tween(Motion.CONTENT_MS)),
+            exit = fadeOut(tween(Motion.CONTENT_MS / 2)),
+        ) {
+            Text(
+                text = stringResource(
+                    R.string.goal_estimate_unassigned,
+                    Money.format(state.unassignedMinor, state.baseCurrency, locale),
+                ),
+                style = MaterialTheme.typography.labelMedium,
+                color = status.textTertiary,
+                modifier = Modifier.padding(top = Spacing.s),
+            )
+        }
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(Spacing.s),
+            modifier = Modifier.padding(top = Spacing.m),
+        ) {
+            OutlinedTextField(
+                value = name,
+                onValueChange = { name = it },
+                label = { Text(stringResource(R.string.goal_estimate_item_hint)) },
+                singleLine = true,
+                modifier = Modifier.weight(1.4f),
+            )
+            OutlinedTextField(
+                value = amount,
+                onValueChange = { amount = it },
+                label = { Text(stringResource(R.string.goal_estimate_amount_hint)) },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                modifier = Modifier.weight(1f),
+            )
+        }
+        PillButton(
+            text = stringResource(R.string.goal_estimate_add),
+            onClick = {
+                onAdd(name, Money.parseMinor(amount, digits) ?: 0L)
+                name = ""
+                amount = ""
+            },
+            icon = R.drawable.ic_plus,
+            modifier = Modifier.padding(top = Spacing.s),
+        )
+
+        Hint(
+            text = stringResource(
+                if (state.costItems.isEmpty()) {
+                    R.string.goal_estimate_empty
+                } else {
+                    R.string.goal_estimate_note
+                },
+            ),
+            modifier = Modifier.padding(top = Spacing.m),
+        )
+    }
+}
+
+/** Строка сметы: за что, сколько закрыто из скольких, и кнопка закрыть остаток. */
+@Composable
+private fun CostItemRow(
+    row: CostItemState,
+    currency: String,
+    locale: Locale,
+    onPay: () -> Unit,
+    onEdit: () -> Unit,
+) {
+    val status = LocalStatusColors.current
+    val accent = MaterialTheme.colorScheme.primary
+
+    val nameColor by animateColorAsState(
+        targetValue = if (row.isClosed) status.textTertiary else MaterialTheme.colorScheme.onBackground,
+        animationSpec = Motion.color,
+        label = "cost-name",
+    )
+
+    Column(
+        modifier = Modifier
+            .padding(top = Spacing.s)
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(Radius.block))
+            .background(status.surfaceSunken)
+            .tappable(onClick = onEdit, onLongClick = onEdit)
+            .padding(horizontal = Spacing.m, vertical = Spacing.m),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            // Закрытая статья помечена галочкой — тем же знаком, что задача.
+            AnimatedVisibility(
+                visible = row.isClosed,
+                enter = fadeIn(tween(Motion.CONTENT_MS)) + expandHorizontally(Motion.resize),
+                exit = fadeOut(tween(Motion.CONTENT_MS / 2)) + shrinkHorizontally(Motion.resize),
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_check),
+                    contentDescription = null,
+                    tint = accent,
+                    modifier = Modifier
+                        .completionPop(row.isClosed)
+                        .size(16.dp)
+                        .padding(end = 2.dp),
+                )
+            }
+            Text(
+                text = row.item.name,
+                style = MaterialTheme.typography.bodyMedium,
+                color = nameColor,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = if (row.isClosed) Spacing.xs else 0.dp),
+            )
+            Text(
+                text = stringResource(
+                    R.string.goal_estimate_paid_of,
+                    Money.format(row.paidMinor, currency, locale),
+                    Money.format(row.item.plannedMinor, currency, locale),
+                ),
+                style = NumberSmall,
+                color = if (row.isClosed) accent else status.textSecondary,
+                maxLines = 1,
+                modifier = Modifier.padding(start = Spacing.s),
+            )
+        }
+        ProgressLine(
+            fraction = row.share,
+            color = accent,
+            track = status.divider,
+            modifier = Modifier.padding(top = Spacing.s),
+        )
+        AnimatedVisibility(
+            visible = !row.isClosed && row.item.plannedMinor > 0L,
+            enter = fadeIn(tween(Motion.CONTENT_MS)) + expandVertically(Motion.resize),
+            exit = fadeOut(tween(Motion.CONTENT_MS / 2)) + shrinkVertically(Motion.resize),
+        ) {
+            PillButton(
+                text = stringResource(R.string.goal_estimate_pay),
+                onClick = onPay,
+                icon = R.drawable.ic_check,
+                modifier = Modifier.padding(top = Spacing.s),
+            )
+        }
+    }
+}
+
+/** Полоса заполнения: одна на смету и на её статьи, чтобы читались как одно. */
+@Composable
+private fun ProgressLine(
+    fraction: Float,
+    color: Color,
+    track: Color,
+    modifier: Modifier = Modifier,
+) {
+    // Полоса не прыгает к новому значению: взнос виден как движение, а не
+    // как другая картинка на том же месте.
+    val filled by animateFloatAsState(
+        targetValue = fraction,
+        animationSpec = tween(Motion.CONTENT_MS * 2),
+        label = "progress-line",
+    )
+
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(6.dp)
+            .clip(RoundedCornerShape(3.dp))
+            .background(track),
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth(filled)
+                .height(6.dp)
+                .clip(RoundedCornerShape(3.dp))
+                .background(color),
+        )
     }
 }
