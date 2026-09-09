@@ -26,6 +26,38 @@ object Money {
         return format.format(amount)
     }
 
+    /**
+     * Разбор введённой суммы в минорные единицы.
+     *
+     * Поле часто заполняется тем, что мы сами и показали, а показываем мы по
+     * правилам локали: в русской это неразрывный пробел между тысячами, во
+     * французской — узкий неразрывный. Вырезать «обычный пробел» мало —
+     * строка «2 105» тогда не разбирается, и правка молча не сохраняется.
+     */
+    fun parseMinor(text: String, fractionDigits: Int = 2): Long? =
+        parseSignedMinor(text, fractionDigits)?.takeIf { it > 0L }
+
+    /**
+     * То же, но допускает ноль и минус: остаток на счёте бывает нулевым
+     * и отрицательным, а сумма операции — нет.
+     */
+    fun parseSignedMinor(text: String, fractionDigits: Int = 2): Long? {
+        val negative = text.trimStart().startsWith('-') || text.trimStart().startsWith('−')
+        val cleaned = buildString {
+            text.forEach { char ->
+                when {
+                    char.isDigit() -> append(char)
+                    char == ',' || char == '.' -> append('.')
+                    // Пробелы любых видов и знаки валюты отбрасываем.
+                    else -> Unit
+                }
+            }
+        }
+        val value = cleaned.toDoubleOrNull() ?: return null
+        val minor = Math.round(value * pow10(fractionDigits).toDouble())
+        return if (negative) -minor else minor
+    }
+
     /** Сумма без знака валюты — для колонок, где валюта названа в заголовке. */
     fun formatPlain(minor: Long, fractionDigits: Int = 2, locale: Locale = Locale.getDefault()): String {
         val amount = BigDecimal.valueOf(minor, fractionDigits)

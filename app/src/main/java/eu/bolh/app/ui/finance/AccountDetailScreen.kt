@@ -253,7 +253,7 @@ fun AccountDetailScreen(
                         )
                     }
                     Text(
-                        text = Money.format(state.balanceMinor, account.currencyCode, locale),
+                        text = Money.format(state.balanceMinor, state.baseCurrency, locale),
                         style = MoneyHero,
                         color = if (state.balanceMinor < 0L) {
                             status.problem
@@ -326,7 +326,7 @@ fun AccountDetailScreen(
             section(
                 title = expensesTitle,
                 total = state.expenseMinor,
-                currency = account.currencyCode,
+                currency = state.baseCurrency,
                 rows = state.expenses,
                 categories = state.categoriesById,
                 accent = status.textSecondary,
@@ -339,7 +339,7 @@ fun AccountDetailScreen(
             section(
                 title = incomeTitle,
                 total = state.incomeMinor,
-                currency = account.currencyCode,
+                currency = state.baseCurrency,
                 rows = state.income,
                 categories = state.categoriesById,
                 accent = status.success,
@@ -468,7 +468,7 @@ private fun androidx.compose.foundation.lazy.LazyListScope.section(
                 )
             }
             Text(
-                text = Money.format(transaction.amountMinor, transaction.currencyCode, locale),
+                text = Money.format(transaction.amountMinor, currency, locale),
                 style = MoneyRow,
                 color = accent,
             )

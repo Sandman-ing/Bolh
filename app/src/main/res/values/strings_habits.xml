@@ -55,6 +55,8 @@
     <string name="habit_start_date_note">Days before this are not asked about: the habit did not exist yet.</string>
     <string name="habit_min_line">min: %1$s</string>
     <string name="habit_norm_line">norm: %1$s</string>
+    <string name="habit_done_minimum">Done: minimum</string>
+    <string name="habit_done_norm">Done: norm</string>
     <string name="habit_save">Save</string>
     <string name="habit_delete">Delete</string>
     <string name="habit_link_goal">Link to a goal</string>

@@ -32,7 +32,11 @@ import kotlinx.coroutines.flow.map
 class FinanceRepository(
     private val dao: FinanceDao,
     private val clock: Clock = Clock.systemDefaultZone(),
-    val baseCurrency: String = "EUR",
+    /**
+     * Валюта приложения. Меняется в настройках и действует сразу: пересчёта нет,
+     * поэтому менять её после первых записей — решение человека, а не наше.
+     */
+    var baseCurrency: String = "EUR",
 ) {
 
     fun today(): LocalDate = LocalDate.now(clock)

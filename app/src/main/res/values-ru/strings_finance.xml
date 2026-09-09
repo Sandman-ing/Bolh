@@ -21,6 +21,7 @@
     <string name="finance_tab_jars">Копилки</string>
     <string name="finance_no_payments">Регулярных платежей пока нет</string>
     <string name="finance_no_jars">Копилка появится здесь, когда у цели будет бюджет</string>
+    <string name="confirm_delete_jar">Удалить эту копилку?</string>
     <string name="finance_options">Как показать</string>
     <string name="finance_tile_transactions_hint">Всё записанное, по дням</string>
     <string name="finance_tile_categories_hint">Цвета, значки, месячные лимиты</string>

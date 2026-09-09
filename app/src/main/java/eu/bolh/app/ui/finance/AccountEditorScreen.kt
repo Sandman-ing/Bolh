@@ -54,6 +54,7 @@ import eu.bolh.app.R
 import eu.bolh.app.data.repository.FinanceRepository
 import eu.bolh.app.domain.model.AccountType
 import eu.bolh.app.ui.common.BolhIcons
+import eu.bolh.app.ui.common.Money
 import eu.bolh.app.ui.theme.Ink
 import eu.bolh.app.ui.theme.LocalStatusColors
 import eu.bolh.app.ui.theme.Spacing
@@ -69,7 +70,7 @@ class AccountEditorViewModel(private val finance: FinanceRepository) : ViewModel
 
     fun save(name: String, icon: String, type: AccountType, balanceText: String) {
         if (name.isBlank()) return
-        val minor = balanceText.replace(',', '.').replace(" ", "").toDoubleOrNull()?.let {
+        val minor = Money.parseMinor(balanceText)?.let {
             Math.round(it * 100.0)
         } ?: 0L
         viewModelScope.launch {

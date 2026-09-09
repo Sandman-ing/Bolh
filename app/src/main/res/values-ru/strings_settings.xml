@@ -14,6 +14,8 @@
     <string name="settings_language_system">Как в системе</string>
     <string name="settings_language_ru">Русский</string>
     <string name="settings_language_en">English</string>
+    <string name="settings_currency">Валюта</string>
+    <string name="settings_currency_note">Одна валюта на всё приложение, без пересчёта. Смена меняет подпись у уже записанных сумм, а не пересчитывает их.</string>
     <string name="settings_export_pdf">Отчёт в PDF</string>
     <string name="settings_pdf_done">Отчёт сохранён</string>
     <string name="settings_data">Данные</string>

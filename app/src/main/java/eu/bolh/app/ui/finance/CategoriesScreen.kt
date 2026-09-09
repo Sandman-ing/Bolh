@@ -514,12 +514,7 @@ private val CategoryPalette: List<Long> = listOf(
 )
 
 /** Пустое поле значит «лимита нет», а не «лимит ноль». */
-private fun parseMinor(raw: String): Long? {
-    val cleaned = raw.trim().replace(',', '.').filter { it.isDigit() || it == '.' }
-    if (cleaned.isBlank()) return null
-    val value = cleaned.toDoubleOrNull() ?: return null
-    return if (value <= 0.0) null else Math.round(value * 100)
-}
+private fun parseMinor(raw: String): Long? = Money.parseMinor(raw)
 
 @Composable
 private fun categoryTitle(category: Category): String {

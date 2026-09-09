@@ -286,6 +286,11 @@ class FinanceViewModel(
         selectedAccount.value = id
     }
 
+    /** Копилка без цели — сирота: удалить её больше нечем, кроме как здесь. */
+    fun deleteJar(id: String) {
+        viewModelScope.launch { finance.deleteJar(id) }
+    }
+
     fun deleteAccount(id: String) {
         viewModelScope.launch { finance.deleteAccount(id) }
     }

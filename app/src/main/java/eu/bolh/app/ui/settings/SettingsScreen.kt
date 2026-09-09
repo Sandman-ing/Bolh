@@ -51,6 +51,7 @@ import eu.bolh.app.BuildConfig
 import eu.bolh.app.R
 import eu.bolh.app.data.backup.BackupService
 import eu.bolh.app.data.backup.PdfReport
+import eu.bolh.app.data.prefs.CurrencyPrefs
 import eu.bolh.app.data.prefs.LanguagePrefs
 import eu.bolh.app.ui.theme.Ink
 import eu.bolh.app.ui.theme.LocalStatusColors
@@ -133,6 +134,7 @@ fun SettingsScreen(
     val activity = LocalActivity.current
     val stamp = LocalDate.now().toString()
     var language by remember { mutableStateOf(LanguagePrefs.get(context)) }
+    var currency by remember { mutableStateOf(CurrencyPrefs.get(context)) }
 
     val exportJson = rememberLauncherForActivityResult(
         ActivityResultContracts.CreateDocument("application/json"),
@@ -194,6 +196,36 @@ fun SettingsScreen(
                         activity?.recreate()
                     }
                 },
+            )
+
+            SectionTitle(stringResource(R.string.settings_currency))
+            ChipRow(
+                options = CurrencyPrefs.supported.map { it to it },
+                current = currency,
+                onSelect = { code ->
+                    if (code != currency) {
+                        CurrencyPrefs.set(context, code)
+                        // Репозиторий живёт дольше экрана: пересоздание Activity
+                        // его не трогает, поэтому валюту меняем и в нём.
+                        (context.applicationContext as BolhApplication)
+                            .container
+                            .financeRepository
+                            .baseCurrency = code
+                        currency = code
+                        // Экран пересоздаётся: репозиторий читает валюту при
+                        // сборке, и живые суммы должны перерисоваться сразу.
+                        activity?.recreate()
+                    }
+                },
+            )
+            Text(
+                text = stringResource(R.string.settings_currency_note),
+                style = MaterialTheme.typography.labelMedium,
+                color = status.textTertiary,
+                modifier = Modifier.padding(
+                    horizontal = Spacing.screenPadding,
+                    vertical = Spacing.s,
+                ),
             )
 
             SectionTitle(stringResource(R.string.settings_appearance))
@@ -324,12 +356,25 @@ private fun SectionTitle(text: String) {
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun LanguageRow(current: String, onSelect: (String) -> Unit) {
-    val status = LocalStatusColors.current
-    val options = listOf(
-        LanguagePrefs.SYSTEM to stringResource(R.string.settings_language_system),
-        "ru" to stringResource(R.string.settings_language_ru),
-        "en" to stringResource(R.string.settings_language_en),
+    ChipRow(
+        options = listOf(
+            LanguagePrefs.SYSTEM to stringResource(R.string.settings_language_system),
+            "ru" to stringResource(R.string.settings_language_ru),
+            "en" to stringResource(R.string.settings_language_en),
+        ),
+        current = current,
+        onSelect = onSelect,
     )
+}
+
+/** Полоса чипов с одним выбранным: язык и валюта выбираются одинаково. */
+@Composable
+private fun ChipRow(
+    options: List<Pair<String, String>>,
+    current: String,
+    onSelect: (String) -> Unit,
+) {
+    val status = LocalStatusColors.current
 
     FlowRow(
         horizontalArrangement = Arrangement.spacedBy(Spacing.s),

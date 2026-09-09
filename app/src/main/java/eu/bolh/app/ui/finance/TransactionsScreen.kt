@@ -258,6 +258,7 @@ fun TransactionsScreen(
                         category = transaction.categoryId?.let { state.categoriesById[it] },
                         account = state.accountsById[transaction.accountId],
                         locale = locale,
+                        currency = state.baseCurrency,
                         selected = transaction.id in selection,
                         selecting = selecting,
                         onClick = {
@@ -284,6 +285,7 @@ private fun TransactionRow(
     category: Category?,
     account: Account?,
     locale: Locale,
+    currency: String,
     selected: Boolean,
     selecting: Boolean,
     onClick: () -> Unit,
@@ -341,7 +343,7 @@ private fun TransactionRow(
             )
         }
         Text(
-            text = signed(transaction, locale),
+            text = signed(transaction, locale, currency),
             style = MoneyRow,
             color = when (transaction.type) {
                 TransactionType.Income -> status.success
@@ -353,8 +355,8 @@ private fun TransactionRow(
     }
 }
 
-private fun signed(transaction: Transaction, locale: Locale): String {
-    val amount = Money.format(transaction.amountMinor, transaction.currencyCode, locale)
+private fun signed(transaction: Transaction, locale: Locale, currency: String): String {
+    val amount = Money.format(transaction.amountMinor, currency, locale)
     return when (transaction.type) {
         TransactionType.Income -> "+$amount"
         TransactionType.Expense -> "−$amount"

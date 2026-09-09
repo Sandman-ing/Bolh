@@ -7,6 +7,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import eu.bolh.app.BolhApplication
 import eu.bolh.app.data.repository.FinanceRepository
+import eu.bolh.app.ui.common.Money
 import eu.bolh.app.data.repository.GoalRepository
 import eu.bolh.app.domain.model.Account
 import eu.bolh.app.domain.model.Category
@@ -42,11 +43,7 @@ data class TransactionDraft(
      */
     val amountMinor: Long?
         get() {
-            val cleaned = amountText.replace(',', '.').replace(" ", "").trim()
-            if (cleaned.isEmpty()) return null
-            val value = cleaned.toDoubleOrNull() ?: return null
-            if (value <= 0.0) return null
-            return Math.round(value * 100.0)
+            return Money.parseMinor(amountText)
         }
 
     val canSave: Boolean

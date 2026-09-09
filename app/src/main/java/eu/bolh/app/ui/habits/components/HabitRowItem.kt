@@ -112,6 +112,23 @@ fun HabitRowItem(
         }
     }
 
+    // Отмеченный уровень называется словом: круг с галочкой не отличает
+    // минимум от нормы, а разница между ними и есть смысл режима (§5.3).
+    if (row.habit.mode == HabitMode.Minimum && row.selectedLevel != null) {
+        Text(
+            text = stringResource(
+                if (row.selectedLevel == EntryLevel.Minimum) {
+                    R.string.habit_done_minimum
+                } else {
+                    R.string.habit_done_norm
+                },
+            ),
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(top = Spacing.s),
+        )
+    }
+
     // Что здесь минимум, а что норма, человек писал сам — и должен видеть это
     // под строкой во всю ширину, а не вспоминать при нажатии кнопки (§5.3).
     if (row.habit.mode == HabitMode.Minimum) {
@@ -242,13 +259,14 @@ private fun MinimumNormButtons(
     modifier: Modifier = Modifier,
 ) {
     val accent = MaterialTheme.colorScheme.primary
-    val status = LocalStatusColors.current
 
+    // Обе кнопки нажимаются, поэтому обе выглядят одинаково. Раньше минимум
+    // был бледным, и казалось, что кликается только норма.
     Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
         Pill(
             text = stringResource(R.string.habits_mark_minimum),
-            textColor = status.textSecondary,
-            borderColor = status.divider,
+            textColor = accent,
+            borderColor = accent,
             onClick = onMinimum,
         )
         Pill(

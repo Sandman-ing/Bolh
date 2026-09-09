@@ -14,6 +14,8 @@
     <string name="settings_language_system">System</string>
     <string name="settings_language_ru">Русский</string>
     <string name="settings_language_en">English</string>
+    <string name="settings_currency">Currency</string>
+    <string name="settings_currency_note">One currency for the whole app, no conversion. Changing it relabels existing amounts, it does not recalculate them.</string>
     <string name="settings_export_pdf">Report as PDF</string>
     <string name="settings_pdf_done">Report saved</string>
     <string name="settings_data">Data</string>

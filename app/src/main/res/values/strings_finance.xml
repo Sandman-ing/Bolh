@@ -21,6 +21,7 @@
     <string name="finance_tab_jars">Jars</string>
     <string name="finance_no_payments">No recurring payments yet</string>
     <string name="finance_no_jars">Jars appear here once a goal gets a budget</string>
+    <string name="confirm_delete_jar">Delete this jar?</string>
     <string name="finance_options">View options</string>
     <string name="finance_tile_transactions_hint">Everything recorded, by day</string>
     <string name="finance_tile_categories_hint">Colours, icons, monthly limits</string>

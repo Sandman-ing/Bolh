@@ -9,6 +9,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import eu.bolh.app.BolhApplication
 import eu.bolh.app.data.repository.FinanceRepository
+import eu.bolh.app.ui.common.Money
 import eu.bolh.app.domain.analytics.FinanceAnalytics
 import eu.bolh.app.domain.model.Account
 import eu.bolh.app.domain.model.Category
@@ -28,6 +29,7 @@ data class AccountDetailUiState(
     val expenseMinor: Long = 0L,
     val incomeMinor: Long = 0L,
     val categoriesById: Map<String, Category> = emptyMap(),
+    val baseCurrency: String = "EUR",
 )
 
 class AccountDetailViewModel(
@@ -56,6 +58,7 @@ class AccountDetailViewModel(
         }
 
         AccountDetailUiState(
+            baseCurrency = finance.baseCurrency,
             account = account,
             balanceMinor = FinanceAnalytics.balanceOf(account, transactions),
             expenses = expenses,
@@ -77,9 +80,7 @@ class AccountDetailViewModel(
      */
     fun save(name: String, balanceText: String) {
         val account = state.value.account ?: return
-        val desired = balanceText.replace(',', '.').replace(" ", "").replace(" ", "")
-            .toDoubleOrNull()
-            ?.let { Math.round(it * 100.0) }
+        val desired = Money.parseSignedMinor(balanceText)
 
         viewModelScope.launch {
             finance.updateAccount(

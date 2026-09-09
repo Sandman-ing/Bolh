@@ -109,6 +109,7 @@ fun FinanceScreen(
     val status = LocalStatusColors.current
     val locale = rememberLocale()
     var pendingAccount by remember { mutableStateOf<String?>(null) }
+    var pendingJar by remember { mutableStateOf<String?>(null) }
     var accountMenu by remember { mutableStateOf(false) }
     var optionsMenu by remember { mutableStateOf(false) }
     var tab by remember { mutableStateOf(FinanceTab.Overview) }
@@ -122,6 +123,15 @@ fun FinanceScreen(
             onDismiss = { pendingAccount = null },
         )
     }
+
+    pendingJar?.let { id ->
+        ConfirmDeleteDialog(
+            title = stringResource(R.string.confirm_delete_jar),
+            onConfirm = { viewModel.deleteJar(id) },
+            onDismiss = { pendingJar = null },
+        )
+    }
+
     pendingPayment?.let { id ->
         ConfirmDeleteDialog(
             title = stringResource(R.string.confirm_delete, state.nextPayment?.name.orEmpty()),
@@ -447,7 +457,7 @@ fun FinanceScreen(
                             .padding(start = Spacing.m),
                     )
                     Text(
-                        text = Money.format(row.balanceMinor, row.account.currencyCode, locale),
+                        text = Money.format(row.balanceMinor, state.baseCurrency, locale),
                         style = MoneyRow,
                         color = if (row.balanceMinor < 0L) {
                             status.problem
@@ -558,7 +568,7 @@ fun FinanceScreen(
                             )
                         }
                         Text(
-                            text = Money.format(payment.amountMinor, payment.currencyCode, locale),
+                            text = Money.format(payment.amountMinor, state.baseCurrency, locale),
                             style = MoneyLarge,
                             color = MaterialTheme.colorScheme.onBackground,
                         )
@@ -619,10 +629,18 @@ fun FinanceScreen(
         items(state.jars.size, key = { state.jars[it].jar.id }) { index ->
             val row = state.jars[index]
             BolhCard(
-                modifier = Modifier.padding(
-                    horizontal = Spacing.screenPadding,
-                    vertical = Spacing.xs,
-                ),
+                modifier = Modifier
+                    .padding(
+                        horizontal = Spacing.screenPadding,
+                        vertical = Spacing.xs,
+                    )
+                    // Копилка без своей цели остаётся строкой без имени —
+                    // и её должно быть чем убрать.
+                    .combinedClickable(
+                        onClick = {},
+                        onLongClick = { pendingJar = row.jar.id },
+                        onLongClickLabel = stringResource(R.string.common_delete),
+                    ),
                 contentPadding = PaddingValues(
                     horizontal = Spacing.l,
                     vertical = Spacing.m,
@@ -647,8 +665,8 @@ fun FinanceScreen(
                 Text(
                     text = stringResource(
                         R.string.finance_jar_progress,
-                        Money.format(row.currentMinor, row.jar.currencyCode, locale),
-                        Money.format(row.jar.targetMinor, row.jar.currencyCode, locale),
+                        Money.format(row.currentMinor, state.baseCurrency, locale),
+                        Money.format(row.jar.targetMinor, state.baseCurrency, locale),
                     ),
                     style = MoneyRow,
                     color = GoalsTeal,

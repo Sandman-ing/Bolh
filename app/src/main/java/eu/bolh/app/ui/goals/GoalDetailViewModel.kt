@@ -199,9 +199,17 @@ class GoalDetailViewModel(
         viewModelScope.launch { goals.setStageDone(stage.id, !stage.isDone) }
     }
 
-    /** Удаление цели: этапы и задачи уходят вместе с ней. */
+    /**
+     * Удаление цели: этапы, задачи и копилка уходят вместе с ней.
+     *
+     * Оставленная копилка превращается в строку без имени, которую нечем
+     * убрать: цели, к которой она привязана, уже нет.
+     */
     fun delete() {
-        viewModelScope.launch { goals.delete(goalId) }
+        viewModelScope.launch {
+            state.value.jar?.let { finance.deleteJar(it.id) }
+            goals.delete(goalId)
+        }
     }
 
     /**

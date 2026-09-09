@@ -42,11 +42,11 @@
     <string name="habit_schedule_times">N раз в неделю</string>
     <string name="habit_advanced">Расширенные настройки</string>
     <string name="habit_mode_title">При пропуске</string>
-    <string name="habit_mode_game">серия обнуляется</string>
-    <string name="habit_mode_skips">два дня отдыха в месяц не ломают счёт</string>
-    <string name="habit_mode_minimum">плохой день не обнуляет прогресс</string>
-    <string name="habit_mode_counter">считать дни без срыва</string>
-    <string name="habit_mode_limit">не больше N раз в неделю</string>
+    <string name="habit_mode_game">Серия обнуляется</string>
+    <string name="habit_mode_skips">Два дня отдыха в месяц не ломают счёт</string>
+    <string name="habit_mode_minimum">Плохой день не обнуляет прогресс</string>
+    <string name="habit_mode_counter">Считать дни без срыва</string>
+    <string name="habit_mode_limit">Не больше N раз в неделю</string>
     <string name="habit_minimum_hint">Минимум: то, что невозможно не сделать</string>
     <string name="habit_norm_hint">Норма: то, ради чего привычка заведена</string>
     <string name="habit_limit_hint">Раз в неделю</string>
@@ -59,6 +59,8 @@
     <string name="habit_start_date_note">О днях раньше приложение не спрашивает: привычки тогда ещё не было.</string>
     <string name="habit_min_line">минимум: %1$s</string>
     <string name="habit_norm_line">норма: %1$s</string>
+    <string name="habit_done_minimum">Сделано: минимум</string>
+    <string name="habit_done_norm">Сделано: норма</string>
     <string name="habit_save">Сохранить</string>
     <string name="habit_delete">Удалить</string>
     <string name="habit_link_goal">Привязать к цели</string>

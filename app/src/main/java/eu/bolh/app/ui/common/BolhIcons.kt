@@ -57,6 +57,7 @@ object BolhIcons {
         "smartphone" to R.drawable.ic_smartphone,
         "smoking_rooms" to R.drawable.ic_smoking_rooms,
         "sports_esports" to R.drawable.ic_sports_esports,
+        "task" to R.drawable.ic_task,
         "translate" to R.drawable.ic_translate,
         "trending_up" to R.drawable.ic_trending_up,
         "upload_file" to R.drawable.ic_upload_file,

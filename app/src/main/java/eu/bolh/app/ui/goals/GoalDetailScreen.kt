@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -46,6 +47,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -614,6 +616,24 @@ fun GoalDetailScreen(
                             onLongClickLabel = stringResource(R.string.goal_rename),
                         ),
                 ) {
+                    // Номер этапа: порядок — часть смысла, без него список
+                    // читается как набор, а не как путь (§4.1).
+                    Text(
+                        text = (state.stages.indexOf(stageState) + 1).toString(),
+                        style = NumberSmall,
+                        color = if (stageState.stage.isDone) {
+                            status.textTertiary
+                        } else {
+                            MaterialTheme.colorScheme.primary
+                        },
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .padding(start = Spacing.s)
+                            .size(24.dp)
+                            .clip(CircleShape)
+                            .background(status.surfaceSunken)
+                            .wrapContentHeight(),
+                    )
                     Checkbox(
                         checked = stageState.stage.isDone,
                         onCheckedChange = { viewModel.toggleStage(stageState.stage) },
@@ -747,13 +767,17 @@ private fun AddTaskRow(onAdd: (String) -> Unit) {
     // Поле под каждым этапом превращает список в простыню: пока не позвали —
     // это одна строка текста.
     if (!open) {
-        Text(
+        // Строка серого текста не читалась как действие: теперь это кнопка
+        // со значком задачи, в том же ритме, что остальные кнопки.
+        PillButton(
             text = stringResource(R.string.goal_add_task),
-            style = MaterialTheme.typography.labelMedium,
-            color = LocalStatusColors.current.textTertiary,
-            modifier = Modifier
-                .clickable { open = true }
-                .padding(start = Spacing.xxl, top = Spacing.xs, bottom = Spacing.m),
+            onClick = { open = true },
+            icon = R.drawable.ic_task,
+            modifier = Modifier.padding(
+                start = Spacing.xl,
+                top = Spacing.xs,
+                bottom = Spacing.s,
+            ),
         )
         return
     }
@@ -785,8 +809,7 @@ private fun AddTaskRow(onAdd: (String) -> Unit) {
 }
 
 /** Ввод денег принимает и запятую, и точку: человек пишет как привык. */
-private fun parseMinor(text: String): Long =
-    text.replace(',', '.').replace(" ", "").toDoubleOrNull()?.let { Math.round(it * 100.0) } ?: 0L
+private fun parseMinor(text: String): Long = Money.parseMinor(text) ?: 0L
 
 @Composable
 private fun InfoBlock(

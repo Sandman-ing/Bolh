@@ -9,6 +9,7 @@ import eu.bolh.app.data.notifications.BolhNotifications
 import eu.bolh.app.data.notifications.HabitReminderScheduler
 import eu.bolh.app.data.notifications.RecurringReminderScheduler
 import eu.bolh.app.data.prefs.SettingsStore
+import eu.bolh.app.data.prefs.CurrencyPrefs
 import eu.bolh.app.data.repository.FinanceRepository
 import eu.bolh.app.data.repository.GoalRepository
 import eu.bolh.app.data.repository.HabitRepository
@@ -29,7 +30,11 @@ class BolhContainer(context: Context, val clock: Clock = Clock.systemDefaultZone
 
     val goalRepository: GoalRepository = GoalRepository(database.goalDao(), clock)
 
-    val financeRepository: FinanceRepository = FinanceRepository(database.financeDao(), clock)
+    val financeRepository: FinanceRepository = FinanceRepository(
+        dao = database.financeDao(),
+        clock = clock,
+        baseCurrency = CurrencyPrefs.get(context),
+    )
 
     val settings: SettingsStore = SettingsStore(context.applicationContext)
 

@@ -375,8 +375,7 @@ fun RecurringEditorScreen(
 
             Button(
                 onClick = {
-                    val minor = amount.replace(',', '.').replace(" ", "").toDoubleOrNull()
-                        ?.let { Math.round(it * 100.0) } ?: 0L
+                    val minor = Money.parseMinor(amount) ?: 0L
                     accountId?.let { account ->
                         viewModel.save(
                             name = name,
