@@ -113,16 +113,6 @@ fun GoalDetailScreen(
         )
     }
 
-    if (celebrating) {
-        CompletionPulse(
-            accent = MaterialTheme.colorScheme.primary,
-            onFinished = {
-                celebrating = false
-                onBack()
-            },
-        )
-    }
-
     pendingStage?.let { (id, name) ->
         RenameDialog(
             initial = name,
@@ -767,6 +757,18 @@ fun GoalDetailScreen(
                 ),
             )
         }
+    }
+
+    // Наложение рисуется после Scaffold: сиблинг до него оказывается под
+    // экраном, и празднование никто не видит.
+    if (celebrating) {
+        CompletionPulse(
+            accent = MaterialTheme.colorScheme.primary,
+            onFinished = {
+                celebrating = false
+                onBack()
+            },
+        )
     }
 }
 
