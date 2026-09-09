@@ -43,6 +43,7 @@ import eu.bolh.app.domain.model.EntryLevel
 import eu.bolh.app.domain.model.HabitKind
 import eu.bolh.app.domain.model.HabitMode
 import eu.bolh.app.ui.common.BolhIcons
+import eu.bolh.app.ui.common.tappable
 import eu.bolh.app.ui.common.Motion
 import eu.bolh.app.ui.common.pressScale
 import eu.bolh.app.ui.common.rememberPressSource
@@ -70,7 +71,7 @@ fun HabitRowItem(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .clickable(onClick = onOpen)
+            .tappable(onClick = onOpen)
             .padding(horizontal = Spacing.screenPadding, vertical = Spacing.habitRowVertical),
     ) {
     Row(verticalAlignment = Alignment.CenterVertically) {

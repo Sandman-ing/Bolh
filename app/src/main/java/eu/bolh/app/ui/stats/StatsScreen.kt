@@ -50,6 +50,7 @@ import eu.bolh.app.domain.model.EntryLevel
 import eu.bolh.app.domain.model.Category
 import eu.bolh.app.domain.templates.SystemCategories
 import eu.bolh.app.ui.common.BolhCard
+import eu.bolh.app.ui.common.tapIcon
 import eu.bolh.app.ui.common.Motion
 import eu.bolh.app.ui.common.pressScale
 import eu.bolh.app.ui.common.rememberPressSource
@@ -125,7 +126,7 @@ fun StatsScreen(
                     .padding(top = Spacing.xl)
                     .size(40.dp)
                     .clip(CircleShape)
-                    .clickable(onClick = onOpenSettings)
+                    .tapIcon(onClick = onOpenSettings)
                     .padding(8.dp),
             )
         }
@@ -234,7 +235,7 @@ fun StatsScreen(
                         .clip(CircleShape)
                         .background(status.surfaceRaised)
                         .border(1.dp, status.stroke, CircleShape)
-                        .clickable(onClick = onOpenSettings)
+                        .tapIcon(onClick = onOpenSettings)
                         .padding(Spacing.s)
                         .size(20.dp),
                 )
@@ -517,7 +518,7 @@ private fun HabitCalendar(
                 tint = status.textSecondary,
                 modifier = Modifier
                     .clip(CircleShape)
-                    .clickable(onClick = onPrevious)
+                    .tapIcon(onClick = onPrevious)
                     .padding(Spacing.xs)
                     .size(18.dp),
             )
@@ -538,7 +539,7 @@ private fun HabitCalendar(
                 },
                 modifier = Modifier
                     .clip(CircleShape)
-                    .clickable(enabled = month.isBefore(YearMonth.from(today)), onClick = onNext)
+                    .tapIcon(enabled = month.isBefore(YearMonth.from(today)), onClick = onNext)
                     .padding(Spacing.xs)
                     .size(18.dp),
             )

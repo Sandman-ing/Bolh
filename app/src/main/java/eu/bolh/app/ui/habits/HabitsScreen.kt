@@ -36,6 +36,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import eu.bolh.app.R
 import androidx.compose.foundation.layout.PaddingValues
+import eu.bolh.app.ui.common.tapIcon
 import eu.bolh.app.ui.common.Motion
 import eu.bolh.app.ui.common.BolhCard
 import eu.bolh.app.ui.common.PillButton
@@ -249,7 +250,7 @@ private fun WeekHeader(
                 modifier = Modifier
                     .size(36.dp)
                     .clip(CircleShape)
-                    .clickable(onClick = onPrevious)
+                    .tapIcon(onClick = onPrevious)
                     .padding(6.dp),
             )
             Icon(
@@ -259,7 +260,7 @@ private fun WeekHeader(
                 modifier = Modifier
                     .size(36.dp)
                     .clip(CircleShape)
-                    .clickable(enabled = nextEnabled, onClick = onNext)
+                    .tapIcon(enabled = nextEnabled, onClick = onNext)
                     .padding(6.dp),
             )
         }

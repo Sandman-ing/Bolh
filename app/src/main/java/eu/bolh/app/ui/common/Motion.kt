@@ -5,6 +5,7 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -131,5 +132,28 @@ fun Modifier.tappable(
             onClick = onClick,
             onLongClick = onLongClick,
             onLongClickLabel = longClickLabel,
+        )
+}
+
+/**
+ * Нажатие на значок-кнопку: стрелку «назад», шестерёнку, стрелки недели.
+ *
+ * Они мелкие и попасть по ним не всегда получается с первого раза, поэтому
+ * отклик здесь нужнее, чем на крупной кнопке: без него непонятно, засчиталось
+ * нажатие или промахнулся. Круг подсветки не обрезается рамкой значка (§9.2).
+ */
+@Composable
+fun Modifier.tapIcon(
+    enabled: Boolean = true,
+    onClick: () -> Unit,
+): Modifier {
+    val press = rememberPressSource()
+    return this
+        .pressScale(press, pressedScale = 0.86f)
+        .clickable(
+            interactionSource = press,
+            indication = ripple(bounded = false),
+            enabled = enabled,
+            onClick = onClick,
         )
 }

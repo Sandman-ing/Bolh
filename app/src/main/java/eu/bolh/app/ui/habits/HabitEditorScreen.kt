@@ -79,6 +79,8 @@ import eu.bolh.app.ui.common.StepButton
 import eu.bolh.app.ui.common.SelectChip
 import eu.bolh.app.ui.common.BolhIcons
 import eu.bolh.app.ui.common.Hint
+import eu.bolh.app.ui.common.tapIcon
+import eu.bolh.app.ui.common.tappable
 import eu.bolh.app.ui.common.Motion
 import eu.bolh.app.ui.common.pressScale
 import eu.bolh.app.ui.common.rememberPressSource
@@ -132,7 +134,7 @@ fun HabitEditorScreen(
                             .padding(start = Spacing.s)
                             .size(40.dp)
                             .clip(CircleShape)
-                            .clickable(onClick = onDone)
+                            .tapIcon(onClick = onDone)
                             .padding(8.dp),
                     )
                 },
@@ -542,7 +544,7 @@ private fun AdvancedSection(draft: HabitDraft, viewModel: HabitEditorViewModel) 
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier
-                    .clickable(onClick = viewModel::clearPause)
+                    .tappable(onClick = viewModel::clearPause)
                     .padding(horizontal = Spacing.screenPadding, vertical = Spacing.xs),
             )
         }

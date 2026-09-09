@@ -52,6 +52,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import eu.bolh.app.R
 import eu.bolh.app.ui.common.BolhIcons
+import eu.bolh.app.ui.common.tapIcon
+import eu.bolh.app.ui.common.tappable
 import eu.bolh.app.ui.common.Motion
 import eu.bolh.app.ui.common.PillButton
 import eu.bolh.app.ui.common.BolhCard
@@ -106,7 +108,7 @@ fun GoalEditorScreen(
                             .padding(start = Spacing.s)
                             .size(40.dp)
                             .clip(CircleShape)
-                            .clickable(onClick = onDone)
+                            .tapIcon(onClick = onDone)
                             .padding(8.dp),
                     )
                 },
@@ -205,7 +207,7 @@ fun GoalEditorScreen(
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable(onClick = viewModel::toggleStages)
+                    .tappable(onClick = viewModel::toggleStages)
                     .padding(horizontal = Spacing.screenPadding, vertical = Spacing.l),
             )
 
@@ -473,7 +475,7 @@ private fun MoveButton(icon: Int, enabled: Boolean, onClick: () -> Unit) {
         modifier = Modifier
             .size(32.dp)
             .clip(CircleShape)
-            .clickable(enabled = enabled, onClick = onClick)
+            .tapIcon(enabled = enabled, onClick = onClick)
             .padding(7.dp),
     )
 }

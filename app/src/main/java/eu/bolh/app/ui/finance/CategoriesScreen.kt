@@ -63,6 +63,7 @@ import eu.bolh.app.ui.common.BolhIcons
 import eu.bolh.app.ui.common.ConfirmDeleteDialog
 import eu.bolh.app.ui.common.Hint
 import eu.bolh.app.ui.common.Money
+import eu.bolh.app.ui.common.tapIcon
 import eu.bolh.app.ui.common.Motion
 import eu.bolh.app.ui.common.pressScale
 import eu.bolh.app.ui.common.rememberPressSource
@@ -195,7 +196,7 @@ fun CategoriesScreen(
                             .padding(start = Spacing.s)
                             .size(40.dp)
                             .clip(CircleShape)
-                            .clickable(onClick = onBack)
+                            .tapIcon(onClick = onBack)
                             .padding(8.dp),
                     )
                 },

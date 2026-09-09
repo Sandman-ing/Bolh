@@ -70,6 +70,7 @@ import eu.bolh.app.data.backup.BackupService
 import eu.bolh.app.data.backup.PdfReport
 import eu.bolh.app.data.prefs.CurrencyPrefs
 import eu.bolh.app.data.prefs.LanguagePrefs
+import eu.bolh.app.ui.common.tapIcon
 import eu.bolh.app.ui.common.Motion
 import eu.bolh.app.ui.common.pressScale
 import eu.bolh.app.ui.common.rememberPressSource
@@ -225,7 +226,7 @@ fun SettingsScreen(
                             .padding(start = Spacing.s)
                             .size(40.dp)
                             .clip(CircleShape)
-                            .clickable(onClick = onBack)
+                            .tapIcon(onClick = onBack)
                             .padding(8.dp),
                     )
                 },

@@ -46,6 +46,7 @@ import eu.bolh.app.domain.model.TransactionType
 import eu.bolh.app.domain.templates.SystemCategories
 import eu.bolh.app.ui.common.SelectChip
 import eu.bolh.app.ui.common.BolhIcons
+import eu.bolh.app.ui.common.tappable
 import eu.bolh.app.ui.common.rememberLocale
 import eu.bolh.app.ui.theme.Ink
 import eu.bolh.app.ui.theme.LocalStatusColors
@@ -219,7 +220,7 @@ fun TransactionSheet(
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable(onClick = viewModel::toggleExpanded)
+                    .tappable(onClick = viewModel::toggleExpanded)
                     .padding(horizontal = Spacing.screenPadding, vertical = Spacing.l),
             )
 

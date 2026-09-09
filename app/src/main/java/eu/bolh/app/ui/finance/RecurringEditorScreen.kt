@@ -69,6 +69,7 @@ import eu.bolh.app.domain.templates.SystemCategories
 import eu.bolh.app.ui.common.StepButton
 import eu.bolh.app.ui.common.SelectChip
 import eu.bolh.app.ui.common.BolhIcons
+import eu.bolh.app.ui.common.tapIcon
 import eu.bolh.app.ui.common.Money
 import eu.bolh.app.ui.common.rememberLocale
 import eu.bolh.app.ui.theme.Ink
@@ -237,7 +238,7 @@ fun RecurringEditorScreen(
                             .padding(start = Spacing.s)
                             .size(40.dp)
                             .clip(CircleShape)
-                            .clickable(onClick = onDone)
+                            .tapIcon(onClick = onDone)
                             .padding(8.dp),
                     )
                 },

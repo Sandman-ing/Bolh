@@ -72,6 +72,7 @@ import eu.bolh.app.ui.common.PillButton
 import eu.bolh.app.ui.common.RenameDialog
 import eu.bolh.app.ui.common.BolhIcons
 import eu.bolh.app.ui.common.completionPop
+import eu.bolh.app.ui.common.tapIcon
 import eu.bolh.app.ui.common.Motion
 import eu.bolh.app.ui.common.BolhCheck
 import eu.bolh.app.ui.common.CompletionPulse
@@ -182,7 +183,7 @@ fun GoalDetailScreen(
                             .padding(start = Spacing.s)
                             .size(40.dp)
                             .clip(CircleShape)
-                            .clickable(onClick = onBack)
+                            .tapIcon(onClick = onBack)
                             .padding(8.dp),
                     )
                 },

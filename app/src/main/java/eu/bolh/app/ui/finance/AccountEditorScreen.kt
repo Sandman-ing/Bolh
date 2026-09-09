@@ -62,6 +62,7 @@ import eu.bolh.app.ui.common.Hint
 import eu.bolh.app.ui.common.PillButton
 import eu.bolh.app.ui.common.SectionTitle
 import eu.bolh.app.ui.common.rememberLocale
+import eu.bolh.app.ui.common.tapIcon
 import eu.bolh.app.ui.common.Money
 import eu.bolh.app.ui.theme.Ink
 import eu.bolh.app.ui.theme.LocalStatusColors
@@ -169,7 +170,7 @@ fun AccountEditorScreen(
                             .padding(start = Spacing.s)
                             .size(40.dp)
                             .clip(CircleShape)
-                            .clickable(onClick = onDone)
+                            .tapIcon(onClick = onDone)
                             .padding(8.dp),
                     )
                 },
