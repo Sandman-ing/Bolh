@@ -13,3 +13,4 @@ local.properties
 # Ключ подписи и его пароль: в репозиторий не едут.
 /keystore.properties
 *.jks
+*.apk
