@@ -50,6 +50,12 @@ import eu.bolh.app.domain.model.EntryLevel
 import eu.bolh.app.domain.model.Category
 import eu.bolh.app.domain.templates.SystemCategories
 import eu.bolh.app.ui.common.BolhCard
+import eu.bolh.app.ui.common.Motion
+import eu.bolh.app.ui.common.pressScale
+import eu.bolh.app.ui.common.rememberPressSource
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.material3.ripple
+import eu.bolh.app.ui.common.Hint
 import eu.bolh.app.ui.common.Money
 import eu.bolh.app.ui.common.SectionCard
 import eu.bolh.app.ui.common.StatTile
@@ -144,19 +150,34 @@ fun StatsScreen(
                 StatPeriod.entries.forEach { period ->
                     val selected = period == state.period
                     val chip = RoundedCornerShape(Radius.chip)
+                    val press = rememberPressSource()
+                    val fill by animateColorAsState(
+                        targetValue = if (selected) TextPrimary else status.surfaceRaised,
+                        animationSpec = Motion.color,
+                        label = "period-fill",
+                    )
+                    val label by animateColorAsState(
+                        targetValue = if (selected) Ink else status.textSecondary,
+                        animationSpec = Motion.color,
+                        label = "period-label",
+                    )
                     Text(
                         text = stringResource(periodLabel(period)),
                         style = MaterialTheme.typography.labelLarge,
-                        color = if (selected) Ink else status.textSecondary,
+                        color = label,
                         modifier = Modifier
+                            .pressScale(press)
                             .clip(chip)
-                            .background(if (selected) TextPrimary else status.surfaceRaised)
+                            .background(fill)
                             .border(
                                 width = 1.dp,
                                 color = if (selected) TextPrimary else status.stroke,
                                 shape = chip,
                             )
-                            .clickable { viewModel.setPeriod(period) }
+                            .clickable(
+                                interactionSource = press,
+                                indication = ripple(),
+                            ) { viewModel.setPeriod(period) }
                             .padding(horizontal = Spacing.m, vertical = Spacing.s),
                     )
                 }
@@ -271,10 +292,8 @@ fun StatsScreen(
                     EmptyLine(stringResource(R.string.stats_no_habits))
                 } else {
                     BarChart(bars = state.bars, color = HabitsViolet)
-                    Text(
+                    Hint(
                         text = stringResource(R.string.stats_calendar_hint),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = status.textTertiary,
                         modifier = Modifier.padding(bottom = Spacing.s),
                     )
                     state.habitRows.forEachIndexed { index, row ->

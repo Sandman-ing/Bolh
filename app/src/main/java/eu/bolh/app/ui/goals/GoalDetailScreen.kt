@@ -59,6 +59,7 @@ import eu.bolh.app.ui.common.MetricChip
 import eu.bolh.app.ui.common.PillButton
 import eu.bolh.app.ui.common.RenameDialog
 import eu.bolh.app.ui.common.BolhIcons
+import eu.bolh.app.ui.common.CompletionPulse
 import eu.bolh.app.ui.common.ConfirmDeleteDialog
 import eu.bolh.app.ui.common.Money
 import eu.bolh.app.ui.common.rememberLocale
@@ -98,6 +99,7 @@ fun GoalDetailScreen(
     var pendingStage by remember { mutableStateOf<Pair<String, String>?>(null) }
     var habitPicker by remember { mutableStateOf(false) }
     var pendingGoal by remember { mutableStateOf(false) }
+    var celebrating by remember { mutableStateOf(false) }
     var pendingTask by remember { mutableStateOf<Pair<String, String>?>(null) }
 
     if (pendingGoal && goal != null) {
@@ -108,6 +110,16 @@ fun GoalDetailScreen(
                 onBack()
             },
             onDismiss = { pendingGoal = false },
+        )
+    }
+
+    if (celebrating) {
+        CompletionPulse(
+            accent = MaterialTheme.colorScheme.primary,
+            onFinished = {
+                celebrating = false
+                onBack()
+            },
         )
     }
 
@@ -728,7 +740,7 @@ fun GoalDetailScreen(
                 Button(
                     onClick = {
                         viewModel.complete()
-                        onBack()
+                        celebrating = true
                     },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary,

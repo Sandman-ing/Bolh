@@ -51,6 +51,7 @@ import eu.bolh.app.ui.common.BolhIcons
 import eu.bolh.app.ui.common.BolhCard
 import eu.bolh.app.ui.common.ConfirmDeleteDialog
 import eu.bolh.app.ui.common.PillButton
+import eu.bolh.app.ui.common.Hint
 import eu.bolh.app.ui.common.MetricChip
 import eu.bolh.app.ui.common.Money
 import eu.bolh.app.ui.common.rememberLocale
@@ -294,12 +295,10 @@ fun AccountDetailScreen(
                         )
                         // Остаток правится начальной суммой, а не подчисткой истории:
                         // операции остаются на месте, меняется точка отсчёта.
-                        Text(
-                            text = stringResource(R.string.account_balance_note),
-                            style = MaterialTheme.typography.labelMedium,
-                            color = status.textTertiary,
+                        Hint(
+            text = stringResource(R.string.account_balance_note),
                             modifier = Modifier.padding(top = Spacing.xs),
-                        )
+        )
                         Row(
                             horizontalArrangement = Arrangement.spacedBy(Spacing.s),
                             modifier = Modifier.padding(top = Spacing.m),

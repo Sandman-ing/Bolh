@@ -1,6 +1,7 @@
 package eu.bolh.app.ui.goals
 
 import android.app.DatePickerDialog
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -8,6 +9,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
@@ -37,15 +40,18 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import eu.bolh.app.R
 import eu.bolh.app.ui.common.BolhIcons
+import eu.bolh.app.ui.common.PillButton
 import eu.bolh.app.ui.common.BolhCard
 import eu.bolh.app.ui.common.rememberLocale
 import eu.bolh.app.ui.theme.Ink
 import eu.bolh.app.ui.theme.LocalStatusColors
+import eu.bolh.app.ui.theme.NumberSmall
 import eu.bolh.app.ui.theme.Radius
 import eu.bolh.app.ui.theme.Spacing
 import java.time.ZoneId
@@ -196,58 +202,140 @@ fun GoalEditorScreen(
                     .padding(horizontal = Spacing.screenPadding, vertical = Spacing.l),
             )
 
-            if (draft.stagesExpanded) {
-                draft.stageNames.forEachIndexed { index, name ->
+            AnimatedVisibility(visible = draft.stagesExpanded) {
+                Column {
+                    val stageFallback = stringResource(R.string.goal_stage_default)
+                    val taskFallback = stringResource(R.string.goal_task_default)
+
+                    draft.stages.forEachIndexed { index, stage ->
+                        BolhCard(
+                            corner = Radius.block,
+                            modifier = Modifier.padding(
+                                horizontal = Spacing.screenPadding,
+                                vertical = Spacing.xs,
+                            ),
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                // Номер этапа: порядок — часть плана, а не украшение.
+                                Text(
+                                    text = (index + 1).toString(),
+                                    style = NumberSmall,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier
+                                        .size(24.dp)
+                                        .clip(CircleShape)
+                                        .background(status.surfaceSunken)
+                                        .wrapContentHeight(),
+                                )
+                                OutlinedTextField(
+                                    value = stage.name,
+                                    onValueChange = { viewModel.renameStage(index, it) },
+                                    singleLine = true,
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .padding(start = Spacing.s),
+                                )
+                            }
+
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.padding(top = Spacing.xs),
+                            ) {
+                                // Этап переставляется стрелками, а не перетаскиванием:
+                                // список короткий, а перетаскивание в форме мешает вводу.
+                                MoveButton(
+                                    icon = R.drawable.ic_chevron_up,
+                                    enabled = index > 0,
+                                    onClick = { viewModel.moveStage(index, -1) },
+                                )
+                                MoveButton(
+                                    icon = R.drawable.ic_chevron_down,
+                                    enabled = index < draft.stages.lastIndex,
+                                    onClick = { viewModel.moveStage(index, 1) },
+                                )
+                                Spacer(modifier = Modifier.weight(1f))
+                                Icon(
+                                    painter = painterResource(R.drawable.ic_close),
+                                    contentDescription = stringResource(R.string.common_delete),
+                                    tint = status.textTertiary,
+                                    modifier = Modifier
+                                        .size(32.dp)
+                                        .clip(CircleShape)
+                                        .clickable { viewModel.removeStage(index) }
+                                        .padding(8.dp),
+                                )
+                            }
+
+                            stage.tasks.forEachIndexed { taskIndex, task ->
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.padding(
+                                        start = Spacing.xl,
+                                        top = Spacing.xs,
+                                    ),
+                                ) {
+                                    Icon(
+                                        painter = painterResource(R.drawable.ic_task),
+                                        contentDescription = null,
+                                        tint = status.textTertiary,
+                                        modifier = Modifier.size(16.dp),
+                                    )
+                                    Text(
+                                        text = task,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = status.textSecondary,
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .padding(start = Spacing.s),
+                                    )
+                                    Icon(
+                                        painter = painterResource(R.drawable.ic_close),
+                                        contentDescription = stringResource(
+                                            R.string.common_delete,
+                                        ),
+                                        tint = status.textTertiary,
+                                        modifier = Modifier
+                                            .size(28.dp)
+                                            .clip(CircleShape)
+                                            .clickable { viewModel.removeTask(index, taskIndex) }
+                                            .padding(7.dp),
+                                    )
+                                }
+                            }
+
+                            // Задачи заводятся здесь же: раньше за ними надо было
+                            // сначала сохранить цель и вернуться внутрь.
+                            PillButton(
+                                text = stringResource(R.string.goal_add_task),
+                                onClick = { viewModel.addTask(index, taskFallback) },
+                                icon = R.drawable.ic_task,
+                                modifier = Modifier.padding(
+                                    start = Spacing.xl,
+                                    top = Spacing.s,
+                                ),
+                            )
+                        }
+                    }
+
                     BolhCard(
                         corner = Radius.block,
-                        contentPadding = PaddingValues(
-                            start = Spacing.l,
-                            end = Spacing.s,
-                            top = Spacing.xs,
-                            bottom = Spacing.xs,
-                        ),
                         modifier = Modifier.padding(
                             horizontal = Spacing.screenPadding,
                             vertical = Spacing.xs,
                         ),
                     ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = name,
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onBackground,
-                            modifier = Modifier.weight(1f),
-                        )
-                        Icon(
-                            painter = painterResource(R.drawable.ic_close),
-                            contentDescription = null,
-                            tint = status.textTertiary,
-                            modifier = Modifier
-                                .size(32.dp)
-                                .clip(CircleShape)
-                                .clickable { viewModel.removeStage(index) }
-                                .padding(8.dp),
-                        )
-                    }
-                    }
-                }
-                BolhCard(
-                    corner = Radius.block,
-                    modifier = Modifier.padding(
-                        horizontal = Spacing.screenPadding,
-                        vertical = Spacing.xs,
-                    ),
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        OutlinedTextField(
-                            value = draft.newStage,
-                            onValueChange = viewModel::setNewStage,
-                            label = { Text(stringResource(R.string.goal_stage_hint)) },
-                            singleLine = true,
-                            modifier = Modifier.weight(1f),
-                        )
-                        TextButton(onClick = viewModel::addStage) {
-                            Text(stringResource(R.string.goal_add_stage))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            OutlinedTextField(
+                                value = draft.newStage,
+                                onValueChange = viewModel::setNewStage,
+                                label = { Text(stringResource(R.string.goal_stage_hint)) },
+                                singleLine = true,
+                                modifier = Modifier.weight(1f),
+                            )
+                            TextButton(onClick = { viewModel.addStage(stageFallback) }) {
+                                Text(stringResource(R.string.goal_add_stage))
+                            }
                         }
                     }
                 }
@@ -348,4 +436,20 @@ private fun DeadlineCheckBlock(
             }
         }
     }
+}
+
+/** Стрелка перестановки этапа: выключенная гаснет, а не исчезает. */
+@Composable
+private fun MoveButton(icon: Int, enabled: Boolean, onClick: () -> Unit) {
+    val status = LocalStatusColors.current
+    Icon(
+        painter = painterResource(icon),
+        contentDescription = null,
+        tint = if (enabled) status.textSecondary else status.divider,
+        modifier = Modifier
+            .size(32.dp)
+            .clip(CircleShape)
+            .clickable(enabled = enabled, onClick = onClick)
+            .padding(7.dp),
+    )
 }

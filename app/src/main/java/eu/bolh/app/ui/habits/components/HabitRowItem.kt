@@ -1,5 +1,9 @@
 package eu.bolh.app.ui.habits.components
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -16,12 +20,19 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ripple
 import androidx.compose.material3.Text
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -32,6 +43,9 @@ import eu.bolh.app.domain.model.EntryLevel
 import eu.bolh.app.domain.model.HabitKind
 import eu.bolh.app.domain.model.HabitMode
 import eu.bolh.app.ui.common.BolhIcons
+import eu.bolh.app.ui.common.Motion
+import eu.bolh.app.ui.common.pressScale
+import eu.bolh.app.ui.common.rememberPressSource
 import eu.bolh.app.ui.common.Money
 import eu.bolh.app.ui.habits.HabitRowState
 import eu.bolh.app.ui.theme.LocalStatusColors
@@ -208,23 +222,56 @@ private fun MarkCircle(
     val status = LocalStatusColors.current
     val filled = level == EntryLevel.Norm
 
+    val press = rememberPressSource()
+
+    // Короткий отклик на отметку: круг проседает и возвращается. Это не
+    // празднование, а подтверждение — привычка отмечается каждый день,
+    // и длинная анимация здесь быстро надоела бы (§3.4).
+    val pop = remember { Animatable(1f) }
+    var previous by remember { mutableStateOf(level) }
+    LaunchedEffect(level) {
+        if (level != null && previous == null) {
+            pop.snapTo(0.72f)
+            pop.animateTo(
+                targetValue = 1f,
+                animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                    stiffness = Spring.StiffnessLow,
+                ),
+            )
+        }
+        previous = level
+    }
+
+    val fill by animateColorAsState(
+        targetValue = if (filled) accent else Color.Transparent,
+        animationSpec = Motion.color,
+        label = "mark-fill",
+    )
+    val ring by animateColorAsState(
+        targetValue = if (level != null) accent else status.divider,
+        animationSpec = Motion.color,
+        label = "mark-ring",
+    )
+
     Box(
         modifier = modifier
             .size(TapTargetMin)
+            .pressScale(press, pressedScale = 0.90f)
             .clip(CircleShape)
-            .clickable(onClick = onClick),
+            .clickable(interactionSource = press, indication = ripple(), onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
         Box(
             modifier = Modifier
                 .size(34.dp)
+                .graphicsLayer {
+                    scaleX = pop.value
+                    scaleY = pop.value
+                }
                 .clip(CircleShape)
-                .background(if (filled) accent else Color.Transparent)
-                .border(
-                    width = 2.dp,
-                    color = if (level != null) accent else status.divider,
-                    shape = CircleShape,
-                ),
+                .background(fill)
+                .border(width = 2.dp, color = ring, shape = CircleShape),
             contentAlignment = Alignment.Center,
         ) {
             when (level) {
@@ -311,15 +358,25 @@ private fun Pill(
     onLongClick: (() -> Unit)? = null,
     longClickLabel: String? = null,
 ) {
+    val press = rememberPressSource()
+    val border by animateColorAsState(borderColor, Motion.color, label = "pill-border")
+
     Box(
         modifier = modifier
+            .pressScale(press)
             .clip(RoundedCornerShape(percent = 50))
-            .border(1.5.dp, borderColor, RoundedCornerShape(percent = 50))
+            .border(1.5.dp, border, RoundedCornerShape(percent = 50))
             .then(
                 if (onLongClick == null) {
-                    Modifier.clickable(onClick = onClick)
+                    Modifier.clickable(
+                        interactionSource = press,
+                        indication = ripple(),
+                        onClick = onClick,
+                    )
                 } else {
                     Modifier.combinedClickable(
+                        interactionSource = press,
+                        indication = ripple(),
                         onClick = onClick,
                         onLongClick = onLongClick,
                         onLongClickLabel = longClickLabel,

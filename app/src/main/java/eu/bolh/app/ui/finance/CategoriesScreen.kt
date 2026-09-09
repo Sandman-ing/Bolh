@@ -61,7 +61,13 @@ import eu.bolh.app.domain.model.CategoryKind
 import eu.bolh.app.domain.templates.SystemCategories
 import eu.bolh.app.ui.common.BolhIcons
 import eu.bolh.app.ui.common.ConfirmDeleteDialog
+import eu.bolh.app.ui.common.Hint
 import eu.bolh.app.ui.common.Money
+import eu.bolh.app.ui.common.Motion
+import eu.bolh.app.ui.common.pressScale
+import eu.bolh.app.ui.common.rememberPressSource
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.material3.ripple
 import eu.bolh.app.ui.common.PillButton
 import eu.bolh.app.ui.common.rememberLocale
 import eu.bolh.app.ui.theme.Ink
@@ -264,11 +270,14 @@ private fun CategoryTile(
     color: Color,
     onClick: () -> Unit,
 ) {
+    val press = rememberPressSource()
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
+            .pressScale(press)
             .clip(RoundedCornerShape(Radius.block))
-            .clickable(onClick = onClick)
+            .clickable(interactionSource = press, indication = ripple(), onClick = onClick)
             .padding(vertical = Spacing.s),
     ) {
         Box(
@@ -306,21 +315,33 @@ private fun KindTab(
 ) {
     val status = LocalStatusColors.current
     val shape = RoundedCornerShape(Radius.chip)
+    val press = rememberPressSource()
+    val fill by animateColorAsState(
+        targetValue = if (selected) accent else status.surfaceSunken,
+        animationSpec = Motion.color,
+        label = "kind-fill",
+    )
+    val label by animateColorAsState(
+        targetValue = if (selected) Ink else status.textSecondary,
+        animationSpec = Motion.color,
+        label = "kind-label",
+    )
 
     Text(
         text = text,
         style = MaterialTheme.typography.labelLarge,
-        color = if (selected) Ink else status.textSecondary,
+        color = label,
         maxLines = 1,
         modifier = Modifier
+            .pressScale(press)
             .clip(shape)
-            .background(if (selected) accent else status.surfaceSunken)
+            .background(fill)
             .border(
                 width = 1.dp,
                 color = if (selected) accent else status.strokeInner,
                 shape = shape,
             )
-            .clickable(onClick = onClick)
+            .clickable(interactionSource = press, indication = ripple(), onClick = onClick)
             .padding(horizontal = Spacing.l, vertical = Spacing.s),
     )
 }
@@ -394,12 +415,10 @@ private fun CategorySheet(
                         modifier = Modifier.padding(start = Spacing.m),
                     )
                 }
-                Text(
-                    text = stringResource(R.string.category_plan_note),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = status.textTertiary,
+                Hint(
+            text = stringResource(R.string.category_plan_note),
                     modifier = Modifier.padding(top = Spacing.xs),
-                )
+        )
             }
 
             Text(
@@ -491,12 +510,10 @@ private fun CategorySheet(
             }
 
             if (category?.isSystem == true) {
-                Text(
-                    text = stringResource(R.string.category_system_note),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = status.textTertiary,
+                Hint(
+            text = stringResource(R.string.category_system_note),
                     modifier = Modifier.padding(top = Spacing.m),
-                )
+        )
             }
         }
     }

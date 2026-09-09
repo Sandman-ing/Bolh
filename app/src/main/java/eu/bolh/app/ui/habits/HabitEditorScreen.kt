@@ -60,6 +60,7 @@ import eu.bolh.app.domain.model.ScheduleType
 import eu.bolh.app.domain.templates.HabitTemplate
 import eu.bolh.app.domain.templates.HabitTemplates
 import eu.bolh.app.ui.common.BolhIcons
+import eu.bolh.app.ui.common.Hint
 import eu.bolh.app.ui.common.rememberLocale
 import eu.bolh.app.ui.theme.Ink
 import eu.bolh.app.ui.theme.LocalStatusColors
@@ -519,10 +520,8 @@ private fun AdvancedSection(draft: HabitDraft, viewModel: HabitEditorViewModel) 
             color = MaterialTheme.colorScheme.primary,
         )
     }
-    Text(
-        text = stringResource(R.string.habit_start_date_note),
-        style = MaterialTheme.typography.labelMedium,
-        color = status.textTertiary,
+    Hint(
+            text = stringResource(R.string.habit_start_date_note),
         modifier = Modifier.padding(
             horizontal = Spacing.screenPadding,
             vertical = Spacing.xs,

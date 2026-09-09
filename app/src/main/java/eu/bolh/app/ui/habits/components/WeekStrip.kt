@@ -23,6 +23,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import eu.bolh.app.ui.common.Motion
+import eu.bolh.app.ui.common.pressScale
+import eu.bolh.app.ui.common.rememberPressSource
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.material3.ripple
+import androidx.compose.runtime.getValue
 import eu.bolh.app.ui.common.rememberLocale
 import eu.bolh.app.ui.habits.DayProgress
 import eu.bolh.app.ui.theme.LocalStatusColors
@@ -63,11 +69,23 @@ fun WeekStrip(
             val isFuture = day.isAfter(today)
             val dayProgress = progress[day]
 
+            val press = rememberPressSource()
+            val dayFill by animateColorAsState(
+                targetValue = if (isSelected) accent else Color.Transparent,
+                animationSpec = Motion.color,
+                label = "day-fill",
+            )
+
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
+                    .pressScale(press, pressedScale = 0.92f)
                     .clip(RoundedCornerShape(14.dp))
-                    .clickable(enabled = !isFuture) { onSelect(day) }
+                    .clickable(
+                        enabled = !isFuture,
+                        interactionSource = press,
+                        indication = ripple(),
+                    ) { onSelect(day) }
                     .padding(horizontal = Spacing.xs, vertical = Spacing.xs),
             ) {
                 Text(
@@ -88,7 +106,7 @@ fun WeekStrip(
                         // ужимается родителем, и круг дня становится овалом.
                         .requiredSize(30.dp)
                         .clip(CircleShape)
-                        .background(if (isSelected) accent else Color.Transparent),
+                        .background(dayFill),
                 ) {
                     Text(
                         text = day.dayOfMonth.toString(),

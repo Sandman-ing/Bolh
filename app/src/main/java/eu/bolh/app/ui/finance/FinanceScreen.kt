@@ -1,5 +1,6 @@
 package eu.bolh.app.ui.finance
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -34,6 +35,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ripple
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -61,6 +63,9 @@ import eu.bolh.app.ui.common.SectionCard
 import eu.bolh.app.ui.common.ToggleChip
 import eu.bolh.app.ui.common.ConfirmDeleteDialog
 import eu.bolh.app.ui.common.EmptyState
+import eu.bolh.app.ui.common.Motion
+import eu.bolh.app.ui.common.pressScale
+import eu.bolh.app.ui.common.rememberPressSource
 import eu.bolh.app.ui.common.Money
 import eu.bolh.app.ui.common.rememberLocale
 import eu.bolh.app.ui.finance.components.DonutChart
@@ -745,24 +750,39 @@ private fun SubTab(
 ) {
     val status = LocalStatusColors.current
     val shape = RoundedCornerShape(Radius.chip)
+    val press = rememberPressSource()
+
+    val fill by animateColorAsState(
+        targetValue = if (selected) {
+            MaterialTheme.colorScheme.primary
+        } else {
+            status.surfaceRaised
+        },
+        animationSpec = Motion.color,
+        label = "subtab-fill",
+    )
+    val label by animateColorAsState(
+        targetValue = if (selected) Ink else status.textSecondary,
+        animationSpec = Motion.color,
+        label = "subtab-label",
+    )
 
     Text(
         text = text,
         style = MaterialTheme.typography.labelLarge,
-        color = if (selected) Ink else status.textSecondary,
+        color = label,
         maxLines = 1,
         textAlign = TextAlign.Center,
         modifier = modifier
+            .pressScale(press)
             .clip(shape)
-            .background(
-                if (selected) MaterialTheme.colorScheme.primary else status.surfaceRaised,
-            )
+            .background(fill)
             .border(
                 width = 1.dp,
                 color = if (selected) MaterialTheme.colorScheme.primary else status.stroke,
                 shape = shape,
             )
-            .clickable(onClick = onClick)
+            .clickable(interactionSource = press, indication = ripple(), onClick = onClick)
             .padding(horizontal = Spacing.s, vertical = Spacing.m),
     )
 }
@@ -778,22 +798,35 @@ private fun FlowTab(
 ) {
     val status = LocalStatusColors.current
     val shape = RoundedCornerShape(Radius.chip)
+    val press = rememberPressSource()
+
+    val fill by animateColorAsState(
+        targetValue = if (selected) accent else status.surfaceSunken,
+        animationSpec = Motion.color,
+        label = "flow-fill",
+    )
+    val label by animateColorAsState(
+        targetValue = if (selected) Ink else status.textSecondary,
+        animationSpec = Motion.color,
+        label = "flow-label",
+    )
 
     Text(
         text = text,
         style = MaterialTheme.typography.labelLarge,
-        color = if (selected) Ink else status.textSecondary,
+        color = label,
         maxLines = 1,
         textAlign = TextAlign.Center,
         modifier = modifier
+            .pressScale(press)
             .clip(shape)
-            .background(if (selected) accent else status.surfaceSunken)
+            .background(fill)
             .border(
                 width = 1.dp,
                 color = if (selected) accent else status.strokeInner,
                 shape = shape,
             )
-            .clickable(onClick = onClick)
+            .clickable(interactionSource = press, indication = ripple(), onClick = onClick)
             .padding(horizontal = Spacing.l, vertical = Spacing.s),
     )
 }

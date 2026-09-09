@@ -92,7 +92,11 @@ fun GoalsScreen(
             SortRow(current = state.sort, onSelect = viewModel::setSort)
         }
         items(state.goals, key = { it.goal.id }) { card ->
-            GoalCard(card = card, onClick = { onOpenGoal(card.goal.id) })
+            GoalCard(
+                card = card,
+                onClick = { onOpenGoal(card.goal.id) },
+                modifier = Modifier.animateItem(),
+            )
         }
 
         if (state.completed.isNotEmpty()) {
@@ -228,13 +232,18 @@ private fun CompletedGoalCard(card: CompletedGoalState, onClick: () -> Unit) {
 }
 
 @Composable
-private fun GoalCard(card: GoalCardState, onClick: () -> Unit) {
+private fun GoalCard(
+    card: GoalCardState,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val status = LocalStatusColors.current
     val accent = MaterialTheme.colorScheme.primary
     val locale = rememberLocale()
 
     BolhCard(
         onClick = onClick,
+        modifier = modifier,
         // Цель с прошедшим сроком обведена красным: статус перебивает цвет
         // раздела, потому что «встала» важнее, чем «это цель» (§9.3).
         accent = if (card.isOverdue) status.problem else null,

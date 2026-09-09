@@ -120,6 +120,7 @@ fun HabitsScreen(
 
             items(state.goodToday, key = { it.habit.id }) { row ->
                 BolhCard(
+                    modifier = Modifier.animateItem(),
                     corner = Radius.block,
                     contentPadding = PaddingValues(0.dp),
                     // Отмеченная привычка обведена своим цветом: строка сама

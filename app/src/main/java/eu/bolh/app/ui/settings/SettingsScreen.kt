@@ -53,6 +53,12 @@ import eu.bolh.app.data.backup.BackupService
 import eu.bolh.app.data.backup.PdfReport
 import eu.bolh.app.data.prefs.CurrencyPrefs
 import eu.bolh.app.data.prefs.LanguagePrefs
+import eu.bolh.app.ui.common.Motion
+import eu.bolh.app.ui.common.pressScale
+import eu.bolh.app.ui.common.rememberPressSource
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.material3.ripple
+import eu.bolh.app.ui.common.Hint
 import eu.bolh.app.ui.theme.Ink
 import eu.bolh.app.ui.theme.LocalStatusColors
 import eu.bolh.app.ui.theme.Spacing
@@ -218,14 +224,12 @@ fun SettingsScreen(
                     }
                 },
             )
-            Text(
-                text = stringResource(R.string.settings_currency_note),
-                style = MaterialTheme.typography.labelMedium,
-                color = status.textTertiary,
+            Hint(
+            text = stringResource(R.string.settings_currency_note),
                 modifier = Modifier.padding(
                     horizontal = Spacing.screenPadding,
                     vertical = Spacing.s,
-                ),
+        ),
             )
 
             SectionTitle(stringResource(R.string.settings_appearance))
@@ -383,21 +387,39 @@ private fun ChipRow(
     ) {
         options.forEach { (code, label) ->
             val selected = code == current
+            val press = rememberPressSource()
+            val fill by animateColorAsState(
+                targetValue = if (selected) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    Color.Transparent
+                },
+                animationSpec = Motion.color,
+                label = "settings-chip-fill",
+            )
+            val textColor by animateColorAsState(
+                targetValue = if (selected) Ink else status.textSecondary,
+                animationSpec = Motion.color,
+                label = "settings-chip-label",
+            )
+
             Text(
                 text = label,
                 style = MaterialTheme.typography.labelLarge,
-                color = if (selected) Ink else status.textSecondary,
+                color = textColor,
                 modifier = Modifier
+                    .pressScale(press)
                     .clip(RoundedCornerShape(percent = 50))
-                    .background(
-                        if (selected) MaterialTheme.colorScheme.primary else Color.Transparent,
-                    )
+                    .background(fill)
                     .border(
                         width = 1.dp,
                         color = if (selected) MaterialTheme.colorScheme.primary else status.divider,
                         shape = RoundedCornerShape(percent = 50),
                     )
-                    .clickable { onSelect(code) }
+                    .clickable(
+                        interactionSource = press,
+                        indication = ripple(),
+                    ) { onSelect(code) }
                     .padding(horizontal = Spacing.m, vertical = Spacing.s),
             )
         }

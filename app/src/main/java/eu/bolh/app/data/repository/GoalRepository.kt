@@ -152,12 +152,14 @@ class GoalRepository(
 
     // --- Этапы и задачи ---------------------------------------------------
 
-    suspend fun addStage(goalId: String, name: String, dueDate: LocalDate? = null) {
+    /** Возвращает id заведённого этапа: к нему сразу цепляются задачи. */
+    suspend fun addStage(goalId: String, name: String, dueDate: LocalDate? = null): String {
         val now = clock.millis()
         val order = dao.stagesForGoal(goalId).size
+        val id = UUID.randomUUID().toString()
         dao.upsertStage(
             StageEntity(
-                id = UUID.randomUUID().toString(),
+                id = id,
                 goalId = goalId,
                 name = name.trim(),
                 dueDate = dueDate,
@@ -166,6 +168,7 @@ class GoalRepository(
                 updatedAt = now,
             ),
         )
+        return id
     }
 
     suspend fun setStageDone(stageId: String, done: Boolean) {

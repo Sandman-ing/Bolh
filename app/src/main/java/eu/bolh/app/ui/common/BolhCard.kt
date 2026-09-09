@@ -1,22 +1,29 @@
 package eu.bolh.app.ui.common
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
+import androidx.compose.material3.ripple
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -49,21 +56,45 @@ fun BolhCard(
 ) {
     val status = LocalStatusColors.current
     val shape = RoundedCornerShape(corner)
+    val press = rememberPressSource()
+
+    // Цвета меняются плавно: статус карточки переключается сам по себе, и
+    // мгновенная подмена цвета читается как мигание.
+    val fill by animateColorAsState(
+        targetValue = if (accent == null) status.surfaceRaised else accent.copy(alpha = 0.10f),
+        animationSpec = Motion.color,
+        label = "card-fill",
+    )
+    val stroke by animateColorAsState(
+        targetValue = accent ?: status.stroke,
+        animationSpec = Motion.color,
+        label = "card-stroke",
+    )
 
     Column(
         modifier = modifier
             .fillMaxWidth()
+            .then(if (onClick == null) Modifier else Modifier.pressScale(press))
             .clip(shape)
-            // Карточка со статусом слегка окрашена изнутри: обводки мало,
-            // когда нужно сказать «здесь проблема» одним взглядом.
-            .background(if (accent == null) status.surfaceRaised else accent.copy(alpha = 0.10f))
+            .background(fill)
             .border(
                 width = if (accent == null) 1.dp else 1.5.dp,
-                color = accent ?: status.stroke,
+                color = stroke,
                 shape = shape,
             )
-            .then(if (onClick == null) Modifier else Modifier.clickable(onClick = onClick))
-            .padding(contentPadding),
+            .then(
+                if (onClick == null) {
+                    Modifier
+                } else {
+                    Modifier.clickable(
+                        interactionSource = press,
+                        indication = ripple(),
+                        onClick = onClick,
+                    )
+                },
+            )
+            .padding(contentPadding)
+            .animateContentSize(animationSpec = Motion.resize),
         content = content,
     )
 }
@@ -170,6 +201,7 @@ fun PillButton(
     color: Color = MaterialTheme.colorScheme.primary,
 ) {
     val shape = RoundedCornerShape(Radius.control)
+    val press = rememberPressSource()
 
     @Composable
     fun ButtonIcon() {
@@ -187,10 +219,11 @@ fun PillButton(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Spacing.s),
         modifier = modifier
+            .pressScale(press)
             .clip(shape)
             .background(color.copy(alpha = 0.12f))
             .border(width = 1.dp, color = color.copy(alpha = 0.55f), shape = shape)
-            .clickable(onClick = onClick)
+            .clickable(interactionSource = press, indication = ripple(), onClick = onClick)
             .padding(horizontal = Spacing.m, vertical = Spacing.m),
     ) {
         if (!iconAtEnd) ButtonIcon()
@@ -220,22 +253,36 @@ fun ToggleChip(
     val status = LocalStatusColors.current
     val accent = MaterialTheme.colorScheme.primary
     val shape = RoundedCornerShape(Radius.chip)
+    val press = rememberPressSource()
+
+    val fill by animateColorAsState(
+        targetValue = if (selected) accent.copy(alpha = 0.14f) else status.surfaceSunken,
+        animationSpec = Motion.color,
+        label = "chip-fill",
+    )
+    val border by animateColorAsState(
+        targetValue = if (selected) accent.copy(alpha = 0.55f) else status.strokeInner,
+        animationSpec = Motion.color,
+        label = "chip-border",
+    )
+    val label by animateColorAsState(
+        targetValue = if (selected) accent else status.textSecondary,
+        animationSpec = Motion.color,
+        label = "chip-label",
+    )
 
     Text(
         text = text,
         style = MaterialTheme.typography.labelMedium,
-        color = if (selected) accent else status.textSecondary,
+        color = label,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
         modifier = modifier
+            .pressScale(press)
             .clip(shape)
-            .background(if (selected) accent.copy(alpha = 0.14f) else status.surfaceSunken)
-            .border(
-                width = 1.dp,
-                color = if (selected) accent.copy(alpha = 0.55f) else status.strokeInner,
-                shape = shape,
-            )
-            .clickable(onClick = onClick)
+            .background(fill)
+            .border(width = 1.dp, color = border, shape = shape)
+            .clickable(interactionSource = press, indication = ripple(), onClick = onClick)
             .padding(horizontal = Spacing.m, vertical = Spacing.s),
     )
 }
@@ -267,4 +314,35 @@ fun MetricChip(
             .border(width = 1.dp, color = status.strokeInner, shape = shape)
             .padding(horizontal = Spacing.m, vertical = Spacing.s),
     )
+}
+
+/**
+ * Сноска — пояснение к тому, что рядом.
+ *
+ * Раньше пояснения жили в таких же рамках, что и кнопки, и на них хотелось
+ * нажимать. У сноски рамки нет: только полоска слева и приглушённый текст —
+ * так видно, что это подпись, а не действие.
+ */
+@Composable
+fun Hint(
+    text: String,
+    modifier: Modifier = Modifier,
+) {
+    val status = LocalStatusColors.current
+
+    Row(modifier = modifier) {
+        Box(
+            modifier = Modifier
+                .padding(top = 3.dp, end = Spacing.m)
+                .width(2.dp)
+                .height(16.dp)
+                .clip(RoundedCornerShape(1.dp))
+                .background(status.strokeInner),
+        )
+        Text(
+            text = text,
+            style = MaterialTheme.typography.labelMedium,
+            color = status.textTertiary,
+        )
+    }
 }
