@@ -44,6 +44,7 @@
 
     <string name="goal_new_title">Новая цель</string>
     <string name="goal_edit_title">Цель</string>
+    <string name="goal_edit_action">Изменить</string>
     <string name="goal_name_hint">Название</string>
     <string name="goal_deadline_hint">Срок</string>
     <string name="goal_deadline_pick">Выбрать дату</string>

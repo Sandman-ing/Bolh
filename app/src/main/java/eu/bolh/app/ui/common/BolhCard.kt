@@ -17,12 +17,14 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ripple
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -33,11 +35,13 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import eu.bolh.app.R
 import eu.bolh.app.ui.theme.Ink
 import eu.bolh.app.ui.theme.LocalStatusColors
 import eu.bolh.app.ui.theme.NumberSmall
 import eu.bolh.app.ui.theme.NumberTile
 import eu.bolh.app.ui.theme.Radius
+import eu.bolh.app.ui.theme.TapTargetMin
 import eu.bolh.app.ui.theme.Spacing
 
 /**
@@ -160,10 +164,14 @@ fun StatTile(
             .padding(horizontal = Spacing.m, vertical = Spacing.m),
         verticalArrangement = Arrangement.spacedBy(Spacing.xs),
     ) {
+        // Ровно две строки под подпись, даже когда она в одну: иначе
+        // «Цели в темпе» переносится, а «Расходы» нет, и числа в соседних
+        // плитках стоят на разной высоте — строй ломается.
         Text(
             text = label,
             style = MaterialTheme.typography.labelMedium,
             color = status.textSecondary,
+            minLines = 2,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
         )
@@ -364,6 +372,11 @@ fun SectionTitle(
     text: String,
     modifier: Modifier = Modifier,
     icon: Int? = null,
+    /**
+     * Внутри карточки отступы уже есть у неё самой, и собственные превращают
+     * заголовок в кусок пустоты над содержимым.
+     */
+    inCard: Boolean = false,
 ) {
     val status = LocalStatusColors.current
 
@@ -371,8 +384,8 @@ fun SectionTitle(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Spacing.s),
         modifier = modifier.padding(
-            start = Spacing.screenPadding,
-            top = Spacing.l,
+            start = if (inCard) 0.dp else Spacing.screenPadding,
+            top = if (inCard) 0.dp else Spacing.l,
             bottom = Spacing.xs,
         ),
     ) {
@@ -455,6 +468,111 @@ fun SelectChip(
             color = content,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
+        )
+    }
+}
+
+/**
+ * Отметка «сделано»: круг, а не квадрат.
+ *
+ * Квадратный Checkbox из Material читается как ячейка таблицы и живёт своей
+ * палитрой — в привычках отметка круглая, и на целях она должна быть такой же,
+ * иначе одно и то же действие выглядит двумя разными (§9.2).
+ */
+@Composable
+fun BolhCheck(
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+    size: Dp = 22.dp,
+) {
+    val status = LocalStatusColors.current
+    val accent = MaterialTheme.colorScheme.primary
+    val press = rememberPressSource()
+
+    val fill by animateColorAsState(
+        targetValue = if (checked) accent else Color.Transparent,
+        animationSpec = Motion.color,
+        label = "check-fill",
+    )
+    val ring by animateColorAsState(
+        targetValue = if (checked) accent else status.divider,
+        animationSpec = Motion.color,
+        label = "check-ring",
+    )
+
+    Box(
+        modifier = modifier
+            .size(TapTargetMin)
+            .clip(CircleShape)
+            .clickable(
+                interactionSource = press,
+                indication = ripple(bounded = false),
+            ) { onCheckedChange(!checked) },
+        contentAlignment = Alignment.Center,
+    ) {
+        Box(
+            modifier = Modifier
+                .completionPop(checked)
+                .size(size)
+                .clip(CircleShape)
+                .background(fill)
+                .border(width = 2.dp, color = ring, shape = CircleShape),
+            contentAlignment = Alignment.Center,
+        ) {
+            if (checked) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_check),
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onPrimary,
+                    modifier = Modifier.size(size * 0.62f),
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Кнопка шага «−» и «+».
+ *
+ * Голый TextButton не читался как кнопка: знак висел в воздухе, попасть по
+ * нему было тем ещё делом. Круг той же величины, что и зона нажатия.
+ */
+@Composable
+fun StepButton(
+    symbol: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+) {
+    val status = LocalStatusColors.current
+    val accent = MaterialTheme.colorScheme.primary
+    val press = rememberPressSource()
+
+    val tint by animateColorAsState(
+        targetValue = if (enabled) accent else status.textTertiary,
+        animationSpec = Motion.color,
+        label = "step-tint",
+    )
+
+    Box(
+        modifier = modifier
+            .pressScale(press, pressedScale = 0.88f)
+            .size(40.dp)
+            .clip(CircleShape)
+            .border(width = 1.dp, color = tint.copy(alpha = 0.45f), shape = CircleShape)
+            .clickable(
+                interactionSource = press,
+                indication = ripple(),
+                enabled = enabled,
+                onClick = onClick,
+            ),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = symbol,
+            style = MaterialTheme.typography.titleMedium,
+            color = tint,
         )
     }
 }

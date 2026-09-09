@@ -151,8 +151,15 @@ fun StatsScreen(
                     val selected = period == state.period
                     val chip = RoundedCornerShape(Radius.chip)
                     val press = rememberPressSource()
+                    // Заливка приглушённая, а не белая: у статистики нет
+                    // своего цвета, но почти белый чип кричал громче всего
+                    // остального на экране и читался как чужой элемент.
                     val fill by animateColorAsState(
-                        targetValue = if (selected) TextPrimary else status.surfaceRaised,
+                        targetValue = if (selected) {
+                            status.textSecondary
+                        } else {
+                            status.surfaceRaised
+                        },
                         animationSpec = Motion.color,
                         label = "period-fill",
                     )
@@ -171,7 +178,7 @@ fun StatsScreen(
                             .background(fill)
                             .border(
                                 width = 1.dp,
-                                color = if (selected) TextPrimary else status.stroke,
+                                color = if (selected) status.textSecondary else status.stroke,
                                 shape = chip,
                             )
                             .clickable(

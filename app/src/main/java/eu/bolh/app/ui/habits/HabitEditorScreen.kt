@@ -44,6 +44,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.RadioButtonDefaults
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.ripple
@@ -73,6 +75,7 @@ import eu.bolh.app.domain.templates.HabitTemplate
 import eu.bolh.app.domain.templates.HabitTemplates
 import eu.bolh.app.ui.common.SectionTitle
 import eu.bolh.app.ui.common.PillButton
+import eu.bolh.app.ui.common.StepButton
 import eu.bolh.app.ui.common.SelectChip
 import eu.bolh.app.ui.common.BolhIcons
 import eu.bolh.app.ui.common.Hint
@@ -82,6 +85,7 @@ import eu.bolh.app.ui.common.rememberPressSource
 import eu.bolh.app.ui.common.rememberLocale
 import eu.bolh.app.ui.theme.Ink
 import eu.bolh.app.ui.theme.LocalStatusColors
+import eu.bolh.app.ui.theme.NumberSmall
 import eu.bolh.app.ui.theme.Spacing
 import java.time.DayOfWeek
 import java.time.format.TextStyle
@@ -360,14 +364,13 @@ fun HabitEditorScreen(
             }
 
             if (draft.isEditing) {
-                TextButton(
+                PillButton(
+                    text = stringResource(R.string.habit_delete),
                     onClick = viewModel::delete,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = Spacing.screenPadding),
-                ) {
-                    Text(stringResource(R.string.habit_delete), color = status.problem)
-                }
+                    icon = R.drawable.ic_delete,
+                    color = status.problem,
+                    modifier = Modifier.padding(horizontal = Spacing.screenPadding),
+                )
             }
         }
     }
@@ -403,7 +406,14 @@ private fun AdvancedSection(draft: HabitDraft, viewModel: HabitEditorViewModel) 
                 .clickable { viewModel.setMode(mode) }
                 .padding(horizontal = Spacing.m, vertical = Spacing.xs),
         ) {
-            RadioButton(selected = draft.mode == mode, onClick = { viewModel.setMode(mode) })
+            RadioButton(
+                selected = draft.mode == mode,
+                onClick = { viewModel.setMode(mode) },
+                colors = RadioButtonDefaults.colors(
+                    selectedColor = MaterialTheme.colorScheme.primary,
+                    unselectedColor = status.divider,
+                ),
+            )
             Text(
                 text = stringResource(modeLabel(mode)),
                 style = MaterialTheme.typography.bodyMedium,
@@ -653,6 +663,14 @@ private fun AdvancedSection(draft: HabitDraft, viewModel: HabitEditorViewModel) 
             Switch(
                 checked = draft.reminderRepeatEvening,
                 onCheckedChange = viewModel::setEveningRepeat,
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = Ink,
+                    checkedTrackColor = MaterialTheme.colorScheme.primary,
+                    checkedBorderColor = MaterialTheme.colorScheme.primary,
+                    uncheckedThumbColor = status.textTertiary,
+                    uncheckedTrackColor = status.surfaceSunken,
+                    uncheckedBorderColor = status.divider,
+                ),
             )
         }
     }
@@ -759,14 +777,14 @@ private fun Stepper(label: String, value: Int, onChange: (Int) -> Unit) {
             color = status.textSecondary,
             modifier = Modifier.weight(1f),
         )
-        TextButton(onClick = { onChange(value - 1) }) { Text("−") }
+        StepButton(symbol = "\u2212", onClick = { onChange(value - 1) })
         Text(
             text = value.toString(),
-            style = MaterialTheme.typography.titleMedium,
+            style = NumberSmall,
             color = MaterialTheme.colorScheme.onBackground,
-            modifier = Modifier.padding(horizontal = Spacing.s),
+            modifier = Modifier.padding(horizontal = Spacing.m),
         )
-        TextButton(onClick = { onChange(value + 1) }) { Text("+") }
+        StepButton(symbol = "+", onClick = { onChange(value + 1) })
     }
 }
 

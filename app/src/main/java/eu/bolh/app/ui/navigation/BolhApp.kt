@@ -14,6 +14,7 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -317,9 +318,14 @@ private fun BolhBottomBar(
                     )
                 },
                 label = {
+                    // Кегль меньше на ступень: «Статистика» — самое длинное
+                    // слово из четырёх, и в labelMedium оно доезжало до самого
+                    // края экрана. В labelSmall помещается целиком.
                     Text(
                         text = stringResource(destination.labelRes),
-                        style = MaterialTheme.typography.labelMedium,
+                        style = MaterialTheme.typography.labelSmall,
+                        maxLines = 1,
+                        textAlign = TextAlign.Center,
                     )
                 },
                 colors = NavigationBarItemDefaults.colors(

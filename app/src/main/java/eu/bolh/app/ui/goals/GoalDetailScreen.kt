@@ -73,6 +73,7 @@ import eu.bolh.app.ui.common.RenameDialog
 import eu.bolh.app.ui.common.BolhIcons
 import eu.bolh.app.ui.common.completionPop
 import eu.bolh.app.ui.common.Motion
+import eu.bolh.app.ui.common.BolhCheck
 import eu.bolh.app.ui.common.CompletionPulse
 import eu.bolh.app.ui.common.ConfirmDeleteDialog
 import eu.bolh.app.ui.common.tappable
@@ -163,9 +164,13 @@ fun GoalDetailScreen(
         topBar = {
             TopAppBar(
                 title = {
+                    // Не больше двух строк: длинное имя расползалось на три,
+                    // шапка не росла, и содержимое проезжало прямо под текстом.
                     Text(
                         text = goal?.name.orEmpty(),
                         style = MaterialTheme.typography.titleLarge,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
                     )
                 },
                 navigationIcon = {
@@ -183,9 +188,12 @@ fun GoalDetailScreen(
                 },
                 actions = {
                     goal?.let {
-                        TextButton(onClick = { onEdit(it.id) }) {
-                            Text(stringResource(R.string.goal_edit_title))
-                        }
+                        PillButton(
+                            text = stringResource(R.string.goal_edit_action),
+                            onClick = { onEdit(it.id) },
+                            icon = R.drawable.ic_edit_note,
+                            modifier = Modifier.padding(end = Spacing.s),
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -483,15 +491,16 @@ fun GoalDetailScreen(
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                             modifier = Modifier.weight(1f),
                         )
-                        TextButton(
+                        PillButton(
+                            text = stringResource(R.string.goal_jar_create),
                             onClick = {
                                 viewModel.createJar(parseMinor(jarTarget))
                                 jarTarget = ""
                                 addingBudget = false
                             },
-                        ) {
-                            Text(stringResource(R.string.goal_jar_create))
-                        }
+                            icon = R.drawable.ic_savings,
+                            modifier = Modifier.padding(start = Spacing.s),
+                        )
                     }
                 } else {
                     Text(
@@ -538,14 +547,15 @@ fun GoalDetailScreen(
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                             modifier = Modifier.weight(1f),
                         )
-                        TextButton(
+                        PillButton(
+                            text = stringResource(R.string.goal_jar_add),
                             onClick = {
                                 viewModel.addContribution(parseMinor(jarAmount))
                                 jarAmount = ""
                             },
-                        ) {
-                            Text(stringResource(R.string.goal_jar_add))
-                        }
+                            icon = R.drawable.ic_plus,
+                            modifier = Modifier.padding(start = Spacing.s),
+                        )
                     }
 
                     // Сумма цели меняется, пополнение снимается, копилка удаляется:
@@ -565,15 +575,16 @@ fun GoalDetailScreen(
                                 ),
                                 modifier = Modifier.weight(1f),
                             )
-                            TextButton(
+                            PillButton(
+                                text = stringResource(R.string.goal_save),
                                 onClick = {
                                     viewModel.setJarTarget(parseMinor(jarTarget))
                                     jarTarget = ""
                                     editingJar = false
                                 },
-                            ) {
-                                Text(stringResource(R.string.goal_save))
-                            }
+                                icon = R.drawable.ic_check,
+                                modifier = Modifier.padding(start = Spacing.s),
+                            )
                         }
                     }
 
@@ -677,8 +688,7 @@ fun GoalDetailScreen(
                             .background(status.surfaceSunken)
                             .wrapContentHeight(),
                     )
-                    Checkbox(
-                        modifier = Modifier.completionPop(stageState.stage.isDone, peak = 1.28f),
+                    BolhCheck(
                         checked = stageState.stage.isDone,
                         onCheckedChange = { viewModel.toggleStage(stageState.stage) },
                     )
@@ -713,10 +723,10 @@ fun GoalDetailScreen(
                             )
                             .padding(start = Spacing.xl),
                     ) {
-                        Checkbox(
+                        BolhCheck(
                             checked = task.isDone,
                             onCheckedChange = { viewModel.toggleTask(task) },
-                            modifier = Modifier.completionPop(task.isDone),
+                            size = 20.dp,
                         )
                         val taskColor by animateColorAsState(
                             targetValue = if (task.isDone) {
@@ -754,9 +764,12 @@ fun GoalDetailScreen(
                         singleLine = true,
                         modifier = Modifier.weight(1f),
                     )
-                    TextButton(onClick = viewModel::addStage) {
-                        Text(stringResource(R.string.goal_add_stage))
-                    }
+                    PillButton(
+                        text = stringResource(R.string.goal_add_stage),
+                        onClick = viewModel::addStage,
+                        icon = R.drawable.ic_flag,
+                        modifier = Modifier.padding(start = Spacing.s),
+                    )
                 }
             }
 
@@ -863,14 +876,15 @@ private fun AddTaskRow(onAdd: (String) -> Unit) {
         // умолчанию: человек может набросать пять пустых строк и заполнить их
         // потом, переименовав долгим нажатием.
         val fallback = stringResource(R.string.goal_task_default)
-        TextButton(
+        PillButton(
+            text = stringResource(R.string.goal_add_task),
             onClick = {
                 onAdd(text.ifBlank { fallback })
                 text = ""
             },
-        ) {
-            Text(stringResource(R.string.goal_add_task))
-        }
+            icon = R.drawable.ic_task,
+            modifier = Modifier.padding(start = Spacing.s),
+        )
     }
 }
 
@@ -929,7 +943,7 @@ private fun EstimateCard(
         SectionTitle(
             text = stringResource(R.string.goal_estimate_title),
             icon = R.drawable.ic_receipt_long,
-            modifier = Modifier.padding(start = 0.dp, top = 0.dp),
+            inCard = true,
         )
 
         // Итог сметы стоит наверху: он отвечает на «сколько ещё» одним числом.

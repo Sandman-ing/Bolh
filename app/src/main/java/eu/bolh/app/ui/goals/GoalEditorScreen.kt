@@ -381,14 +381,13 @@ fun GoalEditorScreen(
             }
 
             if (draft.isEditing) {
-                TextButton(
+                PillButton(
+                    text = stringResource(R.string.goal_delete),
                     onClick = viewModel::delete,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = Spacing.screenPadding),
-                ) {
-                    Text(stringResource(R.string.goal_delete), color = status.problem)
-                }
+                    icon = R.drawable.ic_delete,
+                    color = status.problem,
+                    modifier = Modifier.padding(horizontal = Spacing.screenPadding),
+                )
             }
         }
     }

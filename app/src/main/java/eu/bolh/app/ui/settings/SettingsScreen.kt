@@ -300,32 +300,36 @@ fun SettingsScreen(
             )
 
             SectionTitle(stringResource(R.string.settings_appearance))
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = Spacing.screenPadding, vertical = Spacing.s),
-            ) {
-                Text(
-                    text = stringResource(R.string.settings_theme),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier.weight(1f),
-                )
-                Text(
-                    text = stringResource(R.string.settings_theme_dark),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = status.textSecondary,
-                )
-            }
-            Text(
-                text = stringResource(R.string.settings_theme_light_soon),
-                style = MaterialTheme.typography.labelMedium,
-                color = status.textTertiary,
+            BolhCard(
+                corner = Radius.block,
+                contentPadding = PaddingValues(
+                    horizontal = Spacing.l,
+                    vertical = Spacing.m,
+                ),
                 modifier = Modifier.padding(
-                    start = Spacing.screenPadding,
-                    end = Spacing.screenPadding,
-                    bottom = Spacing.s,
+                    horizontal = Spacing.screenPadding,
+                    vertical = Spacing.xs,
+                ),
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = stringResource(R.string.settings_theme),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onBackground,
+                        modifier = Modifier.weight(1f),
+                    )
+                    Text(
+                        text = stringResource(R.string.settings_theme_dark),
+                        style = NumberSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                }
+            }
+            Hint(
+                text = stringResource(R.string.settings_theme_light_soon),
+                modifier = Modifier.padding(
+                    horizontal = Spacing.screenPadding,
+                    vertical = Spacing.xs,
                 ),
             )
 
@@ -339,14 +343,11 @@ fun SettingsScreen(
                     bottom = Spacing.xs,
                 ),
             )
-            Text(
+            Hint(
                 text = stringResource(R.string.settings_local_note),
-                style = MaterialTheme.typography.bodyMedium,
-                color = status.textSecondary,
                 modifier = Modifier.padding(
-                    start = Spacing.screenPadding,
-                    end = Spacing.screenPadding,
-                    bottom = Spacing.m,
+                    horizontal = Spacing.screenPadding,
+                    vertical = Spacing.xs,
                 ),
             )
 
@@ -498,24 +499,42 @@ private fun ChipRow(
 
 @Composable
 private fun SettingsRow(icon: Int, text: String, onClick: () -> Unit) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(horizontal = Spacing.screenPadding, vertical = Spacing.l),
+    val status = LocalStatusColors.current
+
+    // В рамке и со стрелкой: без них строка читалась как заголовок раздела,
+    // а не как то, что можно нажать. Кегль обычный, а не заголовочный (§9.2).
+    BolhCard(
+        corner = Radius.block,
+        onClick = onClick,
+        contentPadding = PaddingValues(horizontal = Spacing.l, vertical = Spacing.m),
+        modifier = Modifier.padding(
+            horizontal = Spacing.screenPadding,
+            vertical = Spacing.xs,
+        ),
     ) {
-        Icon(
-            painter = painterResource(icon),
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(20.dp),
-        )
-        Text(
-            text = text,
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onBackground,
-            modifier = Modifier.padding(start = Spacing.m),
-        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                painter = painterResource(icon),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(20.dp),
+            )
+            Text(
+                text = text,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onBackground,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = Spacing.m),
+            )
+            Icon(
+                painter = painterResource(R.drawable.ic_chevron_right),
+                contentDescription = null,
+                tint = status.textTertiary,
+                modifier = Modifier.size(18.dp),
+            )
+        }
     }
 }

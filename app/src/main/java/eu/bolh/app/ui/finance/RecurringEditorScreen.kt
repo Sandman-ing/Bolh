@@ -66,12 +66,14 @@ import eu.bolh.app.domain.model.Recurrence
 import eu.bolh.app.domain.model.RecurrenceUnit
 import eu.bolh.app.domain.model.RecurringPayment
 import eu.bolh.app.domain.templates.SystemCategories
+import eu.bolh.app.ui.common.StepButton
 import eu.bolh.app.ui.common.SelectChip
 import eu.bolh.app.ui.common.BolhIcons
 import eu.bolh.app.ui.common.Money
 import eu.bolh.app.ui.common.rememberLocale
 import eu.bolh.app.ui.theme.Ink
 import eu.bolh.app.ui.theme.LocalStatusColors
+import eu.bolh.app.ui.theme.NumberSmall
 import eu.bolh.app.ui.theme.Spacing
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -332,18 +334,22 @@ fun RecurringEditorScreen(
                     color = status.textSecondary,
                     modifier = Modifier.weight(1f),
                 )
-                TextButton(onClick = { interval = (interval - 1).coerceAtLeast(1) }) {
-                    Text("−")
-                }
+                StepButton(
+                    symbol = "\u2212",
+                    onClick = { interval = (interval - 1).coerceAtLeast(1) },
+                    enabled = interval > 1,
+                )
                 Text(
                     text = interval.toString(),
-                    style = MaterialTheme.typography.titleMedium,
+                    style = NumberSmall,
                     color = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier.padding(horizontal = Spacing.s),
+                    modifier = Modifier.padding(horizontal = Spacing.m),
                 )
-                TextButton(onClick = { interval = (interval + 1).coerceAtMost(24) }) {
-                    Text("+")
-                }
+                StepButton(
+                    symbol = "+",
+                    onClick = { interval = (interval + 1).coerceAtMost(24) },
+                    enabled = interval < 24,
+                )
             }
 
             Row(
