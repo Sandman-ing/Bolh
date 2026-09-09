@@ -18,10 +18,21 @@ object CurrencyPrefs {
      */
     val frequent: List<String> = listOf("EUR", "USD", "GBP", "RUB", "AMD")
 
-    /** Все валюты, известные системе, с частыми наверху. */
+    /**
+     * Валюты, которыми расплачиваются сегодня, с частыми наверху.
+     *
+     * getAvailableCurrencies() отдаёт и вышедшие из обращения: ангольскую
+     * кванзу 1977 года, аргентинский аустрал, коды без названия вроде ARM.
+     * Искать среди них свою валюту невозможно. Живыми считаются те, что
+     * закреплены хотя бы за одной страной.
+     */
     fun all(): List<String> {
-        val rest = java.util.Currency.getAvailableCurrencies()
-            .map { it.currencyCode }
+        val live = java.util.Locale.getAvailableLocales()
+            .mapNotNull { locale ->
+                runCatching { java.util.Currency.getInstance(locale)?.currencyCode }.getOrNull()
+            }
+            .toSet()
+        val rest = live
             .filter { it.length == 3 && it !in frequent }
             .sorted()
         return frequent + rest

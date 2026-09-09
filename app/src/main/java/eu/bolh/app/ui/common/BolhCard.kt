@@ -27,6 +27,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -199,6 +200,8 @@ fun PillButton(
     modifier: Modifier = Modifier,
     icon: Int? = null,
     iconAtEnd: Boolean = false,
+    /** Поворот значка в градусах: раскрывающая кнопка показывает им своё состояние. */
+    iconRotation: Float = 0f,
     color: Color = MaterialTheme.colorScheme.primary,
 ) {
     val shape = RoundedCornerShape(Radius.control)
@@ -211,7 +214,9 @@ fun PillButton(
                 painter = painterResource(icon),
                 contentDescription = null,
                 tint = color,
-                modifier = Modifier.size(18.dp),
+                modifier = Modifier
+                    .size(18.dp)
+                    .rotate(iconRotation),
             )
         }
     }
@@ -425,7 +430,9 @@ fun SelectChip(
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(Spacing.s),
+        // По центру: чип бывает шире своей подписи, когда стоит в строке
+        // с весом, и прижатый влево текст выглядел бы обрезанным.
+        horizontalArrangement = Arrangement.spacedBy(Spacing.s, Alignment.CenterHorizontally),
         modifier = modifier
             .pressScale(press)
             .clip(shape)

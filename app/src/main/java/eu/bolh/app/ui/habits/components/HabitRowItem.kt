@@ -241,12 +241,11 @@ private fun LevelLine(
     color: Color,
     mark: @Composable () -> Unit,
 ) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(Spacing.s),
-    ) {
+    // Значок держится первой строки: по центру блока он уезжал вниз, когда
+    // подпись переносилась, и переставал относиться к своей строке.
+    Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
         Box(
-            modifier = Modifier.size(14.dp),
+            modifier = Modifier.size(width = 14.dp, height = 20.dp),
             contentAlignment = Alignment.Center,
             content = { mark() },
         )

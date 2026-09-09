@@ -40,8 +40,10 @@
     <string name="habit_edit_title">Привычка</string>
     <string name="habit_templates">Готовые</string>
     <string name="habit_name_hint">Название</string>
-    <string name="habit_kind_good">Полезная привычка</string>
-    <string name="habit_kind_bad">Вредная привычка</string>
+    <string name="habit_group_kind">Вид привычки</string>
+    <string name="habit_group_schedule">Расписание</string>
+    <string name="habit_kind_good">Полезная</string>
+    <string name="habit_kind_bad">Вредная</string>
     <string name="habit_schedule_daily">Каждый день</string>
     <string name="habit_schedule_weekdays">Выбранные дни</string>
     <string name="habit_schedule_times">N раз в неделю</string>

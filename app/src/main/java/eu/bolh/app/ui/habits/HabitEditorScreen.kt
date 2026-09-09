@@ -9,7 +9,10 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.togetherWith
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -68,6 +71,8 @@ import eu.bolh.app.domain.model.HabitMode
 import eu.bolh.app.domain.model.ScheduleType
 import eu.bolh.app.domain.templates.HabitTemplate
 import eu.bolh.app.domain.templates.HabitTemplates
+import eu.bolh.app.ui.common.SectionTitle
+import eu.bolh.app.ui.common.PillButton
 import eu.bolh.app.ui.common.SelectChip
 import eu.bolh.app.ui.common.BolhIcons
 import eu.bolh.app.ui.common.Hint
@@ -165,11 +170,27 @@ fun HabitEditorScreen(
                 )
             }
 
-            IconRow(
-                icons = if (draft.kind == HabitKind.Good) BolhIcons.habitGood else BolhIcons.habitBad,
-                selected = draft.icon,
-                onSelect = viewModel::setIcon,
-            )
+            // Набор значков у полезной и вредной привычки разный, и мгновенная
+            // подмена целого ряда читалась как подёргивание. Состояние здесь —
+            // только вид привычки, оно меняется по нажатию чипа, а не по вводу.
+            AnimatedContent(
+                targetState = draft.kind,
+                transitionSpec = {
+                    fadeIn(tween(Motion.CONTENT_MS)) togetherWith
+                        fadeOut(tween(Motion.CONTENT_MS / 2))
+                },
+                label = "habit-icons",
+            ) { kind ->
+                IconRow(
+                    icons = if (kind == HabitKind.Good) {
+                        BolhIcons.habitGood
+                    } else {
+                        BolhIcons.habitBad
+                    },
+                    selected = draft.icon,
+                    onSelect = viewModel::setIcon,
+                )
+            }
 
             OutlinedTextField(
                 value = draft.name,
@@ -181,19 +202,40 @@ fun HabitEditorScreen(
                     .padding(horizontal = Spacing.screenPadding, vertical = Spacing.s),
             )
 
-            SectionRow {
-                BolhChip(
+            // Вид и расписание — два разных вопроса. Одинаковыми чипами подряд
+            // они читались как один список, и «вредная привычка» казалась
+            // вариантом расписания. Заголовок и своя раскладка их разводят.
+            SectionTitle(
+                text = stringResource(R.string.habit_group_kind),
+                icon = R.drawable.ic_tab_habits,
+            )
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(Spacing.s),
+                modifier = Modifier.padding(
+                    horizontal = Spacing.screenPadding,
+                    vertical = Spacing.s,
+                ),
+            ) {
+                // Ровно два варианта и ровно пополам: строка не переносится
+                // ни при каком языке, и выбор виден как выбор из двух.
+                SelectChip(
                     text = stringResource(R.string.habit_kind_good),
                     selected = draft.kind == HabitKind.Good,
                     onClick = { viewModel.setKind(HabitKind.Good) },
+                    modifier = Modifier.weight(1f),
                 )
-                BolhChip(
+                SelectChip(
                     text = stringResource(R.string.habit_kind_bad),
                     selected = draft.kind == HabitKind.Bad,
                     onClick = { viewModel.setKind(HabitKind.Bad) },
+                    modifier = Modifier.weight(1f),
                 )
             }
 
+            SectionTitle(
+                text = stringResource(R.string.habit_group_schedule),
+                icon = R.drawable.ic_select_all,
+            )
             SectionRow {
                 BolhChip(
                     text = stringResource(R.string.habit_schedule_daily),
@@ -213,45 +255,77 @@ fun HabitEditorScreen(
             }
 
             // Разница между «выбранными днями» и «N раз в неделю» не очевидна
-            // из названий, поэтому она подписана прямо под выбором.
-            when (draft.scheduleType) {
-                ScheduleType.Weekdays -> {
-                    ScheduleHint(stringResource(R.string.habit_schedule_weekdays_hint))
-                    WeekdayPicker(
-                        selected = draft.days,
-                        onToggle = viewModel::toggleDay,
-                    )
-                }
+            // из названий, поэтому она подписана прямо под выбором. Смена
+            // расписания меняет весь блок — переходом, а не рывком.
+            AnimatedContent(
+                targetState = draft.scheduleType,
+                transitionSpec = {
+                    fadeIn(tween(Motion.CONTENT_MS)) togetherWith
+                        fadeOut(tween(Motion.CONTENT_MS / 2))
+                },
+                label = "schedule-extra",
+            ) { schedule ->
+                Column {
+                    when (schedule) {
+                        ScheduleType.Weekdays -> {
+                            ScheduleHint(
+                                stringResource(R.string.habit_schedule_weekdays_hint),
+                            )
+                            WeekdayPicker(
+                                selected = draft.days,
+                                onToggle = viewModel::toggleDay,
+                            )
+                        }
 
-                ScheduleType.TimesPerWeek -> {
-                    Stepper(
-                        label = stringResource(R.string.habit_schedule_times),
-                        value = draft.timesPerWeek,
-                        onChange = viewModel::setTimesPerWeek,
-                    )
-                    ScheduleHint(
-                        stringResource(
-                            R.string.habit_schedule_times_hint,
-                            draft.timesPerWeek,
-                        ),
-                    )
-                }
+                        ScheduleType.TimesPerWeek -> {
+                            Stepper(
+                                label = stringResource(R.string.habit_schedule_times),
+                                value = draft.timesPerWeek,
+                                onChange = viewModel::setTimesPerWeek,
+                            )
+                            ScheduleHint(
+                                stringResource(
+                                    R.string.habit_schedule_times_hint,
+                                    draft.timesPerWeek,
+                                ),
+                            )
+                        }
 
-                ScheduleType.Daily -> Unit
+                        ScheduleType.Daily -> Unit
+                    }
+                }
             }
 
-            Text(
+            // Голая надпись не читалась как то, что можно нажать. Стрелка
+            // ещё и поворачивается, показывая, раскрыто или свёрнуто.
+            val advancedTurn by animateFloatAsState(
+                targetValue = if (draft.advancedExpanded) 180f else 0f,
+                animationSpec = tween(Motion.CONTENT_MS),
+                label = "advanced-turn",
+            )
+            PillButton(
                 text = stringResource(R.string.habit_advanced),
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable(onClick = viewModel::toggleAdvanced)
-                    .padding(horizontal = Spacing.screenPadding, vertical = Spacing.l),
+                onClick = viewModel::toggleAdvanced,
+                icon = R.drawable.ic_chevron_down,
+                iconAtEnd = true,
+                iconRotation = advancedTurn,
+                modifier = Modifier.padding(
+                    horizontal = Spacing.screenPadding,
+                    vertical = Spacing.l,
+                ),
             )
 
-            if (draft.advancedExpanded) {
-                AdvancedSection(draft = draft, viewModel = viewModel)
+            // AnimatedVisibility, а не AnimatedContent: внутри поля ввода, и
+            // пересоздание содержимого отбирало бы у них фокус. Здесь флаг
+            // меняется только по нажатию кнопки.
+            AnimatedVisibility(
+                visible = draft.advancedExpanded,
+                enter = fadeIn(tween(Motion.CONTENT_MS)) + expandVertically(Motion.resize),
+                exit = fadeOut(tween(Motion.CONTENT_MS / 2)) + shrinkVertically(Motion.resize),
+            ) {
+                Column {
+                    AdvancedSection(draft = draft, viewModel = viewModel)
+                }
             }
 
             Button(

@@ -36,8 +36,10 @@
     <string name="habit_edit_title">Habit</string>
     <string name="habit_templates">Ready-made</string>
     <string name="habit_name_hint">Name</string>
-    <string name="habit_kind_good">Useful habit</string>
-    <string name="habit_kind_bad">Bad habit</string>
+    <string name="habit_group_kind">Kind of habit</string>
+    <string name="habit_group_schedule">Schedule</string>
+    <string name="habit_kind_good">Useful</string>
+    <string name="habit_kind_bad">Bad</string>
     <string name="habit_schedule_daily">Every day</string>
     <string name="habit_schedule_weekdays">Chosen days</string>
     <string name="habit_schedule_times">Times a week</string>

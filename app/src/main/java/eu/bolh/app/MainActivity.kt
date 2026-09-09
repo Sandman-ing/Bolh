@@ -31,13 +31,14 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+        // Пересоздание, а не запуск: recreate() сохраняет состояние, обычный
+        // старт — нет. Затухание нужно только здесь, второй половиной перехода
+        // при смене языка. На холодном старте оно было бы лишней задержкой.
+        val recreated = savedInstanceState != null
         setContent {
-            // Появление приложения — вторая половина перехода. Смена языка
-            // пересоздаёт Activity, и без этого затухания новый экран
-            // возникал рывком: настройки гасли плавно, а возвращались щелчком.
-            val appear = remember { Animatable(0f) }
+            val appear = remember { Animatable(if (recreated) 0f else 1f) }
             LaunchedEffect(Unit) {
-                appear.animateTo(1f, tween(Motion.CONTENT_MS))
+                if (recreated) appear.animateTo(1f, tween(Motion.CONTENT_MS))
             }
             Box(modifier = Modifier.fillMaxSize().alpha(appear.value)) {
                 BolhApp()
