@@ -44,7 +44,15 @@ data class HabitRowState(
     val savedMinor: Long?,
     /** Запланирована ли привычка на выбранный день. */
     val plannedOnDay: Boolean,
-)
+    /** Сколько отметок уже стоит на выбранный день. */
+    val marksOnDay: Int = 0,
+) {
+    /** Сколько раз за день привычку ждут. */
+    val timesPerDay: Int get() = habit.timesPerDay
+
+    /** День закрыт, только когда набраны все отметки (§5.5). */
+    val dayComplete: Boolean get() = marksOnDay >= timesPerDay
+}
 
 /** Сколько привычек на день запланировано и сколько уже закрыто. */
 data class DayProgress(val planned: Int, val done: Int) {
@@ -148,32 +156,50 @@ class HabitsViewModel(private val repository: HabitRepository) : ViewModel() {
         val slips = marks.filter { it.level == EntryLevel.Slip }.map { it.date }
         val weekStart = weekDays.first()
 
+        // День считается отмеченным, только когда набраны все отметки: у
+        // привычки «дважды в день» одна галочка — это половина дня, и выдавать
+        // её за целый значит врать статистике (§5.5).
+        val needed = habit.timesPerDay
         val weekMarks = weekDays.mapNotNull { day ->
-            marks.filter { it.date == day }
-                .maxByOrNull { levelWeight(it.level) }
-                ?.let { day to it.level }
+            val onDay = marks.filter { it.date == day }
+            if (onDay.size < needed) {
+                null
+            } else {
+                onDay.maxByOrNull { levelWeight(it.level) }?.let { day to it.level }
+            }
         }.toMap()
+
+        // В аналитику идут только закрытые дни — по той же причине.
+        val complete = if (needed <= 1) {
+            marks
+        } else {
+            marks.groupBy { it.date }
+                .filterValues { it.size >= needed }
+                .values
+                .mapNotNull { onDay -> onDay.maxByOrNull { levelWeight(it.level) } }
+        }
 
         return HabitRowState(
             habit = habit,
             weekMarks = weekMarks,
-            selectedLevel = weekMarks[selected] ?: marks.firstOrNull { it.date == selected }?.level,
+            selectedLevel = weekMarks[selected],
+            marksOnDay = marks.count { it.date == selected && it.level != EntryLevel.Slip },
             streak = HabitAnalytics.streak(
                 mode = habit.mode,
-                marks = marks,
+                marks = complete,
                 schedule = habit.schedule,
                 today = today,
                 startDate = habit.startDate,
                 pauses = pauses,
                 skipAllowancePerMonth = habit.skipAllowancePerMonth,
             ),
-            tempo30 = HabitAnalytics.tempo(marks, habit.schedule, window, habit.startDate, pauses),
-            depth30 = HabitAnalytics.depth(marks, window, habit.startDate, pauses),
-            done30 = HabitAnalytics.doneDays(marks, window, habit.startDate, pauses),
+            tempo30 = HabitAnalytics.tempo(complete, habit.schedule, window, habit.startDate, pauses),
+            depth30 = HabitAnalytics.depth(complete, window, habit.startDate, pauses),
+            done30 = HabitAnalytics.doneDays(complete, window, habit.startDate, pauses),
             planned30 = HabitAnalytics.plannedDaysRounded(habit.schedule, window, habit.startDate, pauses),
             isPaused = pauses.any { it.covers(selected) },
             needsRecovery = habit.mode == HabitMode.Minimum &&
-                HabitAnalytics.needsRecovery(marks, habit.schedule, today, habit.startDate, pauses),
+                HabitAnalytics.needsRecovery(complete, habit.schedule, today, habit.startDate, pauses),
             slipsThisWeek = HabitAnalytics.slipsInWeek(slips, weekStart),
             daysWithoutSlip = HabitAnalytics.daysWithoutSlip(slips, today, habit.startDate),
             savedMinor = habit.costPerOccurrenceMinor?.let { cost ->

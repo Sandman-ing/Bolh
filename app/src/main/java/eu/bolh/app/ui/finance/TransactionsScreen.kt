@@ -136,6 +136,7 @@ fun TransactionsScreen(
     // Выбор живёт на экране, а не во ViewModel: он не переживает уход
     // с экрана и ничего не значит для данных.
     var selection by remember { mutableStateOf(emptySet<String>()) }
+    var editingTx by remember { mutableStateOf<Transaction?>(null) }
     var confirming by remember { mutableStateOf(false) }
     val selecting = selection.isNotEmpty()
 
@@ -221,14 +222,20 @@ fun TransactionsScreen(
         },
     ) { innerPadding ->
         if (state.loaded && state.transactions.isEmpty()) {
-            Text(
-                text = stringResource(R.string.tx_list_empty),
-                style = MaterialTheme.typography.bodyMedium,
-                color = status.textTertiary,
+            // В рамке, как и остальные «пусто»: голая строка на чёрном фоне
+            // читается как обрывок, а не как состояние экрана.
+            BolhCard(
+                corner = Radius.block,
                 modifier = Modifier
                     .padding(innerPadding)
                     .padding(Spacing.screenPadding),
-            )
+            ) {
+                Text(
+                    text = stringResource(R.string.tx_list_empty),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = status.textTertiary,
+                )
+            }
             return@Scaffold
         }
 
@@ -238,7 +245,7 @@ fun TransactionsScreen(
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize(),
-            contentPadding = PaddingValues(bottom = Spacing.xxl),
+            contentPadding = PaddingValues(bottom = Spacing.fabClearance),
         ) {
             grouped.forEach { (date, rows) ->
                 item(key = "date-$date") {
@@ -272,6 +279,11 @@ fun TransactionsScreen(
                                 } else {
                                     selection + transaction.id
                                 }
+                            } else {
+                                // Ошибиться в сумме легко, а переписывать
+                                // операцию заново — терять категорию и дату
+                                // из-за одной цифры (§6.9).
+                                editingTx = transaction
                             }
                         },
                         onLongClick = { selection = selection + transaction.id },
@@ -279,6 +291,14 @@ fun TransactionsScreen(
                 }
             }
         }
+    }
+
+    editingTx?.let { transaction ->
+        TransactionSheet(
+            onDismiss = { editingTx = null },
+            onAddAccount = { editingTx = null },
+            editing = transaction,
+        )
     }
 }
 

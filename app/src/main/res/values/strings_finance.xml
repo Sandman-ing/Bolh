@@ -75,6 +75,7 @@
     <string name="tx_date">Date</string>
     <string name="tx_goal">Goal</string>
     <string name="tx_record">Record</string>
+    <string name="tx_save">Save changes</string>
     <string name="recurring_new_title">Recurring payment</string>
     <string name="recurring_name_hint">What for</string>
     <string name="recurring_every">Every</string>

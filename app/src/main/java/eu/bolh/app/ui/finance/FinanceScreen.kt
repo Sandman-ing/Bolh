@@ -209,7 +209,7 @@ fun FinanceScreen(
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         // Запас снизу под плавающую кнопку: иначе она накрывает последнюю строку.
-        contentPadding = PaddingValues(bottom = 96.dp),
+        contentPadding = PaddingValues(bottom = Spacing.fabClearance),
     ) {
         if (shown == FinanceTab.Overview) {
         item(key = "total") {

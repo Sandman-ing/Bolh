@@ -220,6 +220,22 @@ class FinanceRepository(
         dao.upsertTransaction(transaction.toEntity(createdAt = now, updatedAt = now))
     }
 
+    /**
+     * Правка записанной операции.
+     *
+     * createdAt берётся у прежней записи: правка суммы не делает операцию
+     * заведённой заново, иначе порядок в истории поехал бы.
+     */
+    suspend fun updateTransaction(transaction: Transaction) {
+        val existing = dao.transactionById(transaction.id)
+        dao.upsertTransaction(
+            transaction.toEntity(
+                createdAt = existing?.createdAt ?: clock.millis(),
+                updatedAt = clock.millis(),
+            ),
+        )
+    }
+
     suspend fun deleteTransaction(id: String) {
         dao.softDeleteTransaction(id, clock.millis())
     }

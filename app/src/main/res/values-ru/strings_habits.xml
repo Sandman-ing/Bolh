@@ -57,6 +57,9 @@
     <string name="habit_minimum_hint">Минимум: то, что невозможно не сделать</string>
     <string name="habit_norm_hint">Норма: то, ради чего привычка заведена</string>
     <string name="habit_limit_hint">Раз в неделю</string>
+    <string name="habit_times_per_day">Раз в день</string>
+    <string name="habit_times_per_day_hint">Зубы утром и на ночь — это два раза, а не один. День засчитывается, только когда отмечены все.</string>
+    <string name="habit_times_done">%1$d из %2$d</string>
     <string name="habit_cost_hint">Стоимость одного случая</string>
     <string name="habit_estimate_hint">Минут за раз</string>
     <string name="habit_reminder">Напоминание</string>

@@ -83,6 +83,9 @@ interface FinanceDao {
     @Upsert
     suspend fun upsertTransaction(transaction: TransactionEntity)
 
+    @Query("SELECT * FROM transactions WHERE id = :id AND deletedAt IS NULL")
+    suspend fun transactionById(id: String): TransactionEntity?
+
     @Query("UPDATE transactions SET deletedAt = :now, updatedAt = :now WHERE id = :id")
     suspend fun softDeleteTransaction(id: String, now: Long)
 

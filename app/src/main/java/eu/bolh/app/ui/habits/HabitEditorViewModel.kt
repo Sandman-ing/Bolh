@@ -42,6 +42,7 @@ data class HabitDraft(
     val scheduleType: ScheduleType = ScheduleType.Daily,
     val days: Set<DayOfWeek> = emptySet(),
     val timesPerWeek: Int = 3,
+    val timesPerDay: Int = 1,
     val minimumLabel: String = "",
     val normLabel: String = "",
     val limitPerWeek: Int = 3,
@@ -134,6 +135,9 @@ class HabitEditorViewModel(
     }
 
     fun setTimesPerWeek(value: Int) = _draft.update { it.copy(timesPerWeek = value.coerceIn(1, 7)) }
+
+    /** Не больше десяти: за пределами этого числа привычка перестаёт быть привычкой. */
+    fun setTimesPerDay(value: Int) = _draft.update { it.copy(timesPerDay = value.coerceIn(1, 10)) }
 
     fun setMinimumLabel(value: String) = _draft.update { it.copy(minimumLabel = value) }
 
@@ -239,6 +243,7 @@ class HabitEditorViewModel(
         scheduleType = schedule.type,
         days = schedule.days,
         timesPerWeek = schedule.timesPerWeek ?: 3,
+        timesPerDay = timesPerDay,
         minimumLabel = minimumLabel.orEmpty(),
         normLabel = normLabel.orEmpty(),
         limitPerWeek = limitPerWeek ?: 3,
@@ -262,6 +267,7 @@ class HabitEditorViewModel(
             days = if (scheduleType == ScheduleType.Weekdays) days else emptySet(),
             timesPerWeek = if (scheduleType == ScheduleType.TimesPerWeek) timesPerWeek else null,
         ),
+        timesPerDay = timesPerDay,
         minimumLabel = minimumLabel.takeIf { it.isNotBlank() },
         normLabel = normLabel.takeIf { it.isNotBlank() },
         estimatedMinutes = estimatedMinutes,

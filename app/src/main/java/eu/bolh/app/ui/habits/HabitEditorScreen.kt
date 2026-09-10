@@ -302,6 +302,29 @@ fun HabitEditorScreen(
                 }
             }
 
+            // Сколько раз за день — рядом с расписанием: это про то же самое,
+            // только внутри дня, а не внутри недели.
+            AnimatedVisibility(
+                visible = draft.kind == HabitKind.Good,
+                enter = fadeIn(tween(Motion.CONTENT_MS)) + expandVertically(Motion.resize),
+                exit = fadeOut(tween(Motion.CONTENT_MS / 2)) + shrinkVertically(Motion.resize),
+            ) {
+                Column {
+                    Stepper(
+                        label = stringResource(R.string.habit_times_per_day),
+                        value = draft.timesPerDay,
+                        onChange = viewModel::setTimesPerDay,
+                    )
+                    Hint(
+                        text = stringResource(R.string.habit_times_per_day_hint),
+                        modifier = Modifier.padding(
+                            horizontal = Spacing.screenPadding,
+                            vertical = Spacing.xs,
+                        ),
+                    )
+                }
+            }
+
             // Голая надпись не читалась как то, что можно нажать. Стрелка
             // ещё и поворачивается, показывая, раскрыто или свёрнуто.
             val advancedTurn by animateFloatAsState(

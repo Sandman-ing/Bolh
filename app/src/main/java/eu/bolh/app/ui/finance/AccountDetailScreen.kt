@@ -106,6 +106,7 @@ fun AccountDetailScreen(
     // для данных — в отличие от самих операций.
     var selection by remember { mutableStateOf(emptySet<String>()) }
     var confirming by remember { mutableStateOf(false) }
+    var editingTx by remember { mutableStateOf<Transaction?>(null) }
     var showSheet by remember { mutableStateOf(false) }
     val selecting = selection.isNotEmpty()
     // Строки берутся до списка: внутри LazyColumn композабл-вызовов уже нельзя.
@@ -147,6 +148,14 @@ fun AccountDetailScreen(
                 onAddAccount()
             },
             accountId = account.id,
+        )
+    }
+
+    editingTx?.let { transaction ->
+        TransactionSheet(
+            onDismiss = { editingTx = null },
+            onAddAccount = { editingTx = null },
+            editing = transaction,
         )
     }
 
@@ -240,7 +249,7 @@ fun AccountDetailScreen(
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize(),
-            contentPadding = PaddingValues(bottom = Spacing.xxl),
+            contentPadding = PaddingValues(bottom = Spacing.fabClearance),
         ) {
             item(key = "balance") {
                 // Сумма правится нажатием по самой сумме. Слово «Изменить» в углу
@@ -362,6 +371,7 @@ fun AccountDetailScreen(
                 selecting = selecting,
                 onToggle = { selection = selection.toggle(it) },
                 onLongClick = { selection = selection + it.id },
+                onEdit = { editingTx = it },
             )
 
             section(
@@ -375,6 +385,7 @@ fun AccountDetailScreen(
                 selecting = selecting,
                 onToggle = { selection = selection.toggle(it) },
                 onLongClick = { selection = selection + it.id },
+                onEdit = { editingTx = it },
             )
         }
     }
@@ -392,6 +403,7 @@ private fun androidx.compose.foundation.lazy.LazyListScope.section(
     selecting: Boolean,
     onToggle: (String) -> Unit,
     onLongClick: (Transaction) -> Unit,
+    onEdit: (Transaction) -> Unit,
 ) {
     item(key = "header-$title") {
         val status = LocalStatusColors.current
@@ -456,7 +468,9 @@ private fun androidx.compose.foundation.lazy.LazyListScope.section(
                     vertical = Spacing.xs,
                 )
                 .tappable(
-                    onClick = { if (selecting) onToggle(transaction.id) },
+                    onClick = {
+                        if (selecting) onToggle(transaction.id) else onEdit(transaction)
+                    },
                     onLongClick = { onLongClick(transaction) },
                     longClickLabel = stringResource(R.string.common_delete),
                 ),

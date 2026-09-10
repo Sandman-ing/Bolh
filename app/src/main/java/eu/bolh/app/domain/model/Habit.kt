@@ -69,6 +69,8 @@ data class Habit(
     val costCurrencyCode: String? = null,
     val limitPerWeek: Int? = null,
     val skipAllowancePerMonth: Int = 0,
+    /** Сколько раз за день привычку ждут. Один — обычный случай. */
+    val timesPerDay: Int = 1,
     val reminderMinuteOfDay: Int? = null,
     val reminderRepeatEvening: Boolean = false,
     val categoryId: String? = null,

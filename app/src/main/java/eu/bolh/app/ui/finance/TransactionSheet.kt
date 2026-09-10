@@ -42,6 +42,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import eu.bolh.app.R
 import eu.bolh.app.domain.model.Category
+import eu.bolh.app.domain.model.Transaction
 import eu.bolh.app.domain.model.TransactionType
 import eu.bolh.app.domain.templates.SystemCategories
 import eu.bolh.app.ui.common.SelectChip
@@ -68,6 +69,8 @@ fun TransactionSheet(
     modifier: Modifier = Modifier,
     /** Счёт, с которого открыли шторку: изнутри счёта выбирать его заново — лишний шаг. */
     accountId: String? = null,
+    /** Операция, открытая на правку. Пусто — записываем новую. */
+    editing: Transaction? = null,
     viewModel: TransactionEditorViewModel = viewModel(factory = TransactionEditorViewModel.Factory),
 ) {
     val draft by viewModel.draft.collectAsStateWithLifecycle()
@@ -77,8 +80,14 @@ fun TransactionSheet(
     val context = LocalContext.current
     val locale = rememberLocale()
 
-    LaunchedEffect(options.accounts, accountId) {
-        if (draft.accountId == null) {
+    // Правка загружается один раз на открытие: иначе набранная сумма
+    // затиралась бы прежней при каждой перерисовке.
+    LaunchedEffect(editing?.id) {
+        if (editing != null) viewModel.edit(editing)
+    }
+
+    LaunchedEffect(options.accounts, accountId, editing?.id) {
+        if (editing == null && draft.accountId == null) {
             val preselected = accountId ?: options.accounts.firstOrNull()?.id
             preselected?.let { viewModel.setAccount(it) }
         }
@@ -313,7 +322,7 @@ fun TransactionSheet(
                         if (options.accounts.isEmpty()) {
                             R.string.finance_empty_action
                         } else {
-                            R.string.tx_record
+                            if (draft.isEditing) R.string.tx_save else R.string.tx_record
                         },
                     ),
                 )

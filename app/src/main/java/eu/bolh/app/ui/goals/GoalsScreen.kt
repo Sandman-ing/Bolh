@@ -84,7 +84,7 @@ fun GoalsScreen(
             start = Spacing.screenPadding,
             end = Spacing.screenPadding,
             top = Spacing.m,
-            bottom = Spacing.xxl,
+            bottom = Spacing.fabClearance,
         ),
         verticalArrangement = Arrangement.spacedBy(Spacing.goalCardGap),
     ) {

@@ -2,8 +2,11 @@ package eu.bolh.app.ui.habits.components
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -31,7 +34,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
@@ -45,6 +52,7 @@ import eu.bolh.app.domain.model.HabitMode
 import eu.bolh.app.ui.common.BolhIcons
 import eu.bolh.app.ui.common.tappable
 import eu.bolh.app.ui.common.Motion
+import eu.bolh.app.ui.common.completionPop
 import eu.bolh.app.ui.common.pressScale
 import eu.bolh.app.ui.common.rememberPressSource
 import eu.bolh.app.ui.common.Money
@@ -114,6 +122,14 @@ fun HabitRowItem(
                     onClick = { onMark(EntryLevel.Slip) },
                     onUndo = onUndoSlip,
                 )
+
+            // Привычку, которую ждут несколько раз за день, нельзя закрыть
+            // выбором уровня: сначала надо набрать все разы (§5.5).
+            row.timesPerDay > 1 -> MarkCounter(
+                done = row.marksOnDay,
+                total = row.timesPerDay,
+                onClick = { onMark(EntryLevel.Norm) },
+            )
 
             row.habit.mode == HabitMode.Minimum && row.selectedLevel == null ->
                 MinimumNormButtons(
@@ -477,5 +493,98 @@ private fun Pill(
         contentAlignment = Alignment.Center,
     ) {
         Text(text = text, style = MaterialTheme.typography.labelLarge, color = textColor)
+    }
+}
+
+/**
+ * Кружок со счётчиком: «1 из 2».
+ *
+ * Одна галочка на привычку, которую ждут дважды за день, врала бы: день ещё
+ * не закрыт. Кольцо по краю показывает, сколько набрано, число внутри — то же
+ * словами. Набрал всё — следующее нажатие снимает день целиком (§5.5).
+ */
+@Composable
+private fun MarkCounter(
+    done: Int,
+    total: Int,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val accent = MaterialTheme.colorScheme.primary
+    val status = LocalStatusColors.current
+    val complete = done >= total
+    val press = rememberPressSource()
+
+    val share by animateFloatAsState(
+        targetValue = if (total <= 0) 0f else (done.toFloat() / total).coerceIn(0f, 1f),
+        animationSpec = tween(Motion.CONTENT_MS),
+        label = "counter-share",
+    )
+    val ring by animateColorAsState(
+        targetValue = if (done > 0) accent else status.divider,
+        animationSpec = Motion.color,
+        label = "counter-ring",
+    )
+    val fill by animateColorAsState(
+        targetValue = if (complete) accent else Color.Transparent,
+        animationSpec = Motion.color,
+        label = "counter-fill",
+    )
+
+    Box(
+        modifier = modifier
+            .size(TapTargetMin)
+            .pressScale(press, pressedScale = 0.90f)
+            .clip(CircleShape)
+            .clickable(interactionSource = press, indication = ripple(), onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        Canvas(modifier = Modifier.size(38.dp)) {
+            val stroke = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round)
+            val inset = stroke.width / 2f
+            drawArc(
+                color = status.divider,
+                startAngle = 0f,
+                sweepAngle = 360f,
+                useCenter = false,
+                topLeft = Offset(inset, inset),
+                size = Size(size.width - inset * 2, size.height - inset * 2),
+                style = stroke,
+            )
+            if (share > 0f) {
+                drawArc(
+                    color = ring,
+                    startAngle = -90f,
+                    sweepAngle = 360f * share,
+                    useCenter = false,
+                    topLeft = Offset(inset, inset),
+                    size = Size(size.width - inset * 2, size.height - inset * 2),
+                    style = stroke,
+                )
+            }
+        }
+        Box(
+            modifier = Modifier
+                .completionPop(complete)
+                .size(26.dp)
+                .clip(CircleShape)
+                .background(fill),
+            contentAlignment = Alignment.Center,
+        ) {
+            if (complete) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_check),
+                    contentDescription = stringResource(R.string.habits_mark_done),
+                    tint = MaterialTheme.colorScheme.onPrimary,
+                    modifier = Modifier.size(16.dp),
+                )
+            } else {
+                Text(
+                    text = done.toString(),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = if (done > 0) accent else status.textTertiary,
+                )
+            }
+        }
     }
 }

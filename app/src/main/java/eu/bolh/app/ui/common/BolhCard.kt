@@ -175,13 +175,13 @@ fun StatTile(
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
         )
-        // Сумме разрешено переноситься: «1 227,50 €» в трети экрана
-        // в одну строку не влезает, а обрезать деньги нельзя.
-        Text(
+        // Сумма ужимается, а не переносится: «8 000 AMD» в трети экрана
+        // ломалось на «8 000 A / MD» — перенос шёл посреди кода валюты.
+        FittedText(
             text = value,
             style = NumberTile,
             color = valueColor,
-            maxLines = 2,
+            modifier = Modifier.fillMaxWidth(),
         )
         if (hint != null) {
             Text(

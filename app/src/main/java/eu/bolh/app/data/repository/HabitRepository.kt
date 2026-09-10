@@ -92,6 +92,30 @@ class HabitRepository(
     ) {
         val now = clock.millis()
         val existing = dao.entriesOn(habitId, date)
+        val timesPerDay = dao.findById(habitId)?.timesPerDay ?: 1
+
+        // Привычка, которую ждут несколько раз за день, набирает отметки по
+        // одной. Когда набрано всё — следующее нажатие снимает день целиком:
+        // иначе отменить лишнюю отметку было бы нечем (§5.5).
+        if (timesPerDay > 1) {
+            if (existing.size >= timesPerDay) {
+                existing.forEach { dao.softDeleteEntry(it.id, now) }
+            } else {
+                dao.upsertEntry(
+                    HabitEntryEntity(
+                        id = UUID.randomUUID().toString(),
+                        habitId = habitId,
+                        date = date,
+                        level = level,
+                        value = value,
+                        createdAt = now,
+                        updatedAt = now,
+                    ),
+                )
+            }
+            return
+        }
+
         if (existing.size == 1 && existing.first().level == level && value == null) {
             dao.softDeleteEntry(existing.first().id, now)
             return

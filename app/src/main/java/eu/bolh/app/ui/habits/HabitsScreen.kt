@@ -111,7 +111,7 @@ fun HabitsScreen(
                 start = Spacing.m,
                 end = Spacing.m,
                 top = Spacing.s,
-                bottom = Spacing.xxl,
+                bottom = Spacing.fabClearance,
             ),
             verticalArrangement = Arrangement.spacedBy(Spacing.s),
         ) {

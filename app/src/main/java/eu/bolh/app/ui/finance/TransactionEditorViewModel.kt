@@ -27,6 +27,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 data class TransactionDraft(
+    /** Пусто — записываем новую операцию; иначе правим эту. */
+    val id: String? = null,
     val type: TransactionType = TransactionType.Expense,
     val amountText: String = "",
     val accountId: String? = null,
@@ -45,6 +47,8 @@ data class TransactionDraft(
         get() {
             return Money.parseMinor(amountText)
         }
+
+    val isEditing: Boolean get() = id != null
 
     val canSave: Boolean
         get() = amountMinor != null &&
@@ -114,6 +118,30 @@ class TransactionEditorViewModel(
         )
     }
 
+    /**
+     * Открыть записанную операцию на правку.
+     *
+     * Ошибиться в сумме легко, а переписывать операцию заново — значит терять
+     * категорию, дату и заметку из-за одной цифры (§6.9).
+     */
+    fun edit(transaction: Transaction) {
+        _draft.value = TransactionDraft(
+            id = transaction.id,
+            type = transaction.type,
+            amountText = Money.formatPlain(
+                transaction.amountMinor,
+                Money.fractionDigitsOf(transaction.currencyCode),
+            ),
+            accountId = transaction.accountId,
+            toAccountId = transaction.toAccountId,
+            categoryId = transaction.categoryId,
+            date = transaction.date,
+            note = transaction.note.orEmpty(),
+            goalId = transaction.goalId,
+            expanded = transaction.note != null || transaction.goalId != null,
+        )
+    }
+
     fun record(onDone: () -> Unit) {
         val draft = _draft.value
         val accountId = draft.accountId ?: return
@@ -135,22 +163,21 @@ class TransactionEditorViewModel(
             return
         }
         viewModelScope.launch {
-            finance.record(
-                Transaction(
-                    id = UUID.randomUUID().toString(),
-                    accountId = accountId,
-                    toAccountId = draft.toAccountId.takeIf { draft.type == TransactionType.Transfer },
-                    type = draft.type,
-                    amountMinor = amount,
-                    currencyCode = account.currencyCode,
-                    // Валюта к самой себе — единица, и она не меняется никогда.
-                    rateToBase = 1.0,
-                    date = draft.date,
-                    categoryId = draft.categoryId.takeIf { draft.type != TransactionType.Transfer },
-                    note = draft.note.takeIf { it.isNotBlank() },
-                    goalId = draft.goalId,
-                ),
+            val record = Transaction(
+                id = draft.id ?: UUID.randomUUID().toString(),
+                accountId = accountId,
+                toAccountId = draft.toAccountId.takeIf { draft.type == TransactionType.Transfer },
+                type = draft.type,
+                amountMinor = amount,
+                currencyCode = account.currencyCode,
+                // Валюта к самой себе — единица, и она не меняется никогда.
+                rateToBase = 1.0,
+                date = draft.date,
+                categoryId = draft.categoryId.takeIf { draft.type != TransactionType.Transfer },
+                note = draft.note.takeIf { it.isNotBlank() },
+                goalId = draft.goalId,
             )
+            if (draft.isEditing) finance.updateTransaction(record) else finance.record(record)
             reset()
             onDone()
         }

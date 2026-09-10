@@ -53,6 +53,9 @@
     <string name="habit_minimum_hint">Minimum: what you cannot fail to do</string>
     <string name="habit_norm_hint">Norm: what the habit is for</string>
     <string name="habit_limit_hint">Times a week</string>
+    <string name="habit_times_per_day">Times a day</string>
+    <string name="habit_times_per_day_hint">Teeth in the morning and at night are two, not one. The day counts only when every one of them is ticked.</string>
+    <string name="habit_times_done">%1$d of %2$d</string>
     <string name="habit_cost_hint">Cost of one occurrence</string>
     <string name="habit_estimate_hint">Minutes per time</string>
     <string name="habit_reminder">Reminder</string>

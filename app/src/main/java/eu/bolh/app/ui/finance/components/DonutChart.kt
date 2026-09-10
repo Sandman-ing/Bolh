@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import eu.bolh.app.ui.theme.Spacing
+import eu.bolh.app.ui.common.FittedText
 import eu.bolh.app.ui.theme.MoneyHero
 import eu.bolh.app.ui.theme.NumberSmall
 import androidx.compose.runtime.getValue
@@ -90,33 +91,14 @@ fun DonutChart(
         // и не должен искать это где-то сбоку. Кольцо вокруг — то, куда
         // эти деньги уходят, и связь читается без единой подписи.
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            // Сумма ужимается под внутренний круг. «26 850 AMD» в драмах длиннее
-            // «300 €», и при жёстком кегле она переносилась по слогам прямо на
-            // кольцо: получалось «26 850 AM / D». Кегль подбирается замером.
-            val room = diameter - thickness * 2 - Spacing.m * 2
-            var fontSize by remember(centerText) { mutableStateOf(MoneyHero.fontSize) }
-            var fitted by remember(centerText) { mutableStateOf(false) }
-
-            Text(
+            // Сумма ужимается под внутренний круг: «26 850 AMD» длиннее
+            // «300 €» и при жёстком кегле переносилась прямо на кольцо.
+            FittedText(
                 text = centerText,
-                style = MoneyHero.copy(fontSize = fontSize, lineHeight = fontSize * 1.15f),
-                maxLines = 1,
-                softWrap = false,
-                // До подбора текст невидим: иначе на первом кадре мелькает
-                // крупный вариант и число «дёргается».
-                color = if (fitted) {
-                    MaterialTheme.colorScheme.onBackground
-                } else {
-                    Color.Transparent
-                },
-                modifier = Modifier.widthIn(max = room),
-                onTextLayout = { result ->
-                    if (result.hasVisualOverflow && fontSize > MIN_HERO_SIZE) {
-                        fontSize *= 0.92f
-                    } else {
-                        fitted = true
-                    }
-                },
+                style = MoneyHero,
+                minFontSize = MIN_HERO_SIZE,
+                align = Alignment.Center,
+                modifier = Modifier.widthIn(max = diameter - thickness * 2 - Spacing.m * 2),
             )
             if (centerCaption != null) {
                 Text(

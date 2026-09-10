@@ -50,7 +50,7 @@ import eu.bolh.app.data.db.entity.TransactionEntity
         HabitEntryEntity::class,
         HabitPauseEntity::class,
     ],
-    version = 3,
+    version = 4,
     exportSchema = true,
 )
 @TypeConverters(Converters::class)
@@ -114,6 +114,18 @@ abstract class BolhDatabase : RoomDatabase() {
             }
         }
 
+        /**
+         * Несколько отметок за день (§5.5): зубы утром и вечером — это два
+         * раза, а не один. У всех прежних привычек по-прежнему один.
+         */
+        private val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(connection: SQLiteConnection) {
+                connection.execSQL(
+                    "ALTER TABLE habits ADD COLUMN timesPerDay INTEGER NOT NULL DEFAULT 1",
+                )
+            }
+        }
+
         @Volatile
         private var instance: BolhDatabase? = null
 
@@ -123,7 +135,7 @@ abstract class BolhDatabase : RoomDatabase() {
 
         private fun build(context: Context): BolhDatabase =
             Room.databaseBuilder(context.applicationContext, BolhDatabase::class.java, NAME)
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
                 .build()
     }
 }

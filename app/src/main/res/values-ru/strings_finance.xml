@@ -75,6 +75,7 @@
     <string name="tx_date">Дата</string>
     <string name="tx_goal">Цель</string>
     <string name="tx_record">Записать</string>
+    <string name="tx_save">Сохранить правку</string>
     <string name="recurring_new_title">Регулярный платёж</string>
     <string name="recurring_name_hint">За что</string>
     <string name="recurring_every">Каждый</string>
