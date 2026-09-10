@@ -504,7 +504,7 @@ private fun androidx.compose.foundation.lazy.LazyListScope.section(
                     color = MaterialTheme.colorScheme.onBackground,
                 )
                 Text(
-                    text = transaction.date.format(DateTimeFormatter.ofPattern("d MMMM", locale)),
+                    text = transaction.date.format(DateTimeFormatter.ofPattern(stringResource(R.string.date_day_month), locale)),
                     style = MaterialTheme.typography.labelMedium,
                     color = status.textTertiary,
                 )

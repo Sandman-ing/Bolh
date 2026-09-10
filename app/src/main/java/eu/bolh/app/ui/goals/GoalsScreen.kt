@@ -400,6 +400,8 @@ private fun sortLabel(sort: GoalSort): Int = when (sort) {
     GoalSort.Tempo -> R.string.goals_sort_tempo
 }
 
+/** Шаблон даты живёт в ресурсах: у каждого языка свой порядок частей (§9.6). */
+@Composable
 internal fun monthYear(date: LocalDate, locale: Locale): String =
-    date.format(DateTimeFormatter.ofPattern("LLLL yyyy", locale))
+    date.format(DateTimeFormatter.ofPattern(stringResource(R.string.date_month_year), locale))
         .replaceFirstChar { if (it.isLowerCase()) it.titlecase(locale) else it.toString() }

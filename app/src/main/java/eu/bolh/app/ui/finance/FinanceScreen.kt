@@ -604,7 +604,7 @@ fun FinanceScreen(
                             )
                             Text(
                                 text = payment.nextDate.format(
-                                    DateTimeFormatter.ofPattern("d MMMM", locale),
+                                    DateTimeFormatter.ofPattern(stringResource(R.string.date_day_month), locale),
                                 ),
                                 style = MaterialTheme.typography.labelMedium,
                                 color = status.textTertiary,

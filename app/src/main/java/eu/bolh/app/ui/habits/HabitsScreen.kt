@@ -270,7 +270,7 @@ private fun WeekHeader(
 @Composable
 private fun monthTitle(state: HabitsUiState): String {
     val locale = rememberLocale()
-    val formatter = DateTimeFormatter.ofPattern("LLLL yyyy", locale)
+    val formatter = DateTimeFormatter.ofPattern(stringResource(R.string.date_month_year), locale)
     val label = state.selectedDate.format(formatter)
     return label.replaceFirstChar { if (it.isLowerCase()) it.titlecase(locale) else it.toString() }
 }

@@ -17,7 +17,7 @@
     <string name="settings_currency">Currency</string>
     <string name="settings_currency_pick">Choose currency</string>
     <string name="settings_currency_search">Search</string>
-    <string name="settings_currency_note">One currency for the whole app, no conversion. Changing it relabels existing amounts, it does not recalculate them.</string>
+    <string name="settings_currency_note">The currency new accounts start with. Each account keeps its own, and there is no conversion between them.</string>
     <string name="settings_export_pdf">Report as PDF</string>
     <string name="settings_pdf_done">Report saved</string>
     <string name="settings_data">Data</string>

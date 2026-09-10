@@ -258,7 +258,7 @@ fun TransactionSheet(
                         modifier = Modifier.weight(1f),
                     )
                     Text(
-                        text = draft.date.format(DateTimeFormatter.ofPattern("d MMMM yyyy", locale)),
+                        text = draft.date.format(DateTimeFormatter.ofPattern(stringResource(R.string.date_full), locale)),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.primary,
                     )

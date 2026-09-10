@@ -13,6 +13,12 @@ import eu.bolh.app.data.prefs.CurrencyPrefs
 import eu.bolh.app.data.repository.FinanceRepository
 import eu.bolh.app.data.repository.GoalRepository
 import eu.bolh.app.data.repository.HabitRepository
+import eu.bolh.app.domain.model.Habit
+import eu.bolh.app.domain.model.RecurringPayment
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import java.time.Clock
 
 /**
@@ -57,9 +63,55 @@ class BolhApplication : Application() {
     lateinit var container: BolhContainer
         private set
 
+    /** Живёт столько же, сколько процесс: следит за напоминаниями всё это время. */
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+
     override fun onCreate() {
         super.onCreate()
         container = BolhContainer(this)
         BolhNotifications.ensureChannel(this)
+        syncReminders()
+    }
+
+    /**
+     * Напоминания следуют за данными, а не за моментом сохранения.
+     *
+     * Раньше они заводились только в редакторе. Стоило записать регулярный
+     * платёж по уведомлению — дата списания уезжала на следующий месяц, а
+     * нового напоминания не появлялось: платёж молча переставал напоминать.
+     * То же после восстановления из копии — привычки возвращались, будильники
+     * нет. Здесь оба списка слушаются целиком, и любая правка данных сразу
+     * доходит до планировщика (§5.6, §6.5).
+     */
+    private fun syncReminders() {
+        scope.launch {
+            var known = emptyMap<String, RecurringPayment>()
+            container.financeRepository.observeRecurring().collect { payments ->
+                val byId = payments.associateBy { it.id }
+                // Перезаводим только изменившееся: перепланировать всё на
+                // каждое изменение таблицы — лишняя работа WorkManager.
+                byId.values
+                    .filter { known[it.id] != it }
+                    .forEach { container.recurringScheduler.schedule(it) }
+                known.keys
+                    .filterNot { it in byId }
+                    .forEach { container.recurringScheduler.cancel(it) }
+                known = byId
+            }
+        }
+
+        scope.launch {
+            var known = emptyMap<String, Habit>()
+            container.habitRepository.observeAllHabits().collect { habits ->
+                val byId = habits.associateBy { it.id }
+                byId.values
+                    .filter { known[it.id] != it }
+                    .forEach { container.reminderScheduler.schedule(it) }
+                known.keys
+                    .filterNot { it in byId }
+                    .forEach { container.reminderScheduler.cancel(it) }
+                known = byId
+            }
+        }
     }
 }

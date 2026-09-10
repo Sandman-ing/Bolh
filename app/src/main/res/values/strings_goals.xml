@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="goals_sort_manual">Mine</string>
+    <string name="goals_sort_manual">Custom</string>
     <string name="goals_sort_deadline">By deadline</string>
     <string name="goals_sort_tempo">By tempo</string>
 

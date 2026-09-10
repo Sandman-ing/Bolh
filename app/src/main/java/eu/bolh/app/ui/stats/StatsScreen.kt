@@ -523,7 +523,7 @@ private fun HabitCalendar(
                     .size(18.dp),
             )
             Text(
-                text = month.atDay(1).format(DateTimeFormatter.ofPattern("LLLL yyyy", locale)),
+                text = month.atDay(1).format(DateTimeFormatter.ofPattern(stringResource(R.string.date_month_year), locale)),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onBackground,
                 textAlign = TextAlign.Center,

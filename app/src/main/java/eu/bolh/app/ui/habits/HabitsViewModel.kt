@@ -170,14 +170,7 @@ class HabitsViewModel(private val repository: HabitRepository) : ViewModel() {
         }.toMap()
 
         // В аналитику идут только закрытые дни — по той же причине.
-        val complete = if (needed <= 1) {
-            marks
-        } else {
-            marks.groupBy { it.date }
-                .filterValues { it.size >= needed }
-                .values
-                .mapNotNull { onDay -> onDay.maxByOrNull { levelWeight(it.level) } }
-        }
+        val complete = HabitAnalytics.completeDays(marks, needed)
 
         return HabitRowState(
             habit = habit,

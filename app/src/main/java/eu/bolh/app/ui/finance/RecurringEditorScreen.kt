@@ -375,7 +375,7 @@ fun RecurringEditorScreen(
                     modifier = Modifier.weight(1f),
                 )
                 Text(
-                    text = firstDate.format(DateTimeFormatter.ofPattern("d MMMM yyyy", locale)),
+                    text = firstDate.format(DateTimeFormatter.ofPattern(stringResource(R.string.date_full), locale)),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.primary,
                 )

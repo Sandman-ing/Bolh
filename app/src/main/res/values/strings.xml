@@ -43,4 +43,9 @@
         <item quantity="other">%d stages</item>
     </plurals>
     <string name="confirm_delete_transaction">Delete the %1$s entry?</string>
+    <!-- Форматы дат: у каждого языка свой порядок частей. По-английски
+         «September 10, 2026», по-русски «10 сентября 2026» (§9.6). -->
+    <string name="date_day_month">MMMM d</string>
+    <string name="date_full">MMMM d, yyyy</string>
+    <string name="date_month_year">LLLL yyyy</string>
 </resources>

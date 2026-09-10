@@ -22,6 +22,34 @@ import kotlin.math.roundToInt
  */
 object HabitAnalytics {
 
+    /**
+     * Дни, закрытые полностью.
+     *
+     * Привычку могут ждать несколько раз за день: зубы утром и на ночь. Одна
+     * отметка из двух — это половина дня, и в счёт она идти не должна, иначе
+     * темп и серия начнут показывать больше, чем было на самом деле (§5.5).
+     *
+     * Срывы вредных привычек не сворачиваются: их за день бывает несколько,
+     * и каждый — отдельное событие.
+     */
+    fun completeDays(marks: List<Mark>, timesPerDay: Int): List<Mark> {
+        if (timesPerDay <= 1) return marks
+        val slips = marks.filter { it.level == EntryLevel.Slip }
+        val done = marks.filterNot { it.level == EntryLevel.Slip }
+            .groupBy { it.date }
+            .filterValues { it.size >= timesPerDay }
+            .values
+            .mapNotNull { onDay -> onDay.maxByOrNull { levelWeight(it.level) } }
+        return (done + slips).sortedBy { it.date }
+    }
+
+    /** Норма весит больше минимума: у дня остаётся лучший достигнутый уровень. */
+    private fun levelWeight(level: EntryLevel): Int = when (level) {
+        EntryLevel.Norm -> 2
+        EntryLevel.Minimum -> 1
+        EntryLevel.Slip -> 0
+    }
+
     /** Дни окна, когда привычка вообще действовала: после старта и вне пауз. */
     fun activeDays(
         window: DayWindow,

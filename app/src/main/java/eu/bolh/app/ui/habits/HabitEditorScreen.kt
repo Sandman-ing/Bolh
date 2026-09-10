@@ -554,7 +554,7 @@ private fun AdvancedSection(draft: HabitDraft, viewModel: HabitEditorViewModel) 
                 text = pause?.let {
                     stringResource(
                         R.string.habit_pause_until,
-                        it.to.format(java.time.format.DateTimeFormatter.ofPattern("d MMMM", locale)),
+                        it.to.format(java.time.format.DateTimeFormatter.ofPattern(stringResource(R.string.date_day_month), locale)),
                     )
                 } ?: stringResource(R.string.habit_pause_none),
                 style = MaterialTheme.typography.bodyMedium,
@@ -658,7 +658,7 @@ private fun AdvancedSection(draft: HabitDraft, viewModel: HabitEditorViewModel) 
         )
         Text(
             text = startDate.format(
-                java.time.format.DateTimeFormatter.ofPattern("d MMMM yyyy", locale),
+                java.time.format.DateTimeFormatter.ofPattern(stringResource(R.string.date_full), locale),
             ),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.primary,

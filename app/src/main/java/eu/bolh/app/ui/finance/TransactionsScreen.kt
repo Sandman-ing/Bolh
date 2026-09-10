@@ -395,5 +395,7 @@ private fun categoryLabel(category: Category?): String {
     return if (res != null) stringResource(res) else category.name
 }
 
+/** Шаблон даты живёт в ресурсах: у каждого языка свой порядок частей (§9.6). */
+@Composable
 private fun dayLabel(date: LocalDate, locale: Locale): String =
-    date.format(DateTimeFormatter.ofPattern("d MMMM yyyy", locale))
+    date.format(DateTimeFormatter.ofPattern(stringResource(R.string.date_full), locale))

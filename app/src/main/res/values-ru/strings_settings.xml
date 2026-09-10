@@ -17,7 +17,7 @@
     <string name="settings_currency">Валюта</string>
     <string name="settings_currency_pick">Выбрать валюту</string>
     <string name="settings_currency_search">Поиск</string>
-    <string name="settings_currency_note">Одна валюта на всё приложение, без пересчёта. Смена меняет подпись у уже записанных сумм, а не пересчитывает их.</string>
+    <string name="settings_currency_note">Валюта, с которой заводятся новые счета. У каждого счёта своя, и пересчёта между ними нет.</string>
     <string name="settings_export_pdf">Отчёт в PDF</string>
     <string name="settings_pdf_done">Отчёт сохранён</string>
     <string name="settings_data">Данные</string>
