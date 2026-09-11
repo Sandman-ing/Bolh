@@ -19,6 +19,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import eu.bolh.app.ui.theme.ThemeMode
 import java.time.Clock
 
 /**
@@ -69,6 +70,7 @@ class BolhApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         container = BolhContainer(this)
+        ThemeMode.load(this)
         BolhNotifications.ensureChannel(this)
         syncReminders()
     }

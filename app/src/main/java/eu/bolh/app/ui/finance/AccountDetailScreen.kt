@@ -58,7 +58,6 @@ import eu.bolh.app.ui.common.MetricChip
 import eu.bolh.app.ui.common.tappable
 import eu.bolh.app.ui.common.Money
 import eu.bolh.app.ui.common.rememberLocale
-import eu.bolh.app.ui.theme.Ink
 import eu.bolh.app.ui.theme.LocalStatusColors
 import eu.bolh.app.ui.theme.MoneyHero
 import eu.bolh.app.ui.theme.MoneyRow
@@ -161,7 +160,7 @@ fun AccountDetailScreen(
 
     Scaffold(
         modifier = modifier,
-        containerColor = Ink,
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
                 title = {
@@ -221,7 +220,7 @@ fun AccountDetailScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Ink,
+                    containerColor = MaterialTheme.colorScheme.background,
                     titleContentColor = MaterialTheme.colorScheme.onBackground,
                 ),
             )
@@ -232,7 +231,7 @@ fun AccountDetailScreen(
                 FloatingActionButton(
                     onClick = { showSheet = true },
                     containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = Ink,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
                     shape = RoundedCornerShape(Radius.card),
                 ) {
                     Icon(

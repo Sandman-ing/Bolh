@@ -64,7 +64,6 @@ import eu.bolh.app.ui.common.SectionTitle
 import eu.bolh.app.ui.common.rememberLocale
 import eu.bolh.app.ui.common.tapIcon
 import eu.bolh.app.ui.common.Money
-import eu.bolh.app.ui.theme.Ink
 import eu.bolh.app.ui.theme.LocalStatusColors
 import eu.bolh.app.ui.theme.Spacing
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -152,7 +151,7 @@ fun AccountEditorScreen(
 
     Scaffold(
         modifier = modifier,
-        containerColor = Ink,
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
                 title = {
@@ -175,7 +174,7 @@ fun AccountEditorScreen(
                     )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Ink,
+                    containerColor = MaterialTheme.colorScheme.background,
                     titleContentColor = MaterialTheme.colorScheme.onBackground,
                 ),
             )
@@ -274,7 +273,7 @@ fun AccountEditorScreen(
                 enabled = name.isNotBlank(),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = Ink,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
                 ),
                 modifier = Modifier
                     .fillMaxWidth()

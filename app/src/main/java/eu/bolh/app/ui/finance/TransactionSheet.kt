@@ -49,7 +49,6 @@ import eu.bolh.app.ui.common.SelectChip
 import eu.bolh.app.ui.common.BolhIcons
 import eu.bolh.app.ui.common.tappable
 import eu.bolh.app.ui.common.rememberLocale
-import eu.bolh.app.ui.theme.Ink
 import eu.bolh.app.ui.theme.LocalStatusColors
 import eu.bolh.app.ui.theme.MoneyLarge
 import eu.bolh.app.ui.theme.Spacing
@@ -311,7 +310,7 @@ fun TransactionSheet(
                 enabled = options.accounts.isEmpty() || draft.canSave,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = Ink,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
                 ),
                 modifier = Modifier
                     .fillMaxWidth()

@@ -12,7 +12,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
-import eu.bolh.app.ui.theme.Ink
 import eu.bolh.app.ui.theme.LocalStatusColors
 import eu.bolh.app.ui.theme.Spacing
 
@@ -38,7 +37,7 @@ fun EmptyState(
             onClick = onAction,
             colors = ButtonDefaults.buttonColors(
                 containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = Ink,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
             ),
         ) {
             Text(text = action, style = MaterialTheme.typography.titleMedium)

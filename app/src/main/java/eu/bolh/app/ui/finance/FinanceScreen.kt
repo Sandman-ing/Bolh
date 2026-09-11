@@ -77,7 +77,6 @@ import eu.bolh.app.ui.common.rememberLocale
 import eu.bolh.app.ui.finance.components.DonutChart
 import eu.bolh.app.ui.finance.components.DonutSlice
 import eu.bolh.app.ui.theme.GoalsTeal
-import eu.bolh.app.ui.theme.Ink
 import eu.bolh.app.ui.theme.LocalStatusColors
 import eu.bolh.app.ui.theme.MoneyHero
 import eu.bolh.app.ui.theme.MoneyLarge
@@ -800,7 +799,7 @@ private fun SubTab(
         label = "subtab-fill",
     )
     val label by animateColorAsState(
-        targetValue = if (selected) Ink else status.textSecondary,
+        targetValue = if (selected) MaterialTheme.colorScheme.onPrimary else status.textSecondary,
         animationSpec = Motion.color,
         label = "subtab-label",
     )
@@ -844,7 +843,7 @@ private fun FlowTab(
         label = "flow-fill",
     )
     val label by animateColorAsState(
-        targetValue = if (selected) Ink else status.textSecondary,
+        targetValue = if (selected) MaterialTheme.colorScheme.onPrimary else status.textSecondary,
         animationSpec = Motion.color,
         label = "flow-label",
     )

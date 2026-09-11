@@ -27,5 +27,7 @@
     <string name="settings_reminders_note">Напоминания намеренно неточные: приложение не просит разрешения на точные будильники. Если они приходят с опозданием или не приходят вовсе — телефон усыпил приложение: разрешите Bolh работать в фоне в настройках батареи.</string>
     <string name="settings_theme">Тема</string>
     <string name="settings_theme_dark">Тёмная</string>
-    <string name="settings_theme_light_soon">Светлая появится во второй версии</string>
+    <string name="settings_theme_system">Как в системе</string>
+    <string name="settings_theme_light">Светлая</string>
+    <string name="settings_theme_note">По умолчанию тёмная: приложение открывают вечером, и белый экран в темноте слепит.</string>
 </resources>

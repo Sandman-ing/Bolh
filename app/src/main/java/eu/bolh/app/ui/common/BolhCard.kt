@@ -36,7 +36,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import eu.bolh.app.R
-import eu.bolh.app.ui.theme.Ink
 import eu.bolh.app.ui.theme.LocalStatusColors
 import eu.bolh.app.ui.theme.NumberSmall
 import eu.bolh.app.ui.theme.NumberTile
@@ -436,7 +435,7 @@ fun SelectChip(
         label = "select-border",
     )
     val content by animateColorAsState(
-        targetValue = if (selected) Ink else status.textSecondary,
+        targetValue = if (selected) MaterialTheme.colorScheme.onPrimary else status.textSecondary,
         animationSpec = Motion.color,
         label = "select-content",
     )

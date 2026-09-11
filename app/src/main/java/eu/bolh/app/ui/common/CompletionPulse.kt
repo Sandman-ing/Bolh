@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -20,7 +21,6 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import eu.bolh.app.R
-import eu.bolh.app.ui.theme.Ink
 
 /**
  * Момент достижения цели.
@@ -50,7 +50,7 @@ fun CompletionPulse(
         modifier = Modifier
             .fillMaxSize()
             .alpha(fade.value)
-            .background(Ink.copy(alpha = 0.72f)),
+            .background(MaterialTheme.colorScheme.background.copy(alpha = 0.72f)),
     ) {
         Box(
             contentAlignment = Alignment.Center,
@@ -66,7 +66,7 @@ fun CompletionPulse(
             Icon(
                 painter = painterResource(R.drawable.ic_check),
                 contentDescription = null,
-                tint = Ink,
+                tint = MaterialTheme.colorScheme.onPrimary,
                 modifier = Modifier.size(56.dp),
             )
         }

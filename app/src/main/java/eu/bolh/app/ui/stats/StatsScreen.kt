@@ -64,7 +64,6 @@ import eu.bolh.app.ui.common.rememberLocale
 import eu.bolh.app.ui.theme.FinanceBlue
 import eu.bolh.app.ui.theme.GoalsTeal
 import eu.bolh.app.ui.theme.HabitsViolet
-import eu.bolh.app.ui.theme.Ink
 import eu.bolh.app.ui.theme.LocalStatusColors
 import eu.bolh.app.ui.theme.MoneyRow
 import eu.bolh.app.ui.theme.NumberSmall
@@ -165,7 +164,7 @@ fun StatsScreen(
                         label = "period-fill",
                     )
                     val label by animateColorAsState(
-                        targetValue = if (selected) Ink else status.textSecondary,
+                        targetValue = if (selected) MaterialTheme.colorScheme.onPrimary else status.textSecondary,
                         animationSpec = Motion.color,
                         label = "period-label",
                     )
@@ -598,7 +597,7 @@ private fun HabitCalendar(
                             text = dayNumber.toString(),
                             style = NumberSmall,
                             color = when (level) {
-                                EntryLevel.Norm -> Ink
+                                EntryLevel.Norm -> MaterialTheme.colorScheme.onPrimary
                                 null -> status.textTertiary
                                 else -> MaterialTheme.colorScheme.onBackground
                             },

@@ -72,7 +72,6 @@ import eu.bolh.app.ui.common.BolhIcons
 import eu.bolh.app.ui.common.tapIcon
 import eu.bolh.app.ui.common.Money
 import eu.bolh.app.ui.common.rememberLocale
-import eu.bolh.app.ui.theme.Ink
 import eu.bolh.app.ui.theme.LocalStatusColors
 import eu.bolh.app.ui.theme.NumberSmall
 import eu.bolh.app.ui.theme.Spacing
@@ -220,7 +219,7 @@ fun RecurringEditorScreen(
 
     Scaffold(
         modifier = modifier,
-        containerColor = Ink,
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
                 title = {
@@ -243,7 +242,7 @@ fun RecurringEditorScreen(
                     )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Ink,
+                    containerColor = MaterialTheme.colorScheme.background,
                     titleContentColor = MaterialTheme.colorScheme.onBackground,
                 ),
             )
@@ -398,7 +397,7 @@ fun RecurringEditorScreen(
                 enabled = name.isNotBlank() && amount.isNotBlank() && accountId != null,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = Ink,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
                 ),
                 modifier = Modifier
                     .fillMaxWidth()

@@ -58,7 +58,6 @@ import eu.bolh.app.ui.common.Motion
 import eu.bolh.app.ui.common.PillButton
 import eu.bolh.app.ui.common.BolhCard
 import eu.bolh.app.ui.common.rememberLocale
-import eu.bolh.app.ui.theme.Ink
 import eu.bolh.app.ui.theme.LocalStatusColors
 import eu.bolh.app.ui.theme.NumberSmall
 import eu.bolh.app.ui.theme.Radius
@@ -88,7 +87,7 @@ fun GoalEditorScreen(
 
     Scaffold(
         modifier = modifier,
-        containerColor = Ink,
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
                 title = {
@@ -113,7 +112,7 @@ fun GoalEditorScreen(
                     )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Ink,
+                    containerColor = MaterialTheme.colorScheme.background,
                     titleContentColor = MaterialTheme.colorScheme.onBackground,
                 ),
             )
@@ -373,7 +372,7 @@ fun GoalEditorScreen(
                 enabled = draft.canSave,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = Ink,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
                 ),
                 modifier = Modifier
                     .fillMaxWidth()

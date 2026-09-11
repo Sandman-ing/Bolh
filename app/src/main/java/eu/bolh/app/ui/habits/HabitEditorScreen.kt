@@ -85,7 +85,6 @@ import eu.bolh.app.ui.common.Motion
 import eu.bolh.app.ui.common.pressScale
 import eu.bolh.app.ui.common.rememberPressSource
 import eu.bolh.app.ui.common.rememberLocale
-import eu.bolh.app.ui.theme.Ink
 import eu.bolh.app.ui.theme.LocalStatusColors
 import eu.bolh.app.ui.theme.NumberSmall
 import eu.bolh.app.ui.theme.Spacing
@@ -114,7 +113,7 @@ fun HabitEditorScreen(
 
     Scaffold(
         modifier = modifier,
-        containerColor = Ink,
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
                 title = {
@@ -139,7 +138,7 @@ fun HabitEditorScreen(
                     )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Ink,
+                    containerColor = MaterialTheme.colorScheme.background,
                     titleContentColor = MaterialTheme.colorScheme.onBackground,
                 ),
             )
@@ -362,7 +361,7 @@ fun HabitEditorScreen(
                 enabled = draft.canSave,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = Ink,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -689,7 +688,7 @@ private fun AdvancedSection(draft: HabitDraft, viewModel: HabitEditorViewModel) 
                 checked = draft.reminderRepeatEvening,
                 onCheckedChange = viewModel::setEveningRepeat,
                 colors = SwitchDefaults.colors(
-                    checkedThumbColor = Ink,
+                    checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
                     checkedTrackColor = MaterialTheme.colorScheme.primary,
                     checkedBorderColor = MaterialTheme.colorScheme.primary,
                     uncheckedThumbColor = status.textTertiary,

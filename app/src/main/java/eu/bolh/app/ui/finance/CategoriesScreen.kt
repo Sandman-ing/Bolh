@@ -76,7 +76,6 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.material3.ripple
 import eu.bolh.app.ui.common.PillButton
 import eu.bolh.app.ui.common.rememberLocale
-import eu.bolh.app.ui.theme.Ink
 import eu.bolh.app.ui.theme.LocalStatusColors
 import eu.bolh.app.ui.theme.Radius
 import eu.bolh.app.ui.theme.Spacing
@@ -178,7 +177,7 @@ fun CategoriesScreen(
 
     Scaffold(
         modifier = modifier,
-        containerColor = Ink,
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
                 title = {
@@ -201,7 +200,7 @@ fun CategoriesScreen(
                     )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Ink,
+                    containerColor = MaterialTheme.colorScheme.background,
                     titleContentColor = MaterialTheme.colorScheme.onBackground,
                 ),
             )
@@ -309,7 +308,7 @@ private fun CategoryTile(
             Icon(
                 painter = painterResource(icon),
                 contentDescription = null,
-                tint = Ink,
+                tint = MaterialTheme.colorScheme.onPrimary,
                 modifier = Modifier.size(30.dp),
             )
         }
@@ -341,7 +340,7 @@ private fun KindTab(
         label = "kind-fill",
     )
     val label by animateColorAsState(
-        targetValue = if (selected) Ink else status.textSecondary,
+        targetValue = if (selected) MaterialTheme.colorScheme.onPrimary else status.textSecondary,
         animationSpec = Motion.color,
         label = "kind-label",
     )
@@ -471,7 +470,7 @@ private fun CategorySheet(
                         Icon(
                             painter = painterResource(BolhIcons.resFor(key)),
                             contentDescription = null,
-                            tint = if (chosen) Ink else status.textSecondary,
+                            tint = if (chosen) MaterialTheme.colorScheme.onPrimary else status.textSecondary,
                             modifier = Modifier.size(22.dp),
                         )
                     }

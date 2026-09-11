@@ -9,6 +9,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
@@ -52,8 +55,10 @@ import eu.bolh.app.ui.habits.HabitEditorViewModel
 import eu.bolh.app.ui.habits.HabitsScreen
 import eu.bolh.app.ui.settings.SettingsScreen
 import eu.bolh.app.ui.stats.StatsScreen
+import eu.bolh.app.data.prefs.ThemePrefs
+import eu.bolh.app.ui.theme.ThemeMode
 import eu.bolh.app.ui.theme.BolhTheme
-import eu.bolh.app.ui.theme.Ink
+import eu.bolh.app.ui.theme.LocalDarkTheme
 import eu.bolh.app.ui.theme.LocalStatusColors
 import eu.bolh.app.ui.theme.Section
 
@@ -97,9 +102,15 @@ fun BolhApp(navController: NavHostController = rememberNavController()) {
     val onTab = tab != null
     var showTransactionSheet by remember { mutableStateOf(false) }
 
-    BolhTheme(section = section) {
+    // Тема читается синхронно и наблюдается: смена в настройках должна
+    // доходить до экрана сразу, без пересоздания Activity.
+    val context = LocalContext.current
+    val themeMode by ThemeMode.current.collectAsStateWithLifecycle()
+    val dark = ThemePrefs.isDark(themeMode, isSystemInDarkTheme())
+
+    BolhTheme(section = section, dark = dark) {
         Scaffold(
-            containerColor = Ink,
+            containerColor = MaterialTheme.colorScheme.background,
             bottomBar = {
                 if (onTab) {
                     BolhBottomBar(
@@ -120,7 +131,7 @@ fun BolhApp(navController: NavHostController = rememberNavController()) {
                     FloatingActionButton(
                         onClick = create,
                         containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = Ink,
+                        contentColor = MaterialTheme.colorScheme.onPrimary,
                     ) {
                         Icon(
                             painter = painterResource(R.drawable.ic_plus),
@@ -303,6 +314,7 @@ private fun BolhBottomBar(
     onSelect: (BolhDestination) -> Unit,
 ) {
     val status = LocalStatusColors.current
+    val dark = LocalDarkTheme.current
     val entries = remember { BolhDestination.entries }
 
     NavigationBar(containerColor = status.surfaceRaised, tonalElevation = 0.dp) {
@@ -329,8 +341,10 @@ private fun BolhBottomBar(
                     )
                 },
                 colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = destination.section.accent,
-                    selectedTextColor = destination.section.accent,
+                    // Акцент раздела берётся под текущую тему: светлый оттенок
+                    // на белом выцветает и перестаёт означать «вы здесь».
+                    selectedIconColor = destination.section.accentOn(dark),
+                    selectedTextColor = destination.section.accentOn(dark),
                     indicatorColor = Color.Transparent,
                     unselectedIconColor = status.textTertiary,
                     unselectedTextColor = status.textTertiary,

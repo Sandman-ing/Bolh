@@ -27,5 +27,7 @@
     <string name="settings_reminders_note">Reminders are inexact on purpose: the app does not ask for the alarm permission. If they arrive late or not at all, the phone has put the app to sleep — allow background activity for Bolh in the battery settings.</string>
     <string name="settings_theme">Theme</string>
     <string name="settings_theme_dark">Dark</string>
-    <string name="settings_theme_light_soon">Light theme comes in the next version</string>
+    <string name="settings_theme_system">System</string>
+    <string name="settings_theme_light">Light</string>
+    <string name="settings_theme_note">Dark by default: the app gets opened in the evening, and a white screen in the dark is blinding.</string>
 </resources>

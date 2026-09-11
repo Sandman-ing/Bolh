@@ -69,6 +69,7 @@ import eu.bolh.app.R
 import eu.bolh.app.data.backup.BackupService
 import eu.bolh.app.data.backup.PdfReport
 import eu.bolh.app.data.prefs.CurrencyPrefs
+import eu.bolh.app.data.prefs.ThemePrefs
 import eu.bolh.app.data.prefs.LanguagePrefs
 import eu.bolh.app.ui.common.tapIcon
 import eu.bolh.app.ui.common.Motion
@@ -82,10 +83,10 @@ import eu.bolh.app.ui.common.rememberLocale
 import eu.bolh.app.ui.common.SectionTitle
 import eu.bolh.app.ui.common.CurrencySheet
 import eu.bolh.app.ui.common.Hint
-import eu.bolh.app.ui.theme.Ink
 import eu.bolh.app.ui.theme.LocalStatusColors
 import eu.bolh.app.ui.theme.NumberSmall
 import eu.bolh.app.ui.theme.Radius
+import eu.bolh.app.ui.theme.ThemeMode
 import eu.bolh.app.ui.theme.Spacing
 import java.time.LocalDate
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -167,6 +168,7 @@ fun SettingsScreen(
     var language by remember { mutableStateOf(LanguagePrefs.get(context)) }
     var currency by remember { mutableStateOf(CurrencyPrefs.get(context)) }
     var currencyPicker by remember { mutableStateOf(false) }
+    var theme by remember { mutableStateOf(ThemePrefs.get(context)) }
     var switchingLanguage by remember { mutableStateOf(false) }
 
     val locale = rememberLocale()
@@ -208,7 +210,7 @@ fun SettingsScreen(
 
     Scaffold(
         modifier = modifier,
-        containerColor = Ink,
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
                 title = {
@@ -231,7 +233,7 @@ fun SettingsScreen(
                     )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Ink,
+                    containerColor = MaterialTheme.colorScheme.background,
                     titleContentColor = MaterialTheme.colorScheme.onBackground,
                 ),
             )
@@ -301,33 +303,23 @@ fun SettingsScreen(
             )
 
             SectionTitle(stringResource(R.string.settings_appearance))
-            BolhCard(
-                corner = Radius.block,
-                contentPadding = PaddingValues(
-                    horizontal = Spacing.l,
-                    vertical = Spacing.m,
+            ChipRow(
+                options = listOf(
+                    ThemePrefs.SYSTEM to stringResource(R.string.settings_theme_system),
+                    ThemePrefs.DARK to stringResource(R.string.settings_theme_dark),
+                    ThemePrefs.LIGHT to stringResource(R.string.settings_theme_light),
                 ),
-                modifier = Modifier.padding(
-                    horizontal = Spacing.screenPadding,
-                    vertical = Spacing.xs,
-                ),
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = stringResource(R.string.settings_theme),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onBackground,
-                        modifier = Modifier.weight(1f),
-                    )
-                    Text(
-                        text = stringResource(R.string.settings_theme_dark),
-                        style = NumberSmall,
-                        color = MaterialTheme.colorScheme.primary,
-                    )
-                }
-            }
+                current = theme,
+                onSelect = { mode ->
+                    if (mode != theme) {
+                        // Пересоздания не нужно: тема — это цвета, а не ресурсы.
+                        ThemeMode.set(context, mode)
+                        theme = mode
+                    }
+                },
+            )
             Hint(
-                text = stringResource(R.string.settings_theme_light_soon),
+                text = stringResource(R.string.settings_theme_note),
                 modifier = Modifier.padding(
                     horizontal = Spacing.screenPadding,
                     vertical = Spacing.xs,
@@ -423,7 +415,7 @@ fun SettingsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .alpha(fade.value)
-                .background(Ink),
+                .background(MaterialTheme.colorScheme.background),
         )
     }
 }
@@ -470,7 +462,7 @@ private fun ChipRow(
                 label = "settings-chip-fill",
             )
             val textColor by animateColorAsState(
-                targetValue = if (selected) Ink else status.textSecondary,
+                targetValue = if (selected) MaterialTheme.colorScheme.onPrimary else status.textSecondary,
                 animationSpec = Motion.color,
                 label = "settings-chip-label",
             )
