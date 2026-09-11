@@ -186,16 +186,19 @@ class GoalEditorViewModel(
                 startDate = draft.startDate ?: today,
                 deadline = draft.deadline,
             )
-            if (draft.isEditing) {
-                repository.update(goal)
-            } else {
-                repository.create(goal)
-                // Этапы и их задачи сохраняются в том порядке, в котором
-                // человек их выстроил: порядок и есть план.
-                draft.stages.forEach { stage ->
-                    val stageId = repository.addStage(goal.id, stage.name)
-                    stage.tasks.forEach { repository.addTask(stageId, it) }
-                }
+            if (draft.isEditing) repository.update(goal) else repository.create(goal)
+
+            // Этапы и их задачи сохраняются в том порядке, в котором человек
+            // их выстроил: порядок и есть план.
+            //
+            // Важно, что это делается и при правке. Раньше сохранение работало
+            // только для новой цели: в уже заведённую цель этапы добавлялись
+            // на экране, «Сохранить» их молча выбрасывало. Черновик правки
+            // начинается с пустого списка этапов, поэтому всё, что в нём
+            // лежит, — заведённое только что, и добавляется как новое.
+            draft.stages.forEach { stage ->
+                val stageId = repository.addStage(goal.id, stage.name)
+                stage.tasks.forEach { repository.addTask(stageId, it) }
             }
             _draft.update { it.copy(saved = true) }
         }

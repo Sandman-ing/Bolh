@@ -485,10 +485,17 @@ fun BolhCheck(
     onCheckedChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
     size: Dp = 22.dp,
+    /**
+     * Квадрат вместо круга. Этап и задача внутри него — разные вещи, и
+     * одинаковыми кружками они сливались в один список. Круг — этап,
+     * квадрат — задача внутри него (§9.2).
+     */
+    square: Boolean = false,
 ) {
     val status = LocalStatusColors.current
     val accent = MaterialTheme.colorScheme.primary
     val press = rememberPressSource()
+    val shape = if (square) RoundedCornerShape(size / 3.5f) else CircleShape
 
     val fill by animateColorAsState(
         targetValue = if (checked) accent else Color.Transparent,
@@ -515,9 +522,9 @@ fun BolhCheck(
             modifier = Modifier
                 .completionPop(checked)
                 .size(size)
-                .clip(CircleShape)
+                .clip(shape)
                 .background(fill)
-                .border(width = 2.dp, color = ring, shape = CircleShape),
+                .border(width = 2.dp, color = ring, shape = shape),
             contentAlignment = Alignment.Center,
         ) {
             if (checked) {

@@ -646,17 +646,20 @@ fun GoalDetailScreen(
             )
 
             state.stages.forEach { stageState ->
+                // Воздуха внутри больше, чем было: название этапа упиралось
+                // в рамку и читалось тесно. Слева поле меньше — там номер
+                // и отметка, они сами держат отступ (§9.2).
                 BolhCard(
                     corner = Radius.block,
                     contentPadding = PaddingValues(
-                        start = Spacing.xs,
+                        start = Spacing.s,
                         end = Spacing.l,
-                        top = Spacing.xs,
-                        bottom = Spacing.s,
+                        top = Spacing.m,
+                        bottom = Spacing.m,
                     ),
                     modifier = Modifier.padding(
                         horizontal = Spacing.screenPadding,
-                        vertical = Spacing.xs,
+                        vertical = Spacing.s,
                     ),
                 ) {
                 Row(
@@ -702,7 +705,9 @@ fun GoalDetailScreen(
                             MaterialTheme.colorScheme.onBackground
                         },
                         textDecoration = if (stageState.stage.isDone) TextDecoration.LineThrough else null,
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(start = Spacing.xs, end = Spacing.s),
                     )
                     stageState.stage.dueDate?.let {
                         Text(
@@ -722,12 +727,13 @@ fun GoalDetailScreen(
                                 onLongClick = { pendingTask = task.id to task.name },
                                 longClickLabel = stringResource(R.string.goal_rename),
                             )
-                            .padding(start = Spacing.xl),
+                            .padding(start = Spacing.xl, top = Spacing.xs, bottom = Spacing.xs),
                     ) {
                         BolhCheck(
                             checked = task.isDone,
                             onCheckedChange = { viewModel.toggleTask(task) },
                             size = 20.dp,
+                            square = true,
                         )
                         val taskColor by animateColorAsState(
                             targetValue = if (task.isDone) {
@@ -743,6 +749,7 @@ fun GoalDetailScreen(
                             style = MaterialTheme.typography.bodyMedium,
                             color = taskColor,
                             textDecoration = if (task.isDone) TextDecoration.LineThrough else null,
+                            modifier = Modifier.padding(start = Spacing.xs, end = Spacing.s),
                         )
                     }
                 }
