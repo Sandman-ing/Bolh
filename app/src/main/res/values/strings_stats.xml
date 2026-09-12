@@ -10,15 +10,13 @@
     <string name="stats_goals_value">%1$d of %2$d</string>
     <string name="stats_no_value">—</string>
 
-    <string name="stats_habits_chart">Habit completion</string>
-    <string name="stats_categories">Spending by category</string>
     <string name="stats_insights">What it adds up to</string>
     <string name="stats_blocks">Which blocks to show</string>
     <string name="stats_calendar_hint">Tap a habit to open its month</string>
 
     <string name="insight_category_up_habit_slipping">%1$s grew by %2$d%%. The habit held %3$s out of %4$d.</string>
     <string name="insight_goal_stalled">Goal “%1$s” has stopped: tempo fell by %2$d%%, linked habits run at %3$d%%.</string>
-    <string name="insight_jar_slowed">Saving has slowed: the forecast for “%1$s” moved %2$d months later.</string>
+    <string name="insight_jar_slowed">Saving has slowed: the forecast for “%1$s” moved %2$s later.</string>
     <string name="insight_depth_low">%1$s runs %2$s out of %3$d, but %4$d of them at the minimum.</string>
     <string name="insight_habit_clustered">%1$s only happens on %2$s, though it is planned %3$s a week.</string>
     <string name="insight_category_anomaly">%1$s is %2$d%% above its own usual level.</string>

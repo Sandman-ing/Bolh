@@ -4,13 +4,47 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
+
+    <!-- Три цвета, три угла, один центр (§9.3).
+
+         Цели наверху: от них всё и идёт. Привычки и финансы —
+         две опоры под ними. Каждый цвет держит свой угол двумя
+         половинами сторон и лучом к середине, поэтому все три
+         фигуры одинаковы и встречаются в центре. -->
+
     <path
-        android:fillColor="#5DCAA5"
-        android:pathData="M28,58 h12 v20 h-12 z" />
+        android:strokeColor="#5DCAA5"
+        android:strokeWidth="8.0"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M40.58,50.25 L54.00,27.00 L67.42,50.25" />
     <path
-        android:fillColor="#7F77DD"
-        android:pathData="M48,44 h12 v34 h-12 z" />
+        android:strokeColor="#5DCAA5"
+        android:strokeWidth="4.0"
+        android:strokeLineCap="round"
+        android:pathData="M54.00,27.00 L54.00,58.00" />
+
     <path
-        android:fillColor="#85B7EB"
-        android:pathData="M68,30 h12 v48 h-12 z" />
+        android:strokeColor="#4E9BE0"
+        android:strokeWidth="8.0"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M40.58,50.25 L27.15,73.50 L54.00,73.50" />
+    <path
+        android:strokeColor="#4E9BE0"
+        android:strokeWidth="4.0"
+        android:strokeLineCap="round"
+        android:pathData="M27.15,73.50 L54.00,58.00" />
+
+    <path
+        android:strokeColor="#8B6FE8"
+        android:strokeWidth="8.0"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M67.42,50.25 L80.85,73.50 L54.00,73.50" />
+    <path
+        android:strokeColor="#8B6FE8"
+        android:strokeWidth="4.0"
+        android:strokeLineCap="round"
+        android:pathData="M80.85,73.50 L54.00,58.00" />
 </vector>

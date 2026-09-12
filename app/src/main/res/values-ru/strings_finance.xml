@@ -13,9 +13,7 @@
     <string name="category_plan_of">%1$s из %2$s</string>
     <string name="finance_add_account">Добавить счёт</string>
     <string name="finance_hide_obligatory_clear">Без жилья и счетов</string>
-    <string name="finance_view_label">Вид</string>
     <string name="finance_group_what">Что смотрим</string>
-    <string name="finance_group_how">Как показать</string>
     <string name="finance_tab_overview">Обзор</string>
     <string name="finance_tab_payments">Платежи</string>
     <string name="finance_tab_jars">Копилки</string>
@@ -36,12 +34,9 @@
     <string name="finance_no_income">В этом периоде доходов ещё не было</string>
     <string name="finance_reserved">Отложено на цели: %1$s</string>
     <string name="finance_available">%1$s можно потратить</string>
-    <string name="finance_month_spend">Расходы за месяц</string>
     <string name="finance_view_ring">Круг</string>
     <string name="finance_view_list">Список</string>
     <string name="finance_view_dynamics">Динамика</string>
-    <string name="finance_hide_obligatory">без обязательных</string>
-    <string name="finance_next_payment">Ближайший платёж</string>
     <string name="finance_record">Записать</string>
     <string name="finance_skip">Пропустить</string>
     <string name="finance_no_spend">В этом месяце трат ещё не было</string>
@@ -85,7 +80,6 @@
     <string name="recurring_period_year">год</string>
     <string name="recurring_first_date">Первое списание</string>
     <string name="recurring_add">Добавить регулярный платёж</string>
-    <string name="recurring_edit_title">Платёж</string>
     <string name="recurring_interval">Повторять через</string>
     <string name="account_edit">Изменить</string>
     <string name="account_expenses">Расходы</string>

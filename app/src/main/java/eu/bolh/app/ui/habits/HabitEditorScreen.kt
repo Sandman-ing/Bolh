@@ -62,6 +62,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -289,8 +290,9 @@ fun HabitEditorScreen(
                                 onChange = viewModel::setTimesPerWeek,
                             )
                             ScheduleHint(
-                                stringResource(
-                                    R.string.habit_schedule_times_hint,
+                                pluralStringResource(
+                                    R.plurals.habit_times_days,
+                                    draft.timesPerWeek,
                                     draft.timesPerWeek,
                                 ),
                             )

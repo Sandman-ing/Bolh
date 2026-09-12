@@ -43,6 +43,8 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import eu.bolh.app.R
@@ -149,8 +151,9 @@ fun HabitRowItem(
     if (row.habit.kind == HabitKind.Bad) {
         Text(
             text = when (row.habit.mode) {
-                HabitMode.Limit -> stringResource(
-                    R.string.habits_bad_hint_limit,
+                HabitMode.Limit -> pluralStringResource(
+                    R.plurals.habits_bad_limit,
+                    row.habit.limitPerWeek ?: 0,
                     row.habit.limitPerWeek ?: 0,
                 )
 
@@ -531,12 +534,17 @@ private fun MarkCounter(
         label = "counter-fill",
     )
 
+    // Озвучка экрана читает «1 из 2», а не «кнопка»: без этого счётчик
+    // для незрячего человека не значит ничего.
+    val spoken = stringResource(R.string.habit_times_done, done, total)
+
     Box(
         modifier = modifier
             .size(TapTargetMin)
             .pressScale(press, pressedScale = 0.90f)
             .clip(CircleShape)
-            .clickable(interactionSource = press, indication = ripple(), onClick = onClick),
+            .clickable(interactionSource = press, indication = ripple(), onClick = onClick)
+            .semantics { contentDescription = spoken },
         contentAlignment = Alignment.Center,
     ) {
         Canvas(modifier = Modifier.size(38.dp)) {

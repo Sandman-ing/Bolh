@@ -682,7 +682,12 @@ private fun insightText(insight: Insight, state: StatsUiState): String {
     is Insight.JarSlowed -> stringResource(
         R.string.insight_jar_slowed,
         state.goalsById[insight.goalId]?.name.orEmpty(),
-        insight.monthsShift.toInt(),
+        // Месяцы отдельным числительным: «уехал на 1 месяцев» — не по-русски.
+        pluralStringResource(
+            R.plurals.goal_months,
+            insight.monthsShift.toInt(),
+            insight.monthsShift.toInt(),
+        ),
     )
 
     is Insight.DepthLow -> stringResource(

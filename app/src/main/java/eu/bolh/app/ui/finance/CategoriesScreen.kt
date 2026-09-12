@@ -140,8 +140,6 @@ fun CategoriesScreen(
     var creating by remember { mutableStateOf(false) }
     var pending by remember { mutableStateOf<Category?>(null) }
 
-    val visible = categories.filter { it.kind == kind }
-
     pending?.let { category ->
         ConfirmDeleteDialog(
             title = stringResource(R.string.confirm_delete_category, categoryTitle(category)),
@@ -243,7 +241,11 @@ fun CategoriesScreen(
                         fadeOut(tween(Motion.CONTENT_MS / 2))
                 },
                 label = "categories-kind",
-            ) { _ ->
+            ) { shown ->
+            // Сетка строится по состоянию перехода, а не по внешней
+            // переменной: иначе обе половины затухания рисуют уже новый
+            // список, и вместо перехода выходит мигание на месте.
+            val rows = categories.filter { it.kind == shown }
             LazyVerticalGrid(
                 columns = GridCells.Fixed(3),
                 contentPadding = PaddingValues(
@@ -257,8 +259,8 @@ fun CategoriesScreen(
                 // Без ключей намеренно: список приходит из потока и первым
                 // значением пуст, а с ключами сетка после его прихода
                 // восстанавливает прокрутку и открывается сдвинутой.
-                items(visible.size) { index ->
-                    val category = visible[index]
+                items(rows.size) { index ->
+                    val category = rows[index]
                     CategoryTile(
                         name = categoryTitle(category),
                         icon = BolhIcons.resFor(category.icon),

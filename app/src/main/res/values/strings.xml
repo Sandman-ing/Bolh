@@ -29,7 +29,6 @@
     <string name="tx_select_all">Select all</string>
     <string name="tx_list_empty">Nothing recorded yet</string>
     <string name="finance_all_transactions">All transactions</string>
-    <string name="hint_long_press_delete">long press to delete</string>
     <plurals name="confirm_delete_transactions">
         <item quantity="one">Delete %1$d entry?</item>
         <item quantity="other">Delete %1$d entries?</item>
@@ -42,7 +41,6 @@
         <item quantity="one">%d stage</item>
         <item quantity="other">%d stages</item>
     </plurals>
-    <string name="confirm_delete_transaction">Delete the %1$s entry?</string>
     <!-- Форматы дат: у каждого языка свой порядок частей. По-английски
          «September 10, 2026», по-русски «10 сентября 2026» (§9.6). -->
     <string name="date_day_month">MMMM d</string>

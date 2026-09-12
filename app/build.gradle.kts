@@ -32,8 +32,8 @@ android {
         applicationId = "eu.bolh.app"
         minSdk = 26
         targetSdk = 36
-        versionCode = 10
-        versionName = "0.3.0"
+        versionCode = 11
+        versionName = "0.3.1"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -78,6 +78,18 @@ android {
 
     androidResources {
         localeFilters += listOf("en", "ru")
+    }
+
+    bundle {
+        language {
+            // Оба языка едут в базовом APK.
+            //
+            // Play по умолчанию ставит из бандла только язык системы. У нас
+            // язык переключается внутри приложения, и на английском телефоне
+            // русских строк тогда просто не оказалось бы на устройстве —
+            // переключатель показывал бы английский (§9.6).
+            enableSplit = false
+        }
     }
 }
 

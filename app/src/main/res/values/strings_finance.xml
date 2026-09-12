@@ -13,9 +13,7 @@
     <string name="category_plan_of">%1$s of %2$s</string>
     <string name="finance_add_account">Add account</string>
     <string name="finance_hide_obligatory_clear">Without rent and bills</string>
-    <string name="finance_view_label">View</string>
     <string name="finance_group_what">What we look at</string>
-    <string name="finance_group_how">How to show it</string>
     <string name="finance_tab_overview">Overview</string>
     <string name="finance_tab_payments">Payments</string>
     <string name="finance_tab_jars">Jars</string>
@@ -36,12 +34,9 @@
     <string name="finance_no_income">No income in this period yet</string>
     <string name="finance_reserved">Reserved for goals: %1$s</string>
     <string name="finance_available">%1$s free to spend</string>
-    <string name="finance_month_spend">Spent this month</string>
     <string name="finance_view_ring">Ring</string>
     <string name="finance_view_list">List</string>
     <string name="finance_view_dynamics">Trend</string>
-    <string name="finance_hide_obligatory">without fixed costs</string>
-    <string name="finance_next_payment">Next payment</string>
     <string name="finance_record">Record</string>
     <string name="finance_skip">Skip</string>
     <string name="finance_no_spend">Nothing spent this month yet</string>
@@ -85,7 +80,6 @@
     <string name="recurring_period_year">year</string>
     <string name="recurring_first_date">First charge</string>
     <string name="recurring_add">Add a recurring payment</string>
-    <string name="recurring_edit_title">Payment</string>
     <string name="recurring_interval">Repeat every N periods</string>
     <string name="account_edit">Edit</string>
     <string name="account_expenses">Expenses</string>

@@ -20,7 +20,6 @@
     <string name="goal_cost_title">What it costs</string>
     <string name="goal_cost_time">%1$s a week</string>
     <string name="goal_cost_time_hours">%1$dh %2$02dm</string>
-    <string name="goal_cost_no_estimate">%1$d linked habits have no duration set</string>
     <string name="goal_estimate_title">Cost breakdown</string>
     <string name="goal_estimate_note">What the price is made of. A contribution closes a line, so it is always clear what is left to pay.</string>
     <string name="goal_estimate_item_hint">What for</string>
@@ -29,10 +28,8 @@
     <string name="goal_estimate_total">%1$s of %2$s closed</string>
     <string name="goal_estimate_paid_of">%1$s of %2$s</string>
     <string name="goal_estimate_pay">Close</string>
-    <string name="goal_estimate_closed">Closed</string>
     <string name="goal_estimate_unassigned">%1$s in the jar is not spread over the lines</string>
     <string name="goal_estimate_empty">No lines yet. Break the price down and you will see what is left.</string>
-    <string name="goal_estimate_rename">Rename the line</string>
 
     <string name="goal_deadline_check_title">Deadline check</string>
     <string name="goal_deadline_check_text">Your factor is %1$s×. Of %2$d deadlines you set, you met %3$d.</string>
@@ -51,7 +48,6 @@
     <string name="goal_stages_title">Stages</string>
     <string name="goal_stage_hint">Stage name</string>
     <string name="goal_add_stage">Add a stage</string>
-    <string name="goal_tasks_title">Tasks</string>
     <string name="goal_task_hint">Task</string>
     <string name="goal_add_task">Add a task</string>
     <string name="goal_rename">Rename</string>
@@ -85,4 +81,8 @@
     <string name="goal_habits_free">No free habits left</string>
     <string name="goal_completed_stages">%1$s closed</string>
     <string name="goal_budget_add">Add a budget</string>
+    <plurals name="goal_no_estimate">
+        <item quantity="one">%d linked habit has no duration set</item>
+        <item quantity="other">%d linked habits have no duration set</item>
+    </plurals>
 </resources>

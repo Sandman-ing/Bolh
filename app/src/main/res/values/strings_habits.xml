@@ -3,7 +3,6 @@
     <string name="habits_bad_section">Bad habits</string>
     <string name="habits_bad_hint_game">A slip resets the streak of clean days to zero.</string>
     <string name="habits_bad_hint_counter">Clean days are counted; a slip starts the count again.</string>
-    <string name="habits_bad_hint_limit">Up to %1$d slips a week; above that the week counts as broken.</string>
     <string name="habits_bad_action_hint">The button records a slip. A long press undoes the last one.</string>
     <string name="habits_week_previous">Previous week</string>
     <string name="habits_today">Today</string>
@@ -79,7 +78,14 @@
     <string name="habit_pause_clear">clear</string>
     <string name="habits_other_days">%1$d more, not for today</string>
     <string name="habits_hide_other">hide</string>
-    <string name="habit_schedule_times_hint">Any %1$d days a week — you choose which as you go. For fixed days pick “Chosen days”.</string>
     <string name="habit_schedule_weekdays_hint">The habit is asked for only on these days.</string>
     <string name="habits_nothing_today">Nothing planned for this day</string>
+    <plurals name="habit_times_days">
+        <item quantity="one">Any %d day a week — you choose which as you go. For fixed days pick “Chosen days”.</item>
+        <item quantity="other">Any %d days a week — you choose which as you go. For fixed days pick “Chosen days”.</item>
+    </plurals>
+    <plurals name="habits_bad_limit">
+        <item quantity="one">Up to %d slip a week; above that the week counts as broken.</item>
+        <item quantity="other">Up to %d slips a week; above that the week counts as broken.</item>
+    </plurals>
 </resources>

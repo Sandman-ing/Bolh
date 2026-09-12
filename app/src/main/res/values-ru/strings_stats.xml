@@ -10,15 +10,13 @@
     <string name="stats_goals_value">%1$d из %2$d</string>
     <string name="stats_no_value">—</string>
 
-    <string name="stats_habits_chart">Выполнение привычек</string>
-    <string name="stats_categories">Расходы по категориям</string>
     <string name="stats_insights">Что из этого следует</string>
     <string name="stats_blocks">Какие блоки показывать</string>
     <string name="stats_calendar_hint">Нажмите на привычку, чтобы раскрыть месяц</string>
 
     <string name="insight_category_up_habit_slipping">%1$s выросла на %2$d%%. Привычка держалась %3$s из %4$d.</string>
     <string name="insight_goal_stalled">Цель «%1$s» стоит: темп упал на %2$d%%, привязанные привычки выполняются на %3$d%%.</string>
-    <string name="insight_jar_slowed">Пополнение копилки замедлилось: прогноз по цели «%1$s» уехал на %2$d месяцев.</string>
+    <string name="insight_jar_slowed">Пополнение копилки замедлилось: прогноз по цели «%1$s» уехал на %2$s.</string>
     <string name="insight_depth_low">%1$s идёт %2$s из %3$d, но %4$d из них на минимуме.</string>
     <string name="insight_habit_clustered">%1$s случается только по %2$s, хотя запланирована %3$s в неделю.</string>
     <string name="insight_category_anomaly">%1$s выше своего обычного уровня на %2$d%%.</string>

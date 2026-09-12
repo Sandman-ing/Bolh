@@ -9,8 +9,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import android.app.Activity
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.view.WindowCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -19,6 +22,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -107,6 +111,20 @@ fun BolhApp(navController: NavHostController = rememberNavController()) {
     val context = LocalContext.current
     val themeMode by ThemeMode.current.collectAsStateWithLifecycle()
     val dark = ThemePrefs.isDark(themeMode, isSystemInDarkTheme())
+
+    // Значки системной строки — часов, батареи, жестов — рисует система, и
+    // про нашу тему она не знает. На светлой теме белые значки на белом фоне
+    // просто исчезали, поэтому их вид переключается вместе с темой (§9.4).
+    val view = LocalView.current
+    if (!view.isInEditMode) {
+        SideEffect {
+            val window = (view.context as Activity).window
+            WindowCompat.getInsetsController(window, view).apply {
+                isAppearanceLightStatusBars = !dark
+                isAppearanceLightNavigationBars = !dark
+            }
+        }
+    }
 
     BolhTheme(section = section, dark = dark) {
         Scaffold(

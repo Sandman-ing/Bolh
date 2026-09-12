@@ -374,8 +374,9 @@ fun GoalDetailScreen(
                     )
                     if (state.habitsWithoutEstimate > 0) {
                         Text(
-                            text = stringResource(
-                                R.string.goal_cost_no_estimate,
+                            text = pluralStringResource(
+                                R.plurals.goal_no_estimate,
+                                state.habitsWithoutEstimate,
                                 state.habitsWithoutEstimate,
                             ),
                             style = MaterialTheme.typography.labelMedium,

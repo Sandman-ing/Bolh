@@ -29,7 +29,6 @@
     <string name="tx_select_all">Выбрать все</string>
     <string name="tx_list_empty">Записей пока нет</string>
     <string name="finance_all_transactions">Все операции</string>
-    <string name="hint_long_press_delete">долгое нажатие — удалить</string>
     <plurals name="confirm_delete_transactions">
         <item quantity="one">Удалить %1$d операцию?</item>
         <item quantity="few">Удалить %1$d операции?</item>
@@ -48,7 +47,6 @@
         <item quantity="many">%d этапов</item>
         <item quantity="other">%d этапов</item>
     </plurals>
-    <string name="confirm_delete_transaction">Удалить запись на %1$s?</string>
     <string name="date_day_month">d MMMM</string>
     <string name="date_full">d MMMM yyyy</string>
     <string name="date_month_year">LLLL yyyy</string>

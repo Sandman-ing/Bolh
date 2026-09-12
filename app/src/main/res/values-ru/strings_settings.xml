@@ -15,17 +15,13 @@
     <string name="settings_language_ru">Русский</string>
     <string name="settings_language_en">English</string>
     <string name="settings_currency">Валюта</string>
-    <string name="settings_currency_pick">Выбрать валюту</string>
     <string name="settings_currency_search">Поиск</string>
     <string name="settings_currency_note">Валюта, с которой заводятся новые счета. У каждого счёта своя, и пересчёта между ними нет.</string>
     <string name="settings_export_pdf">Отчёт в PDF</string>
-    <string name="settings_pdf_done">Отчёт сохранён</string>
-    <string name="settings_data">Данные</string>
     <string name="settings_appearance">Вид</string>
     <string name="settings_reminders">Напоминания</string>
     <string name="settings_reminders_open">Системные настройки уведомлений</string>
     <string name="settings_reminders_note">Напоминания намеренно неточные: приложение не просит разрешения на точные будильники. Если они приходят с опозданием или не приходят вовсе — телефон усыпил приложение: разрешите Bolh работать в фоне в настройках батареи.</string>
-    <string name="settings_theme">Тема</string>
     <string name="settings_theme_dark">Тёмная</string>
     <string name="settings_theme_system">Как в системе</string>
     <string name="settings_theme_light">Светлая</string>
