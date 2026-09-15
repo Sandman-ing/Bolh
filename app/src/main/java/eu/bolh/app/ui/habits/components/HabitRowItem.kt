@@ -1,5 +1,13 @@
 package eu.bolh.app.ui.habits.components
 
+import androidx.compose.runtime.SideEffect
+import androidx.compose.animation.togetherWith
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
@@ -117,32 +125,46 @@ fun HabitRowItem(
             )
         }
 
-        when {
-            row.habit.kind == HabitKind.Bad ->
-                SlipButton(
+        val control = when {
+            row.habit.kind == HabitKind.Bad -> RowControl.Slip
+            // Привычку, которую ждут несколько раз за день, нельзя закрыть
+            // выбором уровня: сначала надо набрать все разы (§5.5).
+            row.timesPerDay > 1 -> RowControl.Counter
+            row.habit.mode == HabitMode.Minimum && row.selectedLevel == null -> RowControl.Levels
+            else -> RowControl.Circle
+        }
+        // Две кнопки уровня и круг отметки сменяют друг друга переходом: после
+        // «минимума» кнопки не исчезают скачком, а уступают место кругу.
+        AnimatedContent(
+            targetState = control,
+            transitionSpec = {
+                fadeIn(tween(Motion.CONTENT_MS)) togetherWith fadeOut(tween(Motion.CONTENT_MS / 2))
+            },
+            label = "habit-control",
+        ) { shown ->
+            when (shown) {
+                RowControl.Slip -> SlipButton(
                     mode = row.habit.mode,
                     onClick = { onMark(EntryLevel.Slip) },
                     onUndo = onUndoSlip,
                 )
 
-            // Привычку, которую ждут несколько раз за день, нельзя закрыть
-            // выбором уровня: сначала надо набрать все разы (§5.5).
-            row.timesPerDay > 1 -> MarkCounter(
-                done = row.marksOnDay,
-                total = row.timesPerDay,
-                onClick = { onMark(EntryLevel.Norm) },
-            )
+                RowControl.Counter -> MarkCounter(
+                    done = row.marksOnDay,
+                    total = row.timesPerDay,
+                    onClick = { onMark(EntryLevel.Norm) },
+                )
 
-            row.habit.mode == HabitMode.Minimum && row.selectedLevel == null ->
-                MinimumNormButtons(
+                RowControl.Levels -> MinimumNormButtons(
                     onMinimum = { onMark(EntryLevel.Minimum) },
                     onNorm = { onMark(EntryLevel.Norm) },
                 )
 
-            else -> MarkCircle(
-                level = row.selectedLevel,
-                onClick = { onMark(EntryLevel.Norm) },
-            )
+                RowControl.Circle -> MarkCircle(
+                    level = row.selectedLevel,
+                    onClick = { onMark(EntryLevel.Norm) },
+                )
+            }
         }
     }
 
@@ -173,10 +195,20 @@ fun HabitRowItem(
 
     // Отмеченный уровень называется словом: круг с галочкой не отличает
     // минимум от нормы, а разница между ними и есть смысл режима (§5.3).
-    if (row.habit.mode == HabitMode.Minimum && row.selectedLevel != null) {
+    // Уходящая подпись держит прежний уровень: без этого при снятии отметки
+    // «минимум» на миг превращался в «норму».
+    var lastLevel by remember { mutableStateOf(row.selectedLevel) }
+    SideEffect { if (row.selectedLevel != null) lastLevel = row.selectedLevel }
+    val shownLevel = row.selectedLevel ?: lastLevel
+    AnimatedVisibility(
+        visible = row.habit.mode == HabitMode.Minimum && row.selectedLevel != null,
+        enter = fadeIn(tween(Motion.CONTENT_MS)) + expandVertically(Motion.resize),
+        exit = fadeOut(tween(Motion.CONTENT_MS / 2)) + shrinkVertically(Motion.resize),
+        label = "habit-level",
+    ) {
         Text(
             text = stringResource(
-                if (row.selectedLevel == EntryLevel.Minimum) {
+                if (shownLevel == EntryLevel.Minimum) {
                     R.string.habit_done_minimum
                 } else {
                     R.string.habit_done_norm
@@ -596,3 +628,6 @@ private fun MarkCounter(
         }
     }
 }
+
+/** Что стоит справа в строке привычки. */
+private enum class RowControl { Slip, Counter, Levels, Circle }

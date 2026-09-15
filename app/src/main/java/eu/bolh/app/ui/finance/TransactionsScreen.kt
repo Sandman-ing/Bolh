@@ -1,5 +1,6 @@
 package eu.bolh.app.ui.finance
 
+import eu.bolh.app.ui.common.tapIcon
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
@@ -180,7 +181,7 @@ fun TransactionsScreen(
                             .padding(start = Spacing.s)
                             .size(40.dp)
                             .clip(CircleShape)
-                            .clickable {
+                            .tapIcon {
                                 if (selecting) selection = emptySet() else onBack()
                             }
                             .padding(8.dp),
@@ -195,7 +196,7 @@ fun TransactionsScreen(
                             modifier = Modifier
                                 .size(40.dp)
                                 .clip(CircleShape)
-                                .clickable {
+                                .tapIcon {
                                     selection = state.transactions.map { it.id }.toSet()
                                 }
                                 .padding(8.dp),
@@ -208,7 +209,7 @@ fun TransactionsScreen(
                                 .padding(end = Spacing.s)
                                 .size(40.dp)
                                 .clip(CircleShape)
-                                .clickable { confirming = true }
+                                .tapIcon { confirming = true }
                                 .padding(8.dp),
                         )
                     }
@@ -252,11 +253,13 @@ fun TransactionsScreen(
                         text = dayLabel(date, locale),
                         style = MaterialTheme.typography.labelMedium,
                         color = status.textTertiary,
-                        modifier = Modifier.padding(
-                            start = Spacing.screenPadding,
-                            top = Spacing.l,
-                            bottom = Spacing.xs,
-                        ),
+                        modifier = Modifier
+                            .animateItem()
+                            .padding(
+                                start = Spacing.screenPadding,
+                                top = Spacing.l,
+                                bottom = Spacing.xs,
+                            ),
                     )
                 }
                 items(rows.size, key = { rows[it].id }) { index ->
@@ -286,6 +289,8 @@ fun TransactionsScreen(
                             }
                         },
                         onLongClick = { selection = selection + transaction.id },
+                        // Удалённая операция уходит, а соседи съезжают на её место.
+                        modifier = Modifier.animateItem(),
                     )
                 }
             }
@@ -313,6 +318,7 @@ private fun TransactionRow(
     selecting: Boolean,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val status = LocalStatusColors.current
     BolhCard(
@@ -322,7 +328,7 @@ private fun TransactionRow(
             horizontal = Spacing.l,
             vertical = Spacing.m,
         ),
-        modifier = Modifier
+        modifier = modifier
             .padding(horizontal = Spacing.screenPadding, vertical = Spacing.xs)
             .tappable(
                 onClick = onClick,

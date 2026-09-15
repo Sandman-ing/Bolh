@@ -1,5 +1,10 @@
 package eu.bolh.app.ui.finance
 
+import eu.bolh.app.ui.common.tapIcon
+import eu.bolh.app.ui.common.animatedMinor
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.consumeWindowInsets
+import eu.bolh.app.ui.common.BolhTextField
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -184,7 +189,7 @@ fun AccountDetailScreen(
                             .padding(start = Spacing.s)
                             .size(40.dp)
                             .clip(CircleShape)
-                            .clickable {
+                            .tapIcon {
                                 if (selecting) selection = emptySet() else onBack()
                             }
                             .padding(8.dp),
@@ -199,7 +204,7 @@ fun AccountDetailScreen(
                             modifier = Modifier
                                 .size(40.dp)
                                 .clip(CircleShape)
-                                .clickable {
+                                .tapIcon {
                                     selection = (state.expenses + state.income)
                                         .map { it.id }
                                         .toSet()
@@ -214,7 +219,7 @@ fun AccountDetailScreen(
                                 .padding(end = Spacing.s)
                                 .size(40.dp)
                                 .clip(CircleShape)
-                                .clickable { confirming = true }
+                                .tapIcon { confirming = true }
                                 .padding(8.dp),
                         )
                     }
@@ -247,6 +252,8 @@ fun AccountDetailScreen(
         LazyColumn(
             modifier = Modifier
                 .padding(innerPadding)
+                .consumeWindowInsets(innerPadding)
+                .imePadding()
                 .fillMaxSize(),
             contentPadding = PaddingValues(bottom = Spacing.fabClearance),
         ) {
@@ -255,7 +262,7 @@ fun AccountDetailScreen(
                 // экрана искали дольше, чем меняли.
                 BolhCard(
                     onClick = { editing = !editing },
-                    modifier = Modifier.padding(
+                    modifier = Modifier.animateItem().padding(
                         horizontal = Spacing.screenPadding,
                         vertical = Spacing.s,
                     ),
@@ -284,7 +291,7 @@ fun AccountDetailScreen(
                         )
                     }
                     Text(
-                        text = Money.format(state.balanceMinor, state.baseCurrency, locale),
+                        text = Money.format(animatedMinor(state.balanceMinor), state.baseCurrency, locale),
                         style = MoneyHero,
                         color = if (state.balanceMinor < 0L) {
                             status.problem
@@ -301,16 +308,15 @@ fun AccountDetailScreen(
             if (editing) {
                 item(key = "edit") {
                     BolhCard(
-                        modifier = Modifier.padding(
+                        modifier = Modifier.animateItem().padding(
                             horizontal = Spacing.screenPadding,
                             vertical = Spacing.s,
                         ),
                     ) {
-                        OutlinedTextField(
+                        BolhTextField(
                             value = name,
                             onValueChange = { name = it },
                             label = { Text(stringResource(R.string.account_name_hint)) },
-                            singleLine = true,
                             modifier = Modifier.fillMaxWidth(),
                         )
                         OutlinedTextField(
@@ -409,7 +415,7 @@ private fun androidx.compose.foundation.lazy.LazyListScope.section(
         val locale = rememberLocale()
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(
+            modifier = Modifier.animateItem().padding(
                 start = Spacing.screenPadding,
                 end = Spacing.screenPadding,
                 top = Spacing.xl,
@@ -423,7 +429,7 @@ private fun androidx.compose.foundation.lazy.LazyListScope.section(
                 modifier = Modifier.weight(1f),
             )
             MetricChip(
-                text = Money.format(total, currency, locale),
+                text = Money.format(animatedMinor(total), currency, locale),
                 color = accent,
             )
         }
@@ -432,7 +438,7 @@ private fun androidx.compose.foundation.lazy.LazyListScope.section(
     if (rows.isEmpty()) {
         item(key = "empty-$title") {
             BolhCard(
-                modifier = Modifier.padding(
+                modifier = Modifier.animateItem().padding(
                     horizontal = Spacing.screenPadding,
                     vertical = Spacing.xs,
                 ),
@@ -462,6 +468,7 @@ private fun androidx.compose.foundation.lazy.LazyListScope.section(
                 vertical = Spacing.m,
             ),
             modifier = Modifier
+                .animateItem()
                 .padding(
                     horizontal = Spacing.screenPadding,
                     vertical = Spacing.xs,

@@ -41,10 +41,10 @@ fun DonutChart(
     slices: List<DonutSlice>,
     centerText: String,
     trackColor: Color,
+    modifier: Modifier = Modifier,
     /** Подпись под главным числом: чем занято само кольцо. */
     centerCaption: String? = null,
     captionColor: Color = Color.Unspecified,
-    modifier: Modifier = Modifier,
     diameter: Dp = 190.dp,
     thickness: Dp = 22.dp,
 ) {

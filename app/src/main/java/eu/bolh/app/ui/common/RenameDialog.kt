@@ -35,10 +35,9 @@ fun RenameDialog(
         containerColor = status.surfaceRaised,
         title = { Text(stringResource(R.string.goal_rename)) },
         text = {
-            OutlinedTextField(
+            BolhTextField(
                 value = text,
                 onValueChange = { text = it },
-                singleLine = true,
                 modifier = Modifier,
             )
         },

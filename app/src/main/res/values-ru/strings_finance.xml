@@ -45,8 +45,11 @@
 
     <string name="account_new_title">Новый счёт</string>
     <string name="account_currency">Валюта счёта</string>
-    <string name="account_currency_note">Суммы на этом счете считаются в его собственной валюте. Пересчёта нет: итоги показываются по каждой валюте отдельно.</string>
+    <string name="account_currency_note">Суммы на этом счёте считаются в его собственной валюте и никогда не пересчитываются. Только общий итог по всем счетам показывается примерно, по последнему известному курсу.</string>
     <string name="finance_currency_scope">Валюта</string>
+    <string name="finance_approx_total">Примерно всего</string>
+    <string name="finance_approx_note">По курсу на %1$s. Без интернета остаётся последний известный курс.</string>
+    <string name="finance_approx_missing">Нет курса для %1$s — нужен интернет хотя бы один раз.</string>
     <string name="account_name_hint">Название</string>
     <string name="account_balance_hint">Текущий остаток</string>
     <string name="account_new_balance">Новый остаток</string>

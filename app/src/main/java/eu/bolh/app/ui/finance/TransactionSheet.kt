@@ -1,5 +1,13 @@
 package eu.bolh.app.ui.finance
 
+import eu.bolh.app.ui.common.Motion
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.AnimatedVisibility
+import eu.bolh.app.ui.common.BolhTextField
 import android.app.DatePickerDialog
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -125,30 +133,39 @@ fun TransactionSheet(
                     .padding(horizontal = Spacing.screenPadding, vertical = Spacing.m),
             )
 
-            if (draft.type != TransactionType.Transfer) {
-                Text(
-                    text = stringResource(R.string.tx_category),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = status.textTertiary,
-                    modifier = Modifier.padding(start = Spacing.screenPadding, bottom = Spacing.xs),
-                )
-                LazyRow(
-                    horizontalArrangement = Arrangement.spacedBy(Spacing.s),
-                    contentPadding = PaddingValues(horizontal = Spacing.screenPadding),
-                ) {
-                    items(options.categoriesFor(draft.type), key = { it.id }) { category ->
-                        SheetChip(
-                            text = categoryLabel(category),
-                            selected = draft.categoryId == category.id,
-                            onClick = {
-                                viewModel.setCategory(
-                                    if (draft.categoryId == category.id) null else category.id,
-                                )
-                            },
-                            icon = category.icon,
-                            accent = Color(category.colorArgb),
+            // Поля, которых у выбранного типа нет, уходят переходом, а не
+            // пропадают: шторка меняет высоту плавно и не прыгает под пальцем.
+            AnimatedVisibility(
+                visible = draft.type != TransactionType.Transfer,
+                enter = fadeIn(tween(Motion.CONTENT_MS)) + expandVertically(Motion.resize),
+                exit = fadeOut(tween(Motion.CONTENT_MS / 2)) + shrinkVertically(Motion.resize),
+                label = "tx-category",
+            ) {
+                Column {
+                        Text(
+                            text = stringResource(R.string.tx_category),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = status.textTertiary,
+                            modifier = Modifier.padding(start = Spacing.screenPadding, bottom = Spacing.xs),
                         )
-                    }
+                        LazyRow(
+                            horizontalArrangement = Arrangement.spacedBy(Spacing.s),
+                            contentPadding = PaddingValues(horizontal = Spacing.screenPadding),
+                        ) {
+                            items(options.categoriesFor(draft.type), key = { it.id }) { category ->
+                                SheetChip(
+                                    text = categoryLabel(category),
+                                    selected = draft.categoryId == category.id,
+                                    onClick = {
+                                        viewModel.setCategory(
+                                            if (draft.categoryId == category.id) null else category.id,
+                                        )
+                                    },
+                                    icon = category.icon,
+                                    accent = Color(category.colorArgb),
+                                )
+                            }
+                        }
                 }
             }
 
@@ -186,39 +203,46 @@ fun TransactionSheet(
                 }
             }
 
-            if (draft.type == TransactionType.Transfer) {
-                Text(
-                    text = stringResource(R.string.tx_account_to),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = status.textTertiary,
-                    modifier = Modifier.padding(
-                        start = Spacing.screenPadding,
-                        top = Spacing.m,
-                        bottom = Spacing.xs,
-                    ),
-                )
-                LazyRow(
-                    horizontalArrangement = Arrangement.spacedBy(Spacing.s),
-                    contentPadding = PaddingValues(horizontal = Spacing.screenPadding),
-                ) {
-                    items(
-                        // Счета чужой валюты в получатели не годятся: без курса
-                        // перевод в них означал бы, что драмы стали евро сами собой.
-                        options.accounts.filter { candidate ->
-                            candidate.id != draft.accountId &&
-                                candidate.currencyCode == options.accounts
-                                    .firstOrNull { it.id == draft.accountId }
-                                    ?.currencyCode
-                        },
-                        key = { it.id },
-                    ) { account ->
-                        SheetChip(
-                            text = account.name,
-                            selected = draft.toAccountId == account.id,
-                            onClick = { viewModel.setToAccount(account.id) },
-                            icon = account.icon,
+            AnimatedVisibility(
+                visible = draft.type == TransactionType.Transfer,
+                enter = fadeIn(tween(Motion.CONTENT_MS)) + expandVertically(Motion.resize),
+                exit = fadeOut(tween(Motion.CONTENT_MS / 2)) + shrinkVertically(Motion.resize),
+                label = "tx-target",
+            ) {
+                Column {
+                        Text(
+                            text = stringResource(R.string.tx_account_to),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = status.textTertiary,
+                            modifier = Modifier.padding(
+                                start = Spacing.screenPadding,
+                                top = Spacing.m,
+                                bottom = Spacing.xs,
+                            ),
                         )
-                    }
+                        LazyRow(
+                            horizontalArrangement = Arrangement.spacedBy(Spacing.s),
+                            contentPadding = PaddingValues(horizontal = Spacing.screenPadding),
+                        ) {
+                            items(
+                                // Счета чужой валюты в получатели не годятся: без курса
+                                // перевод в них означал бы, что драмы стали евро сами собой.
+                                options.accounts.filter { candidate ->
+                                    candidate.id != draft.accountId &&
+                                        candidate.currencyCode == options.accounts
+                                            .firstOrNull { it.id == draft.accountId }
+                                            ?.currencyCode
+                                },
+                                key = { it.id },
+                            ) { account ->
+                                SheetChip(
+                                    text = account.name,
+                                    selected = draft.toAccountId == account.id,
+                                    onClick = { viewModel.setToAccount(account.id) },
+                                    icon = account.icon,
+                                )
+                            }
+                        }
                 }
             }
 
@@ -232,73 +256,79 @@ fun TransactionSheet(
                     .padding(horizontal = Spacing.screenPadding, vertical = Spacing.l),
             )
 
-            if (draft.expanded) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable {
-                            DatePickerDialog(
-                                context,
-                                { _, year, month, day ->
-                                    viewModel.setDate(java.time.LocalDate.of(year, month + 1, day))
-                                },
-                                draft.date.year,
-                                draft.date.monthValue - 1,
-                                draft.date.dayOfMonth,
-                            ).show()
-                        }
-                        .padding(horizontal = Spacing.screenPadding, vertical = Spacing.s),
-                ) {
-                    Text(
-                        text = stringResource(R.string.tx_date),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = status.textSecondary,
-                        modifier = Modifier.weight(1f),
-                    )
-                    Text(
-                        text = draft.date.format(DateTimeFormatter.ofPattern(stringResource(R.string.date_full), locale)),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.primary,
-                    )
-                }
-
-                OutlinedTextField(
-                    value = draft.note,
-                    onValueChange = viewModel::setNote,
-                    label = { Text(stringResource(R.string.tx_note)) },
-                    singleLine = true,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = Spacing.screenPadding, vertical = Spacing.xs),
-                )
-
-                if (options.goals.isNotEmpty()) {
-                    Text(
-                        text = stringResource(R.string.tx_goal),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = status.textTertiary,
-                        modifier = Modifier.padding(
-                            start = Spacing.screenPadding,
-                            top = Spacing.s,
-                            bottom = Spacing.xs,
-                        ),
-                    )
-                    LazyRow(
-                        horizontalArrangement = Arrangement.spacedBy(Spacing.s),
-                        contentPadding = PaddingValues(horizontal = Spacing.screenPadding),
-                    ) {
-                        items(options.goals, key = { it.id }) { goal ->
-                            SheetChip(
-                                text = goal.name,
-                                selected = draft.goalId == goal.id,
-                                onClick = {
-                                    viewModel.setGoal(if (draft.goalId == goal.id) null else goal.id)
-                                },
-                                icon = goal.icon,
+            AnimatedVisibility(
+                visible = draft.expanded,
+                enter = fadeIn(tween(Motion.CONTENT_MS)) + expandVertically(Motion.resize),
+                exit = fadeOut(tween(Motion.CONTENT_MS / 2)) + shrinkVertically(Motion.resize),
+                label = "tx-more",
+            ) {
+                Column {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .tappable(onClick = {
+                                    DatePickerDialog(
+                                        context,
+                                        { _, year, month, day ->
+                                            viewModel.setDate(java.time.LocalDate.of(year, month + 1, day))
+                                        },
+                                        draft.date.year,
+                                        draft.date.monthValue - 1,
+                                        draft.date.dayOfMonth,
+                                    ).show()
+                                })
+                                .padding(horizontal = Spacing.screenPadding, vertical = Spacing.s),
+                        ) {
+                            Text(
+                                text = stringResource(R.string.tx_date),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = status.textSecondary,
+                                modifier = Modifier.weight(1f),
+                            )
+                            Text(
+                                text = draft.date.format(DateTimeFormatter.ofPattern(stringResource(R.string.date_full), locale)),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.primary,
                             )
                         }
-                    }
+
+                        BolhTextField(
+                            value = draft.note,
+                            onValueChange = viewModel::setNote,
+                            label = { Text(stringResource(R.string.tx_note)) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = Spacing.screenPadding, vertical = Spacing.xs),
+                        )
+
+                        if (options.goals.isNotEmpty()) {
+                            Text(
+                                text = stringResource(R.string.tx_goal),
+                                style = MaterialTheme.typography.labelMedium,
+                                color = status.textTertiary,
+                                modifier = Modifier.padding(
+                                    start = Spacing.screenPadding,
+                                    top = Spacing.s,
+                                    bottom = Spacing.xs,
+                                ),
+                            )
+                            LazyRow(
+                                horizontalArrangement = Arrangement.spacedBy(Spacing.s),
+                                contentPadding = PaddingValues(horizontal = Spacing.screenPadding),
+                            ) {
+                                items(options.goals, key = { it.id }) { goal ->
+                                    SheetChip(
+                                        text = goal.name,
+                                        selected = draft.goalId == goal.id,
+                                        onClick = {
+                                            viewModel.setGoal(if (draft.goalId == goal.id) null else goal.id)
+                                        },
+                                        icon = goal.icon,
+                                    )
+                                }
+                            }
+                        }
                 }
             }
 

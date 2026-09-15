@@ -1,5 +1,18 @@
 package eu.bolh.app.ui.goals
 
+import eu.bolh.app.ui.common.BolhTextField
+import androidx.compose.ui.draw.rotate
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.animateColorAsState
 import android.app.DatePickerDialog
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.tween
@@ -118,279 +131,359 @@ fun GoalEditorScreen(
             )
         },
     ) { innerPadding ->
-        Column(
+        val stageFallback = stringResource(R.string.goal_stage_default)
+        val taskFallback = stringResource(R.string.goal_task_default)
+        val deadlineLabel = draft.deadline?.let { monthYear(it, locale) }
+            ?: stringResource(R.string.goal_deadline_pick)
+        // Проверка срока держится до конца исчезновения: иначе блок пропадал
+        // бы мгновенно, не успев уехать.
+        var shownCheck by remember { mutableStateOf(check) }
+        LaunchedEffect(check) { if (check != null) shownCheck = check }
+        val stagesTurn by animateFloatAsState(
+            targetValue = if (draft.stagesExpanded) 180f else 0f,
+            animationSpec = tween(Motion.CONTENT_MS),
+            label = "stages-turn",
+        )
+
+        // Ленивый список вместо колонки с прокруткой. У каждого этапа свой
+        // ключ, и перестановка стрелками едет: этап плавно съезжает на новое
+        // место, а не подменяется текстом соседа. Фокус поля держится за тот же
+        // ключ, поэтому клавиатура не закрывается ни при вводе, ни при
+        // перестановке. Отступ под клавиатуру — чтобы поле, в котором пишешь,
+        // не уходило под неё.
+        LazyColumn(
             modifier = Modifier
                 .padding(innerPadding)
-                .verticalScroll(rememberScrollState())
-                .padding(bottom = Spacing.xxl),
+                .consumeWindowInsets(innerPadding)
+                .imePadding(),
+            contentPadding = PaddingValues(bottom = Spacing.xxl),
         ) {
-            LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(Spacing.s),
-                contentPadding = PaddingValues(horizontal = Spacing.screenPadding),
-                modifier = Modifier.padding(vertical = Spacing.s),
-            ) {
-                items(BolhIcons.goal) { key ->
-                    Icon(
-                        painter = painterResource(BolhIcons.resFor(key)),
-                        contentDescription = null,
-                        tint = if (key == draft.icon) {
-                            MaterialTheme.colorScheme.primary
-                        } else {
-                            status.textTertiary
+            item(key = "icons") {
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.s),
+                    contentPadding = PaddingValues(horizontal = Spacing.screenPadding),
+                    modifier = Modifier.padding(vertical = Spacing.s),
+                ) {
+                    items(BolhIcons.goal) { key ->
+                        val tint by animateColorAsState(
+                            targetValue = if (key == draft.icon) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                status.textTertiary
+                            },
+                            animationSpec = Motion.color,
+                            label = "goal-icon",
+                        )
+                        Icon(
+                            painter = painterResource(BolhIcons.resFor(key)),
+                            contentDescription = null,
+                            tint = tint,
+                            modifier = Modifier
+                                .size(44.dp)
+                                .clip(CircleShape)
+                                .tapIcon { viewModel.setIcon(key) }
+                                .padding(10.dp),
+                        )
+                    }
+                }
+            }
+
+            item(key = "name") {
+                BolhTextField(
+                    value = draft.name,
+                    onValueChange = viewModel::setName,
+                    label = { Text(stringResource(R.string.goal_name_hint)) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = Spacing.screenPadding, vertical = Spacing.s),
+                )
+            }
+
+            item(key = "deadline") {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .tappable(onClick = {
+                            // Календарь открывается на сегодняшнем месяце, а не
+                            // через полгода: человек ищет свой срок от «сейчас».
+                            val today = LocalDate.now()
+                            val start = draft.deadline ?: today
+                            DatePickerDialog(
+                                context,
+                                { _, year, month, day ->
+                                    viewModel.setDeadline(LocalDate.of(year, month + 1, day))
+                                },
+                                start.year,
+                                start.monthValue - 1,
+                                start.dayOfMonth,
+                            ).apply {
+                                // Срок в прошлом бессмыслен: цель к нему уже не успеть.
+                                datePicker.minDate = today
+                                    .atStartOfDay(ZoneId.systemDefault())
+                                    .toInstant()
+                                    .toEpochMilli()
+                            }.show()
+                        })
+                        .padding(horizontal = Spacing.screenPadding, vertical = Spacing.l),
+                ) {
+                    Text(
+                        text = stringResource(R.string.goal_deadline_hint),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onBackground,
+                        modifier = Modifier.weight(1f),
+                    )
+                    AnimatedContent(
+                        targetState = deadlineLabel,
+                        transitionSpec = {
+                            fadeIn(tween(Motion.CONTENT_MS)) togetherWith
+                                fadeOut(tween(Motion.CONTENT_MS / 2))
                         },
+                        label = "deadline-label",
+                    ) { label ->
+                        Text(
+                            text = label,
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                    }
+                }
+            }
+
+            item(key = "check") {
+                AnimatedVisibility(
+                    visible = check != null,
+                    enter = fadeIn(tween(Motion.CONTENT_MS)) + expandVertically(Motion.resize),
+                    exit = fadeOut(tween(Motion.CONTENT_MS / 2)) + shrinkVertically(Motion.resize),
+                ) {
+                    shownCheck?.let {
+                        DeadlineCheckBlock(check = it, current = draft.deadline, viewModel = viewModel)
+                    }
+                }
+            }
+
+            item(key = "stages-title") {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .tappable(onClick = viewModel::toggleStages)
+                        .padding(horizontal = Spacing.screenPadding, vertical = Spacing.l),
+                ) {
+                    Text(
+                        text = stringResource(R.string.goal_stages_title),
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.weight(1f),
+                    )
+                    Icon(
+                        painter = painterResource(R.drawable.ic_chevron_down),
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier
-                            .size(44.dp)
-                            .clip(CircleShape)
-                            .clickable { viewModel.setIcon(key) }
-                            .padding(10.dp),
+                            .size(18.dp)
+                            .rotate(stagesTurn),
                     )
                 }
             }
 
-            OutlinedTextField(
-                value = draft.name,
-                onValueChange = viewModel::setName,
-                label = { Text(stringResource(R.string.goal_name_hint)) },
-                singleLine = true,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = Spacing.screenPadding, vertical = Spacing.s),
-            )
+            if (draft.stagesExpanded) {
+                itemsIndexed(draft.stages, key = { _, stage -> stage.id }) { index, stage ->
+                    StageDraftCard(
+                        index = index,
+                        stage = stage,
+                        isLast = index == draft.stages.lastIndex,
+                        taskFallback = taskFallback,
+                        viewModel = viewModel,
+                        modifier = Modifier.animateItem(),
+                    )
+                }
 
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable {
-                        // Календарь открывается на сегодняшнем месяце, а не через
-                        // полгода: человек ищет свой срок от «сейчас».
-                        val today = LocalDate.now()
-                        val start = draft.deadline ?: today
-                        DatePickerDialog(
-                            context,
-                            { _, year, month, day ->
-                                viewModel.setDeadline(LocalDate.of(year, month + 1, day))
-                            },
-                            start.year,
-                            start.monthValue - 1,
-                            start.dayOfMonth,
-                        ).apply {
-                            // Срок в прошлом бессмыслен: цель к нему уже не успеть.
-                            datePicker.minDate = today
-                                .atStartOfDay(ZoneId.systemDefault())
-                                .toInstant()
-                                .toEpochMilli()
-                        }.show()
-                    }
-                    .padding(horizontal = Spacing.screenPadding, vertical = Spacing.l),
-            ) {
-                Text(
-                    text = stringResource(R.string.goal_deadline_hint),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier.weight(1f),
-                )
-                Text(
-                    text = draft.deadline?.let { monthYear(it, locale) }
-                        ?: stringResource(R.string.goal_deadline_pick),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.primary,
-                )
-            }
-
-            check?.let { DeadlineCheckBlock(check = it, current = draft.deadline, viewModel = viewModel) }
-
-            Text(
-                text = stringResource(R.string.goal_stages_title),
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .tappable(onClick = viewModel::toggleStages)
-                    .padding(horizontal = Spacing.screenPadding, vertical = Spacing.l),
-            )
-
-            AnimatedVisibility(visible = draft.stagesExpanded) {
-                Column {
-                    val stageFallback = stringResource(R.string.goal_stage_default)
-                    val taskFallback = stringResource(R.string.goal_task_default)
-
-                    // Список этапов НЕ заворачивается в AnimatedContent: он
-                    // сравнивает состояние целиком, а состояние здесь меняется
-                    // на каждый набранный символ. Поле пересоздавалось, теряло
-                    // фокус, и клавиатура закрывалась после каждой буквы.
-                    // Перестановка и так видна: в полях просто меняется текст.
-                    Column(modifier = Modifier.animateContentSize(Motion.resize)) {
-                    draft.stages.forEachIndexed { index, stage ->
-                        BolhCard(
-                            corner = Radius.block,
-                            modifier = Modifier.padding(
-                                horizontal = Spacing.screenPadding,
-                                vertical = Spacing.xs,
-                            ),
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                // Номер этапа: порядок — часть плана, а не украшение.
-                                Text(
-                                    text = (index + 1).toString(),
-                                    style = NumberSmall,
-                                    color = MaterialTheme.colorScheme.primary,
-                                    textAlign = TextAlign.Center,
-                                    modifier = Modifier
-                                        .size(24.dp)
-                                        .clip(CircleShape)
-                                        .background(status.surfaceSunken)
-                                        .wrapContentHeight(),
-                                )
-                                OutlinedTextField(
-                                    value = stage.name,
-                                    onValueChange = { viewModel.renameStage(index, it) },
-                                    singleLine = true,
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .padding(start = Spacing.s),
-                                )
-                            }
-
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.padding(top = Spacing.xs),
-                            ) {
-                                // Этап переставляется стрелками, а не перетаскиванием:
-                                // список короткий, а перетаскивание в форме мешает вводу.
-                                MoveButton(
-                                    icon = R.drawable.ic_chevron_up,
-                                    enabled = index > 0,
-                                    onClick = { viewModel.moveStage(index, -1) },
-                                )
-                                MoveButton(
-                                    icon = R.drawable.ic_chevron_down,
-                                    enabled = index < draft.stages.lastIndex,
-                                    onClick = { viewModel.moveStage(index, 1) },
-                                )
-                                Spacer(modifier = Modifier.weight(1f))
-                                Icon(
-                                    painter = painterResource(R.drawable.ic_close),
-                                    contentDescription = stringResource(R.string.common_delete),
-                                    tint = status.textTertiary,
-                                    modifier = Modifier
-                                        .size(32.dp)
-                                        .clip(CircleShape)
-                                        .clickable { viewModel.removeStage(index) }
-                                        .padding(8.dp),
-                                )
-                            }
-
-                            stage.tasks.forEachIndexed { taskIndex, task ->
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier.padding(
-                                        start = Spacing.xl,
-                                        top = Spacing.xs,
-                                    ),
-                                ) {
-                                    Icon(
-                                        painter = painterResource(R.drawable.ic_task),
-                                        contentDescription = null,
-                                        tint = status.textTertiary,
-                                        modifier = Modifier.size(16.dp),
-                                    )
-                                    // Имя задачи правится здесь же: набросал
-                                    // пустую строку — назвал, когда придумал.
-                                    OutlinedTextField(
-                                        value = task,
-                                        onValueChange = {
-                                            viewModel.renameTask(index, taskIndex, it)
-                                        },
-                                        singleLine = true,
-                                        textStyle = MaterialTheme.typography.bodyMedium,
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .padding(start = Spacing.s),
-                                    )
-                                    Icon(
-                                        painter = painterResource(R.drawable.ic_close),
-                                        contentDescription = stringResource(
-                                            R.string.common_delete,
-                                        ),
-                                        tint = status.textTertiary,
-                                        modifier = Modifier
-                                            .size(28.dp)
-                                            .clip(CircleShape)
-                                            .clickable { viewModel.removeTask(index, taskIndex) }
-                                            .padding(7.dp),
-                                    )
-                                }
-                            }
-
-                            // Задачи заводятся здесь же: раньше за ними надо было
-                            // сначала сохранить цель и вернуться внутрь.
-                            PillButton(
-                                text = stringResource(R.string.goal_add_task),
-                                onClick = { viewModel.addTask(index, taskFallback) },
-                                icon = R.drawable.ic_task,
-                                modifier = Modifier.padding(
-                                    start = Spacing.xl,
-                                    top = Spacing.s,
-                                ),
-                            )
-                        }
-                    }
-
-                    }
-
+                item(key = "new-stage") {
                     BolhCard(
                         corner = Radius.block,
-                        modifier = Modifier.padding(
-                            horizontal = Spacing.screenPadding,
-                            vertical = Spacing.xs,
-                        ),
+                        modifier = Modifier
+                            .animateItem()
+                            .padding(horizontal = Spacing.screenPadding, vertical = Spacing.xs),
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            OutlinedTextField(
-                                value = draft.newStage,
-                                onValueChange = viewModel::setNewStage,
-                                label = { Text(stringResource(R.string.goal_stage_hint)) },
-                                singleLine = true,
-                                modifier = Modifier.weight(1f),
-                            )
-                            // Раньше это была голая надпись, и на фоне поля
-                            // ввода она не читалась как кнопка (§9.2).
-                            PillButton(
-                                text = stringResource(R.string.goal_add_stage),
-                                onClick = { viewModel.addStage(stageFallback) },
-                                icon = R.drawable.ic_flag,
-                                modifier = Modifier.padding(start = Spacing.s),
-                            )
-                        }
+                        // Поле во всю ширину, кнопка под ним: рядом с кнопкой поле
+                        // сжималось так, что даже подсказка ломалась на две строки.
+                        BolhTextField(
+                            value = draft.newStage,
+                            onValueChange = viewModel::setNewStage,
+                            label = { Text(stringResource(R.string.goal_stage_hint)) },
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                        // Раньше это была голая надпись, и на фоне поля
+                        // ввода она не читалась как кнопка (§9.2).
+                        PillButton(
+                            text = stringResource(R.string.goal_add_stage),
+                            onClick = { viewModel.addStage(stageFallback) },
+                            icon = R.drawable.ic_flag,
+                            modifier = Modifier.padding(top = Spacing.s),
+                        )
                     }
                 }
             }
 
-            Button(
-                onClick = viewModel::save,
-                enabled = draft.canSave,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary,
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = Spacing.screenPadding, vertical = Spacing.m),
-            ) {
-                Text(stringResource(R.string.goal_save))
+            item(key = "save") {
+                Button(
+                    onClick = viewModel::save,
+                    enabled = draft.canSave,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary,
+                    ),
+                    modifier = Modifier
+                        .animateItem()
+                        .fillMaxWidth()
+                        .padding(horizontal = Spacing.screenPadding, vertical = Spacing.m),
+                ) {
+                    Text(stringResource(R.string.goal_save))
+                }
             }
 
             if (draft.isEditing) {
-                PillButton(
-                    text = stringResource(R.string.goal_delete),
-                    onClick = viewModel::delete,
-                    icon = R.drawable.ic_delete,
-                    color = status.problem,
-                    modifier = Modifier.padding(horizontal = Spacing.screenPadding),
+                item(key = "delete") {
+                    PillButton(
+                        text = stringResource(R.string.goal_delete),
+                        onClick = viewModel::delete,
+                        icon = R.drawable.ic_delete,
+                        color = status.problem,
+                        modifier = Modifier
+                            .animateItem()
+                            .padding(horizontal = Spacing.screenPadding),
+                    )
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Этап в черновике цели: номер, название, стрелки порядка и задачи.
+ *
+ * Отдельная функция, потому что этап живёт элементом ленивого списка со своим
+ * ключом: при перестановке едет вся карточка целиком, вместе с задачами.
+ */
+@Composable
+private fun StageDraftCard(
+    index: Int,
+    stage: StageDraft,
+    isLast: Boolean,
+    taskFallback: String,
+    viewModel: GoalEditorViewModel,
+    modifier: Modifier = Modifier,
+) {
+    val status = LocalStatusColors.current
+
+    BolhCard(
+        corner = Radius.block,
+        modifier = modifier.padding(horizontal = Spacing.screenPadding, vertical = Spacing.xs),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            // Номер этапа: порядок — часть плана, а не украшение. При
+            // перестановке номер сменяется переходом, а не щелчком.
+            AnimatedContent(
+                targetState = index + 1,
+                transitionSpec = {
+                    fadeIn(tween(Motion.CONTENT_MS)) togetherWith
+                        fadeOut(tween(Motion.CONTENT_MS / 2))
+                },
+                label = "stage-number",
+            ) { number ->
+                Text(
+                    text = number.toString(),
+                    style = NumberSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .size(24.dp)
+                        .clip(CircleShape)
+                        .background(status.surfaceSunken)
+                        .wrapContentHeight(),
+                )
+            }
+            BolhTextField(
+                value = stage.name,
+                onValueChange = { viewModel.renameStage(index, it) },
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = Spacing.s),
+            )
+        }
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(top = Spacing.xs),
+        ) {
+            // Этап переставляется стрелками, а не перетаскиванием: список
+            // короткий, а перетаскивание в форме мешает вводу.
+            MoveButton(
+                icon = R.drawable.ic_chevron_up,
+                enabled = index > 0,
+                onClick = { viewModel.moveStage(index, -1) },
+            )
+            MoveButton(
+                icon = R.drawable.ic_chevron_down,
+                enabled = !isLast,
+                onClick = { viewModel.moveStage(index, 1) },
+            )
+            Spacer(modifier = Modifier.weight(1f))
+            Icon(
+                painter = painterResource(R.drawable.ic_close),
+                contentDescription = stringResource(R.string.common_delete),
+                tint = status.textTertiary,
+                modifier = Modifier
+                    .size(32.dp)
+                    .clip(CircleShape)
+                    .tapIcon { viewModel.removeStage(index) }
+                    .padding(8.dp),
+            )
+        }
+
+        stage.tasks.forEachIndexed { taskIndex, task ->
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(start = Spacing.xl, top = Spacing.xs),
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_task),
+                    contentDescription = null,
+                    tint = status.textTertiary,
+                    modifier = Modifier.size(16.dp),
+                )
+                // Имя задачи правится здесь же: набросал пустую строку —
+                // назвал, когда придумал. Поле растёт вместе с текстом.
+                BolhTextField(
+                    value = task,
+                    onValueChange = { viewModel.renameTask(index, taskIndex, it) },
+                    textStyle = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(start = Spacing.s),
+                )
+                Icon(
+                    painter = painterResource(R.drawable.ic_close),
+                    contentDescription = stringResource(R.string.common_delete),
+                    tint = status.textTertiary,
+                    modifier = Modifier
+                        .size(28.dp)
+                        .clip(CircleShape)
+                        .tapIcon { viewModel.removeTask(index, taskIndex) }
+                        .padding(7.dp),
                 )
             }
         }
+
+        // Задачи заводятся здесь же: раньше за ними надо было сначала
+        // сохранить цель и вернуться внутрь.
+        PillButton(
+            text = stringResource(R.string.goal_add_task),
+            onClick = { viewModel.addTask(index, taskFallback) },
+            icon = R.drawable.ic_task,
+            modifier = Modifier.padding(start = Spacing.xl, top = Spacing.s),
+        )
     }
 }
 

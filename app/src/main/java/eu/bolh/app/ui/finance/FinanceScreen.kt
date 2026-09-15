@@ -1,5 +1,9 @@
 package eu.bolh.app.ui.finance
 
+import eu.bolh.app.ui.common.tapIcon
+import eu.bolh.app.ui.common.animatedMinor
+import eu.bolh.app.ui.common.Hint
+import eu.bolh.app.ui.common.FittedText
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.AnimatedContent
@@ -213,7 +217,7 @@ fun FinanceScreen(
         if (shown == FinanceTab.Overview) {
         item(key = "total") {
             BolhCard(
-                modifier = Modifier.padding(
+                modifier = Modifier.animateItem().padding(
                     start = Spacing.screenPadding,
                     end = Spacing.screenPadding,
                     top = Spacing.l,
@@ -227,7 +231,7 @@ fun FinanceScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
                             .clip(RoundedCornerShape(Radius.chip))
-                            .clickable { accountMenu = true }
+                            .tappable(onClick = { accountMenu = true })
                             .padding(vertical = Spacing.xs),
                     ) {
                         Text(
@@ -278,7 +282,7 @@ fun FinanceScreen(
                         tint = status.textSecondary,
                         modifier = Modifier
                             .clip(CircleShape)
-                            .clickable { optionsMenu = true }
+                            .tapIcon { optionsMenu = true }
                             .padding(Spacing.xs)
                             .size(20.dp),
                     )
@@ -350,7 +354,7 @@ fun FinanceScreen(
                             )
                         },
                         centerText = Money.format(
-                            state.headlineMinor,
+                            animatedMinor(state.headlineMinor),
                             state.analysedCurrency,
                             locale,
                         ),
@@ -366,24 +370,31 @@ fun FinanceScreen(
                     FinanceView.Dynamics -> DynamicsBlock(state = state, locale = locale)
                 }
                 // Без этой строки человек считает своими деньги, уже обещанные цели.
-                if (state.reservedMinor > 0L) {
-                    Text(
-                        text = stringResource(
-                            R.string.finance_reserved,
-                            Money.format(state.reservedMinor, state.analysedCurrency, locale),
-                        ),
-                        style = NumberSmall,
-                        color = GoalsTeal,
-                        modifier = Modifier.padding(top = Spacing.xs),
-                    )
-                    Text(
-                        text = stringResource(
-                            R.string.finance_available,
-                            Money.format(state.availableMinor, state.analysedCurrency, locale),
-                        ),
-                        style = NumberSmall,
-                        color = status.textSecondary,
-                    )
+                AnimatedVisibility(
+                    visible = state.reservedMinor > 0L,
+                    enter = fadeIn(tween(Motion.CONTENT_MS)) + expandVertically(Motion.resize),
+                    exit = fadeOut(tween(Motion.CONTENT_MS / 2)) + shrinkVertically(Motion.resize),
+                    label = "finance-reserved",
+                ) {
+                    Column {
+                            Text(
+                                text = stringResource(
+                                    R.string.finance_reserved,
+                                    Money.format(animatedMinor(state.reservedMinor), state.analysedCurrency, locale),
+                                ),
+                                style = NumberSmall,
+                                color = GoalsTeal,
+                                modifier = Modifier.padding(top = Spacing.xs),
+                            )
+                            Text(
+                                text = stringResource(
+                                    R.string.finance_available,
+                                    Money.format(animatedMinor(state.availableMinor), state.analysedCurrency, locale),
+                                ),
+                                style = NumberSmall,
+                                color = status.textSecondary,
+                            )
+                    }
                 }
             }
         }
@@ -392,7 +403,7 @@ fun FinanceScreen(
             SectionCard(
                 title = stringResource(R.string.finance_group_what),
                 titleColor = status.textTertiary,
-                modifier = Modifier.padding(
+                modifier = Modifier.animateItem().padding(
                     horizontal = Spacing.screenPadding,
                     vertical = Spacing.s,
                 ),
@@ -465,6 +476,7 @@ fun FinanceScreen(
             // стрелка: без неё нажатие остаётся тайной.
             BolhCard(
                 modifier = Modifier
+                    .animateItem()
                     .padding(
                         horizontal = Spacing.screenPadding,
                         vertical = Spacing.xs,
@@ -499,7 +511,7 @@ fun FinanceScreen(
                     Text(
                         // Валюта берётся у самого счёта: Wise в евро и
                         // наличные в драмах стоят в одном списке рядом.
-                        text = Money.format(row.balanceMinor, row.account.currencyCode, locale),
+                        text = Money.format(animatedMinor(row.balanceMinor), row.account.currencyCode, locale),
                         style = MoneyRow,
                         color = if (row.balanceMinor < 0L) {
                             status.problem
@@ -519,10 +531,17 @@ fun FinanceScreen(
             }
         }
 
+        state.approxTotal?.let { total ->
+            item(key = "approx-total") {
+                ApproxTotalCard(total = total, locale = locale, modifier = Modifier.animateItem())
+            }
+        }
+
         item(key = "shortcuts") {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(Spacing.s),
                 modifier = Modifier
+                    .animateItem()
                     .padding(
                         start = Spacing.screenPadding,
                         end = Spacing.screenPadding,
@@ -558,7 +577,7 @@ fun FinanceScreen(
         if (state.payments.isEmpty()) {
             item(key = "no-payments") {
                 BolhCard(
-                    modifier = Modifier.padding(
+                    modifier = Modifier.animateItem().padding(
                         horizontal = Spacing.screenPadding,
                         vertical = Spacing.s,
                     ),
@@ -584,6 +603,7 @@ fun FinanceScreen(
                         null
                     },
                     modifier = Modifier
+                        .animateItem()
                         .padding(
                             horizontal = Spacing.screenPadding,
                             vertical = Spacing.xs,
@@ -640,7 +660,7 @@ fun FinanceScreen(
                 text = stringResource(R.string.recurring_add),
                 onClick = onAddRecurring,
                 icon = R.drawable.ic_plus,
-                modifier = Modifier.padding(
+                modifier = Modifier.animateItem().padding(
                     horizontal = Spacing.screenPadding,
                     vertical = Spacing.s,
                 ),
@@ -654,7 +674,7 @@ fun FinanceScreen(
         if (state.jars.isEmpty()) {
             item(key = "no-jars") {
                 BolhCard(
-                    modifier = Modifier.padding(
+                    modifier = Modifier.animateItem().padding(
                         horizontal = Spacing.screenPadding,
                         vertical = Spacing.s,
                     ),
@@ -672,6 +692,7 @@ fun FinanceScreen(
             val row = state.jars[index]
             BolhCard(
                 modifier = Modifier
+                    .animateItem()
                     .padding(
                         horizontal = Spacing.screenPadding,
                         vertical = Spacing.xs,
@@ -707,7 +728,7 @@ fun FinanceScreen(
                 Text(
                     text = stringResource(
                         R.string.finance_jar_progress,
-                        Money.format(row.currentMinor, row.jar.currencyCode, locale),
+                        Money.format(animatedMinor(row.currentMinor), row.jar.currencyCode, locale),
                         Money.format(row.jar.targetMinor, row.jar.currencyCode, locale),
                     ),
                     style = MoneyRow,
@@ -885,7 +906,7 @@ private fun ViewSwitch(current: FinanceView, onSelect: (FinanceView) -> Unit) {
                 .clip(shape)
                 .background(status.surfaceSunken)
                 .border(1.dp, status.strokeInner, shape)
-                .clickable { open = true }
+                .tappable(onClick = { open = true })
                 .padding(horizontal = Spacing.m, vertical = Spacing.s),
         ) {
             Text(
@@ -1140,7 +1161,7 @@ private fun flowCaption(state: FinanceUiState, locale: Locale): String {
     } else {
         stringResource(R.string.finance_flow_income)
     }
-    val amount = Money.format(state.periodTotalMinor, state.analysedCurrency, locale)
+    val amount = Money.format(animatedMinor(state.periodTotalMinor), state.analysedCurrency, locale)
     return "$label · $amount"
 }
 
@@ -1155,4 +1176,66 @@ private fun viewLabel(view: FinanceView): Int = when (view) {
     FinanceView.Ring -> R.string.finance_view_ring
     FinanceView.List -> R.string.finance_view_list
     FinanceView.Dynamics -> R.string.finance_view_dynamics
+}
+
+/**
+ * Примерный общий итог по счетам в разных валютах (§6.3).
+ *
+ * Сумма помечена «≈» и датой курса: это не остаток, а оценка, и выдавать её
+ * за точную цифру значило бы врать. Если для какой-то валюты курса нет,
+ * это сказано прямо — итог без неё неполный.
+ */
+@Composable
+private fun ApproxTotalCard(
+    total: ApproxTotal,
+    locale: Locale,
+    modifier: Modifier = Modifier,
+) {
+    val status = LocalStatusColors.current
+    val shown = animatedMinor(total.minor)
+
+    BolhCard(
+        corner = Radius.block,
+        contentPadding = PaddingValues(horizontal = Spacing.l, vertical = Spacing.m),
+        modifier = modifier.padding(
+            horizontal = Spacing.screenPadding,
+            vertical = Spacing.xs,
+        ),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                painter = painterResource(R.drawable.ic_payments),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(18.dp),
+            )
+            Text(
+                text = stringResource(R.string.finance_approx_total),
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onBackground,
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = Spacing.m),
+            )
+            FittedText(
+                text = "\u2248 " + Money.format(shown, total.currency, locale),
+                style = MoneyRow,
+                align = Alignment.CenterEnd,
+                modifier = Modifier.weight(1f),
+            )
+        }
+        val note = if (total.missing.isNotEmpty()) {
+            stringResource(R.string.finance_approx_missing, total.missing.joinToString(", "))
+        } else {
+            total.ratesDate?.let { date ->
+                stringResource(
+                    R.string.finance_approx_note,
+                    date.format(DateTimeFormatter.ofPattern(stringResource(R.string.date_full), locale)),
+                )
+            }
+        }
+        if (note != null) {
+            Hint(text = note, modifier = Modifier.padding(top = Spacing.s))
+        }
+    }
 }

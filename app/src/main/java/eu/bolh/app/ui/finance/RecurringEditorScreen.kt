@@ -1,5 +1,9 @@
 package eu.bolh.app.ui.finance
 
+import eu.bolh.app.ui.common.tappable
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.consumeWindowInsets
+import eu.bolh.app.ui.common.BolhTextField
 import android.app.DatePickerDialog
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -251,13 +255,14 @@ fun RecurringEditorScreen(
         Column(
             modifier = Modifier
                 .padding(innerPadding)
+                .consumeWindowInsets(innerPadding)
+                .imePadding()
                 .verticalScroll(rememberScrollState()),
         ) {
-            OutlinedTextField(
+            BolhTextField(
                 value = name,
                 onValueChange = { name = it },
                 label = { Text(stringResource(R.string.recurring_name_hint)) },
-                singleLine = true,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = Spacing.screenPadding, vertical = Spacing.s),
@@ -356,7 +361,7 @@ fun RecurringEditorScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable {
+                    .tappable(onClick = {
                         DatePickerDialog(
                             context,
                             { _, year, month, day -> firstDate = LocalDate.of(year, month + 1, day) },
@@ -364,7 +369,7 @@ fun RecurringEditorScreen(
                             firstDate.monthValue - 1,
                             firstDate.dayOfMonth,
                         ).show()
-                    }
+                    })
                     .padding(horizontal = Spacing.screenPadding, vertical = Spacing.l),
             ) {
                 Text(

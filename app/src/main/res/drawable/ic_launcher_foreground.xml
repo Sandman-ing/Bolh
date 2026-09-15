@@ -14,37 +14,37 @@
 
     <path
         android:strokeColor="#5DCAA5"
-        android:strokeWidth="8.0"
+        android:strokeWidth="3.8"
         android:strokeLineCap="round"
         android:strokeLineJoin="round"
         android:pathData="M40.58,50.25 L54.00,27.00 L67.42,50.25" />
     <path
         android:strokeColor="#5DCAA5"
-        android:strokeWidth="4.0"
+        android:strokeWidth="2.0"
         android:strokeLineCap="round"
         android:pathData="M54.00,27.00 L54.00,58.00" />
 
     <path
         android:strokeColor="#4E9BE0"
-        android:strokeWidth="8.0"
+        android:strokeWidth="3.8"
         android:strokeLineCap="round"
         android:strokeLineJoin="round"
         android:pathData="M40.58,50.25 L27.15,73.50 L54.00,73.50" />
     <path
         android:strokeColor="#4E9BE0"
-        android:strokeWidth="4.0"
+        android:strokeWidth="2.0"
         android:strokeLineCap="round"
         android:pathData="M27.15,73.50 L54.00,58.00" />
 
     <path
         android:strokeColor="#8B6FE8"
-        android:strokeWidth="8.0"
+        android:strokeWidth="3.8"
         android:strokeLineCap="round"
         android:strokeLineJoin="round"
         android:pathData="M67.42,50.25 L80.85,73.50 L54.00,73.50" />
     <path
         android:strokeColor="#8B6FE8"
-        android:strokeWidth="4.0"
+        android:strokeWidth="2.0"
         android:strokeLineCap="round"
         android:pathData="M80.85,73.50 L54.00,58.00" />
 </vector>

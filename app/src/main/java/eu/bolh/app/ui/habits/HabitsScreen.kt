@@ -1,5 +1,6 @@
 package eu.bolh.app.ui.habits
 
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandHorizontally
@@ -118,7 +119,7 @@ fun HabitsScreen(
             // Пустой список в день, когда привычек не ждут, читался бы как потеря данных.
             if (state.goodToday.isEmpty() && state.good.isNotEmpty()) {
                 item(key = "nothing-today") {
-                    BolhCard(corner = Radius.block) {
+                    BolhCard(corner = Radius.block, modifier = Modifier.animateItem()) {
                         Text(
                             text = stringResource(R.string.habits_nothing_today),
                             style = MaterialTheme.typography.bodyMedium,
@@ -151,6 +152,13 @@ fun HabitsScreen(
 
             if (state.goodOtherDays.isNotEmpty()) {
                 item(key = "other-days") {
+                    // Стрелка поворачивается вслед за списком: видно, что он
+                    // раскрыт и что тем же нажатием сворачивается.
+                    val otherTurn by animateFloatAsState(
+                        targetValue = if (showOtherDays) 180f else 0f,
+                        animationSpec = tween(Motion.CONTENT_MS),
+                        label = "other-days-turn",
+                    )
                     PillButton(
                         text = if (showOtherDays) {
                             stringResource(R.string.habits_hide_other)
@@ -160,13 +168,20 @@ fun HabitsScreen(
                         onClick = { showOtherDays = !showOtherDays },
                         icon = R.drawable.ic_chevron_down,
                         iconAtEnd = true,
+                        iconRotation = otherTurn,
                         color = status.textSecondary,
-                        modifier = Modifier.padding(vertical = Spacing.s),
+                        modifier = Modifier
+                            .animateItem()
+                            .padding(vertical = Spacing.s),
                     )
                 }
                 if (showOtherDays) {
                     items(state.goodOtherDays, key = { "other-" + it.habit.id }) { row ->
-                        BolhCard(corner = Radius.block, contentPadding = PaddingValues(0.dp)) {
+                        BolhCard(
+                            modifier = Modifier.animateItem(),
+                            corner = Radius.block,
+                            contentPadding = PaddingValues(0.dp),
+                        ) {
                             HabitRowItem(
                                 row = row,
                                 onMark = { level -> viewModel.mark(row.habit, level) },
@@ -183,15 +198,21 @@ fun HabitsScreen(
                         text = stringResource(R.string.habits_bad_section),
                         style = MaterialTheme.typography.labelMedium,
                         color = status.textSecondary,
-                        modifier = Modifier.padding(
-                            start = Spacing.s,
-                            top = Spacing.l,
-                            bottom = Spacing.xs,
-                        ),
+                        modifier = Modifier
+                            .animateItem()
+                            .padding(
+                                start = Spacing.s,
+                                top = Spacing.l,
+                                bottom = Spacing.xs,
+                            ),
                     )
                 }
                 items(state.badToday, key = { it.habit.id }) { row ->
-                    BolhCard(corner = Radius.block, contentPadding = PaddingValues(0.dp)) {
+                    BolhCard(
+                        modifier = Modifier.animateItem(),
+                        corner = Radius.block,
+                        contentPadding = PaddingValues(0.dp),
+                    ) {
                         HabitRowItem(
                             row = row,
                             onMark = { viewModel.addSlip(row.habit) },

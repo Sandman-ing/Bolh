@@ -5,6 +5,7 @@ import androidx.room.Query
 import androidx.room.Upsert
 import eu.bolh.app.data.db.entity.AccountEntity
 import eu.bolh.app.data.db.entity.CategoryEntity
+import eu.bolh.app.data.db.entity.CurrencyRateEntity
 import eu.bolh.app.data.db.entity.JarContributionEntity
 import eu.bolh.app.data.db.entity.RecurringPaymentEntity
 import eu.bolh.app.data.db.entity.SavingsJarEntity
@@ -147,4 +148,19 @@ interface FinanceDao {
 
     @Query("UPDATE recurring_payments SET deletedAt = :now, updatedAt = :now WHERE id = :id")
     suspend fun softDeleteRecurring(id: String, now: Long)
+
+    // --- Курсы валют ------------------------------------------------------
+
+    @Upsert
+    suspend fun upsertRates(rates: List<CurrencyRateEntity>)
+
+    /** Самый свежий известный набор курсов: без сети живём на нём (§6.3). */
+    @Query("SELECT * FROM currency_rates WHERE date = (SELECT MAX(date) FROM currency_rates)")
+    fun observeLatestRates(): Flow<List<CurrencyRateEntity>>
+
+    @Query("SELECT MAX(fetchedAt) FROM currency_rates")
+    suspend fun lastRatesFetch(): Long?
+
+    @Query("DELETE FROM currency_rates WHERE date < :before")
+    suspend fun pruneRates(before: LocalDate)
 }

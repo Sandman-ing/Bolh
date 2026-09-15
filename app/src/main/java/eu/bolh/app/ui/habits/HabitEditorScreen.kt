@@ -1,5 +1,10 @@
 package eu.bolh.app.ui.habits
 
+import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.consumeWindowInsets
+import eu.bolh.app.ui.common.BolhTextField
 import android.Manifest
 import android.app.TimePickerDialog
 import android.content.pm.PackageManager
@@ -152,6 +157,8 @@ fun HabitEditorScreen(
         Column(
             modifier = Modifier
                 .padding(innerPadding)
+                .consumeWindowInsets(innerPadding)
+                .imePadding()
                 .verticalScroll(rememberScrollState())
                 .animateContentSize(Motion.resize)
                 .padding(bottom = Spacing.xxl),
@@ -198,11 +205,10 @@ fun HabitEditorScreen(
                 )
             }
 
-            OutlinedTextField(
+            BolhTextField(
                 value = draft.name,
                 onValueChange = viewModel::setName,
                 label = { Text(stringResource(R.string.habit_name_hint)) },
-                singleLine = true,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = Spacing.screenPadding, vertical = Spacing.s),
@@ -429,7 +435,7 @@ private fun AdvancedSection(draft: HabitDraft, viewModel: HabitEditorViewModel) 
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable { viewModel.setMode(mode) }
+                .tappable(onClick = { viewModel.setMode(mode) })
                 .padding(horizontal = Spacing.m, vertical = Spacing.xs),
         ) {
             RadioButton(
@@ -448,43 +454,60 @@ private fun AdvancedSection(draft: HabitDraft, viewModel: HabitEditorViewModel) 
         }
     }
 
-    if (draft.mode == HabitMode.Minimum) {
-        OutlinedTextField(
-            value = draft.minimumLabel,
-            onValueChange = viewModel::setMinimumLabel,
-            label = { Text(stringResource(R.string.habit_minimum_hint)) },
-            singleLine = true,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = Spacing.screenPadding, vertical = Spacing.xs),
-        )
-        OutlinedTextField(
-            value = draft.normLabel,
-            onValueChange = viewModel::setNormLabel,
-            label = { Text(stringResource(R.string.habit_norm_hint)) },
-            singleLine = true,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = Spacing.screenPadding, vertical = Spacing.xs),
-        )
+    // Поля режима появляются и уходят переходом: режим переключают,
+    // чтобы посмотреть, что он просит, и подмена скачком дёргала форму.
+    AnimatedVisibility(
+        visible = draft.mode == HabitMode.Minimum,
+        enter = fadeIn(tween(Motion.CONTENT_MS)) + expandVertically(Motion.resize),
+        exit = fadeOut(tween(Motion.CONTENT_MS / 2)) + shrinkVertically(Motion.resize),
+        label = "habit-minimum",
+    ) {
+        Column {
+                BolhTextField(
+                    value = draft.minimumLabel,
+                    onValueChange = viewModel::setMinimumLabel,
+                    label = { Text(stringResource(R.string.habit_minimum_hint)) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = Spacing.screenPadding, vertical = Spacing.xs),
+                )
+                BolhTextField(
+                    value = draft.normLabel,
+                    onValueChange = viewModel::setNormLabel,
+                    label = { Text(stringResource(R.string.habit_norm_hint)) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = Spacing.screenPadding, vertical = Spacing.xs),
+                )
+        }
     }
 
-    if (draft.mode == HabitMode.Limit) {
-        Stepper(
-            label = stringResource(R.string.habit_limit_hint),
-            value = draft.limitPerWeek,
-            onChange = viewModel::setLimitPerWeek,
-        )
+    AnimatedVisibility(
+        visible = draft.mode == HabitMode.Limit,
+        enter = fadeIn(tween(Motion.CONTENT_MS)) + expandVertically(Motion.resize),
+        exit = fadeOut(tween(Motion.CONTENT_MS / 2)) + shrinkVertically(Motion.resize),
+        label = "habit-limit",
+    ) {
+            Stepper(
+                label = stringResource(R.string.habit_limit_hint),
+                value = draft.limitPerWeek,
+                onChange = viewModel::setLimitPerWeek,
+            )
     }
 
-    if (draft.kind == HabitKind.Bad) {
-        NumberField(
-            label = stringResource(R.string.habit_cost_hint),
-            value = draft.costMinor?.let { (it / 100).toString() }.orEmpty(),
-            onValueChange = { text ->
-                viewModel.setCostMinor(text.toLongOrNull()?.times(100))
-            },
-        )
+    AnimatedVisibility(
+        visible = draft.kind == HabitKind.Bad,
+        enter = fadeIn(tween(Motion.CONTENT_MS)) + expandVertically(Motion.resize),
+        exit = fadeOut(tween(Motion.CONTENT_MS / 2)) + shrinkVertically(Motion.resize),
+        label = "habit-cost",
+    ) {
+            NumberField(
+                label = stringResource(R.string.habit_cost_hint),
+                value = draft.costMinor?.let { (it / 100).toString() }.orEmpty(),
+                onValueChange = { text ->
+                    viewModel.setCostMinor(text.toLongOrNull()?.times(100))
+                },
+            )
     }
 
     NumberField(
@@ -525,7 +548,7 @@ private fun AdvancedSection(draft: HabitDraft, viewModel: HabitEditorViewModel) 
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable {
+                .tappable(onClick = {
                     val start = pause?.to ?: java.time.LocalDate.now().plusWeeks(1)
                     android.app.DatePickerDialog(
                         context,
@@ -536,7 +559,7 @@ private fun AdvancedSection(draft: HabitDraft, viewModel: HabitEditorViewModel) 
                         start.monthValue - 1,
                         start.dayOfMonth,
                     ).show()
-                }
+                })
                 .padding(horizontal = Spacing.screenPadding, vertical = Spacing.m),
         ) {
             Column(modifier = Modifier.weight(1f)) {
@@ -551,26 +574,40 @@ private fun AdvancedSection(draft: HabitDraft, viewModel: HabitEditorViewModel) 
                     color = status.textTertiary,
                 )
             }
-            Text(
-                text = pause?.let {
-                    stringResource(
-                        R.string.habit_pause_until,
-                        it.to.format(java.time.format.DateTimeFormatter.ofPattern(stringResource(R.string.date_day_month), locale)),
-                    )
-                } ?: stringResource(R.string.habit_pause_none),
-                style = MaterialTheme.typography.bodyMedium,
-                color = if (pause != null) status.attention else status.textSecondary,
-            )
+            val pauseLabel = pause?.let {
+                stringResource(
+                    R.string.habit_pause_until,
+                    it.to.format(java.time.format.DateTimeFormatter.ofPattern(stringResource(R.string.date_day_month), locale)),
+                )
+            } ?: stringResource(R.string.habit_pause_none)
+            AnimatedContent(
+                targetState = pauseLabel to (pause != null),
+                transitionSpec = {
+                    fadeIn(tween(Motion.CONTENT_MS)) togetherWith fadeOut(tween(Motion.CONTENT_MS / 2))
+                },
+                label = "pause-label",
+            ) { (label, paused) ->
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = if (paused) status.attention else status.textSecondary,
+                )
+            }
         }
-        if (pause != null) {
-            Text(
-                text = stringResource(R.string.habit_pause_clear),
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier
-                    .tappable(onClick = viewModel::clearPause)
-                    .padding(horizontal = Spacing.screenPadding, vertical = Spacing.xs),
-            )
+        AnimatedVisibility(
+            visible = pause != null,
+            enter = fadeIn(tween(Motion.CONTENT_MS)) + expandVertically(Motion.resize),
+            exit = fadeOut(tween(Motion.CONTENT_MS / 2)) + shrinkVertically(Motion.resize),
+            label = "pause-clear",
+        ) {
+                Text(
+                    text = stringResource(R.string.habit_pause_clear),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier
+                        .tappable(onClick = viewModel::clearPause)
+                        .padding(horizontal = Spacing.screenPadding, vertical = Spacing.xs),
+                )
         }
     }
 
@@ -578,7 +615,7 @@ private fun AdvancedSection(draft: HabitDraft, viewModel: HabitEditorViewModel) 
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
-            .clickable {
+            .tappable(onClick = {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
                     ContextCompat.checkSelfPermission(
                         context,
@@ -595,7 +632,7 @@ private fun AdvancedSection(draft: HabitDraft, viewModel: HabitEditorViewModel) 
                     current % 60,
                     android.text.format.DateFormat.is24HourFormat(context),
                 ).show()
-            }
+            })
             .padding(horizontal = Spacing.screenPadding, vertical = Spacing.m),
     ) {
         Text(
@@ -604,25 +641,38 @@ private fun AdvancedSection(draft: HabitDraft, viewModel: HabitEditorViewModel) 
             color = MaterialTheme.colorScheme.onBackground,
             modifier = Modifier.weight(1f),
         )
-        Text(
-            text = draft.reminderMinuteOfDay?.let { "%02d:%02d".format(it / 60, it % 60) } ?: "—",
-            style = MaterialTheme.typography.bodyMedium,
-            color = status.textSecondary,
-        )
+        AnimatedContent(
+            targetState = draft.reminderMinuteOfDay?.let { "%02d:%02d".format(it / 60, it % 60) } ?: "—",
+            transitionSpec = {
+                fadeIn(tween(Motion.CONTENT_MS)) togetherWith fadeOut(tween(Motion.CONTENT_MS / 2))
+            },
+            label = "reminder-time",
+        ) { time ->
+            Text(
+                text = time,
+                style = MaterialTheme.typography.bodyMedium,
+                color = status.textSecondary,
+            )
+        }
         // Напоминание — опция, и выключать его нужно так же просто,
         // как включать. Раньше поставленное время убрать было нечем.
-        if (draft.reminderMinuteOfDay != null) {
-            Icon(
-                painter = painterResource(R.drawable.ic_close),
-                contentDescription = stringResource(R.string.habit_reminder_off),
-                tint = status.textTertiary,
-                modifier = Modifier
-                    .padding(start = Spacing.s)
-                    .size(32.dp)
-                    .clip(CircleShape)
-                    .clickable { viewModel.setReminder(null) }
-                    .padding(8.dp),
-            )
+        AnimatedVisibility(
+            visible = draft.reminderMinuteOfDay != null,
+            enter = fadeIn(tween(Motion.CONTENT_MS)) + expandHorizontally(Motion.resize),
+            exit = fadeOut(tween(Motion.CONTENT_MS / 2)) + shrinkHorizontally(Motion.resize),
+            label = "reminder-off",
+        ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_close),
+                    contentDescription = stringResource(R.string.habit_reminder_off),
+                    tint = status.textTertiary,
+                    modifier = Modifier
+                        .padding(start = Spacing.s)
+                        .size(32.dp)
+                        .clip(CircleShape)
+                        .tapIcon { viewModel.setReminder(null) }
+                        .padding(8.dp),
+                )
         }
     }
 
@@ -632,7 +682,7 @@ private fun AdvancedSection(draft: HabitDraft, viewModel: HabitEditorViewModel) 
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
-            .clickable {
+            .tappable(onClick = {
                 val today = java.time.LocalDate.now()
                 android.app.DatePickerDialog(
                     context,
@@ -648,7 +698,7 @@ private fun AdvancedSection(draft: HabitDraft, viewModel: HabitEditorViewModel) 
                         .toInstant()
                         .toEpochMilli()
                 }.show()
-            }
+            })
             .padding(horizontal = Spacing.screenPadding, vertical = Spacing.m),
     ) {
         Text(
@@ -657,13 +707,21 @@ private fun AdvancedSection(draft: HabitDraft, viewModel: HabitEditorViewModel) 
             color = MaterialTheme.colorScheme.onBackground,
             modifier = Modifier.weight(1f),
         )
-        Text(
-            text = startDate.format(
+        AnimatedContent(
+            targetState = startDate.format(
                 java.time.format.DateTimeFormatter.ofPattern(stringResource(R.string.date_full), locale),
             ),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.primary,
-        )
+            transitionSpec = {
+                fadeIn(tween(Motion.CONTENT_MS)) togetherWith fadeOut(tween(Motion.CONTENT_MS / 2))
+            },
+            label = "start-date",
+        ) { label ->
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.primary,
+            )
+        }
     }
     Hint(
             text = stringResource(R.string.habit_start_date_note),
@@ -673,32 +731,37 @@ private fun AdvancedSection(draft: HabitDraft, viewModel: HabitEditorViewModel) 
         ),
     )
 
-    if (draft.reminderMinuteOfDay != null) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = Spacing.screenPadding, vertical = Spacing.xs),
-        ) {
-            Text(
-                text = stringResource(R.string.habit_reminder_evening),
-                style = MaterialTheme.typography.bodyMedium,
-                color = status.textSecondary,
-                modifier = Modifier.weight(1f),
-            )
-            Switch(
-                checked = draft.reminderRepeatEvening,
-                onCheckedChange = viewModel::setEveningRepeat,
-                colors = SwitchDefaults.colors(
-                    checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
-                    checkedTrackColor = MaterialTheme.colorScheme.primary,
-                    checkedBorderColor = MaterialTheme.colorScheme.primary,
-                    uncheckedThumbColor = status.textTertiary,
-                    uncheckedTrackColor = status.surfaceSunken,
-                    uncheckedBorderColor = status.divider,
-                ),
-            )
-        }
+    AnimatedVisibility(
+        visible = draft.reminderMinuteOfDay != null,
+        enter = fadeIn(tween(Motion.CONTENT_MS)) + expandVertically(Motion.resize),
+        exit = fadeOut(tween(Motion.CONTENT_MS / 2)) + shrinkVertically(Motion.resize),
+        label = "reminder-evening",
+    ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = Spacing.screenPadding, vertical = Spacing.xs),
+            ) {
+                Text(
+                    text = stringResource(R.string.habit_reminder_evening),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = status.textSecondary,
+                    modifier = Modifier.weight(1f),
+                )
+                Switch(
+                    checked = draft.reminderRepeatEvening,
+                    onCheckedChange = viewModel::setEveningRepeat,
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
+                        checkedTrackColor = MaterialTheme.colorScheme.primary,
+                        checkedBorderColor = MaterialTheme.colorScheme.primary,
+                        uncheckedThumbColor = status.textTertiary,
+                        uncheckedTrackColor = status.surfaceSunken,
+                        uncheckedBorderColor = status.divider,
+                    ),
+                )
+            }
     }
 }
 

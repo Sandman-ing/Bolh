@@ -1,5 +1,6 @@
 package eu.bolh.app.ui.goals
 
+import eu.bolh.app.ui.common.tappable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -105,11 +106,17 @@ fun GoalsScreen(
                     text = stringResource(R.string.goals_completed),
                     style = MaterialTheme.typography.labelLarge,
                     color = LocalStatusColors.current.textTertiary,
-                    modifier = Modifier.padding(top = Spacing.l, bottom = Spacing.xs),
+                    modifier = Modifier
+                        .animateItem()
+                        .padding(top = Spacing.l, bottom = Spacing.xs),
                 )
             }
             items(state.completed, key = { "done-" + it.goal.id }) { card ->
-                CompletedGoalCard(card = card, onClick = { onOpenGoal(card.goal.id) })
+                CompletedGoalCard(
+                    card = card,
+                    onClick = { onOpenGoal(card.goal.id) },
+                    modifier = Modifier.animateItem(),
+                )
             }
         }
     }
@@ -132,7 +139,7 @@ private fun SortRow(current: GoalSort, onSelect: (GoalSort) -> Unit) {
                 .clip(shape)
                 .background(status.surfaceRaised)
                 .border(1.dp, status.stroke, shape)
-                .clickable { open = true }
+                .tappable(onClick = { open = true })
                 .padding(horizontal = Spacing.m, vertical = Spacing.s),
         ) {
             Text(
@@ -183,11 +190,15 @@ private fun SortRow(current: GoalSort, onSelect: (GoalSort) -> Unit) {
 
 /** Достигнутая цель: без полосы прогресса и темпа, только итог. */
 @Composable
-private fun CompletedGoalCard(card: CompletedGoalState, onClick: () -> Unit) {
+private fun CompletedGoalCard(
+    card: CompletedGoalState,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val status = LocalStatusColors.current
     val locale = rememberLocale()
 
-    BolhCard(onClick = onClick, accent = status.success) {
+    BolhCard(onClick = onClick, accent = status.success, modifier = modifier) {
         Row(verticalAlignment = Alignment.CenterVertically) {
         Icon(
             painter = painterResource(R.drawable.ic_check),

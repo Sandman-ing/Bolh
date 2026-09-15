@@ -1,5 +1,8 @@
 package eu.bolh.app.data.repository
 
+import eu.bolh.app.data.rates.RatesSnapshot
+import eu.bolh.app.data.rates.RatesClient
+import eu.bolh.app.data.db.entity.CurrencyRateEntity
 import eu.bolh.app.data.db.dao.FinanceDao
 import eu.bolh.app.data.db.entity.AccountEntity
 import eu.bolh.app.data.db.entity.CategoryEntity
@@ -26,6 +29,9 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 
+/** Курсы обновляются не чаще, чем раз в полсуток: они и меняются раз в сутки. */
+private const val RATES_MAX_AGE_MS = 12L * 60 * 60 * 1000
+
 /**
  * Деньги (§6). Первая версия — только ручной ввод: подключение банка требует
  * юрлица, договора и другого уровня требований к безопасности (§6.2).
@@ -34,6 +40,8 @@ class FinanceRepository(
     private val dao: FinanceDao,
     private val clock: Clock = Clock.systemDefaultZone(),
     initialCurrency: String = "EUR",
+    /** Откуда брать курсы. Пусто — курсов нет, итог в разных валютах не считается. */
+    private val ratesClient: RatesClient? = null,
 ) {
 
     /**
@@ -51,6 +59,44 @@ class FinanceRepository(
         }
 
     fun today(): LocalDate = LocalDate.now(clock)
+
+    // --- Курсы валют -------------------------------------------------------
+
+    /** Последние известные курсы или null, если их ещё ни разу не загружали. */
+    fun observeRates(): Flow<RatesSnapshot?> =
+        dao.observeLatestRates().map { rows ->
+            if (rows.isEmpty()) {
+                null
+            } else {
+                RatesSnapshot(rows.first().date, rows.associate { it.code to it.rateToBase })
+            }
+        }
+
+    /**
+     * Обновить курсы, если прежним больше полусуток.
+     *
+     * Без сети ничего не ломается: остаются последние известные, итог
+     * по-прежнему считается — по вчерашнему курсу, о чём сказано рядом с ним.
+     */
+    suspend fun refreshRatesIfStale(maxAgeMillis: Long = RATES_MAX_AGE_MS) {
+        val client = ratesClient ?: return
+        val now = clock.millis()
+        val last = dao.lastRatesFetch()
+        if (last != null && now - last < maxAgeMillis) return
+        val snapshot = client.fetch() ?: return
+        dao.upsertRates(
+            snapshot.perEur.map { (code, rate) ->
+                CurrencyRateEntity(
+                    code = code,
+                    date = snapshot.date,
+                    rateToBase = rate,
+                    fetchedAt = now,
+                )
+            },
+        )
+        // Месяца истории хватает с запасом: для итога нужен только свежий курс.
+        dao.pruneRates(snapshot.date.minusDays(30))
+    }
 
     // --- Счета ------------------------------------------------------------
 

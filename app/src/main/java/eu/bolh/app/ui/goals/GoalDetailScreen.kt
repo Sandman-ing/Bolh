@@ -1,5 +1,18 @@
 package eu.bolh.app.ui.goals
 
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.runtime.key
+import androidx.compose.animation.core.MutableTransitionState
+import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.consumeWindowInsets
+import eu.bolh.app.ui.common.BolhTextField
+import eu.bolh.app.ui.common.animatedMinor
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.animation.togetherWith
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
@@ -208,6 +221,8 @@ fun GoalDetailScreen(
         Column(
             modifier = Modifier
                 .padding(innerPadding)
+                .consumeWindowInsets(innerPadding)
+                .imePadding()
                 .verticalScroll(rememberScrollState())
                 .padding(bottom = Spacing.xxl),
         ) {
@@ -244,22 +259,13 @@ fun GoalDetailScreen(
             }
 
             state.progress?.let { progress ->
-                Box(
-                    modifier = Modifier
-                        .padding(vertical = Spacing.m)
-                        .fillMaxWidth()
-                        .height(6.dp)
-                        .clip(RoundedCornerShape(3.dp))
-                        .background(status.surfaceSunken),
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth(progress.toFloat().coerceIn(0f, 1f))
-                            .height(6.dp)
-                            .clip(RoundedCornerShape(3.dp))
-                            .background(MaterialTheme.colorScheme.primary),
-                    )
-                }
+                // Полоса доезжает до новой доли: закрытый этап виден как шаг.
+                ProgressLine(
+                    fraction = progress.toFloat().coerceIn(0f, 1f),
+                    color = MaterialTheme.colorScheme.primary,
+                    track = status.surfaceSunken,
+                    modifier = Modifier.padding(vertical = Spacing.m),
+                )
                 Text(
                     text = stringResource(
                         R.string.goal_progress,
@@ -427,7 +433,7 @@ fun GoalDetailScreen(
                             tint = status.textTertiary,
                             modifier = Modifier
                                 .clip(CircleShape)
-                                .clickable { viewModel.unlinkHabit(habit.id) }
+                                .tapIcon { viewModel.unlinkHabit(habit.id) }
                                 .padding(Spacing.xs)
                                 .size(16.dp),
                         )
@@ -466,164 +472,204 @@ fun GoalDetailScreen(
 
             // Бюджет — единственное место, где цель и деньги встречаются напрямую.
             // Пока его не позвали, он не занимает экран: по умолчанию всё выключено (§3.1).
-            val jar = state.jar
-            if (jar == null && !addingBudget) {
-                PillButton(
-                    text = stringResource(R.string.goal_budget_add),
-                    onClick = { addingBudget = true },
-                    icon = R.drawable.ic_plus,
-                    modifier = Modifier.padding(
-                        horizontal = Spacing.screenPadding,
-                        vertical = Spacing.m,
-                    ),
-                )
-            } else {
-            InfoBlock(
-                title = stringResource(R.string.goal_jar_title),
-                titleColor = status.textTertiary,
-            ) {
-                if (jar == null) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        OutlinedTextField(
-                            value = jarTarget,
-                            onValueChange = { jarTarget = it },
-                            label = { Text(stringResource(R.string.goal_jar_target_hint)) },
-                            singleLine = true,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                            modifier = Modifier.weight(1f),
-                        )
-                        PillButton(
-                            text = stringResource(R.string.goal_jar_create),
-                            onClick = {
-                                viewModel.createJar(parseMinor(jarTarget))
-                                jarTarget = ""
-                                addingBudget = false
-                            },
-                            icon = R.drawable.ic_savings,
-                            modifier = Modifier.padding(start = Spacing.s),
-                        )
-                    }
-                } else {
-                    Text(
-                        text = stringResource(
-                            R.string.finance_jar_progress,
-                            Money.format(state.jarCurrentMinor, state.baseCurrency, locale),
-                            Money.format(jar.targetMinor, state.baseCurrency, locale),
+            //
+            // Кнопка, ввод суммы и сам бюджет сменяют друг друга переходом: блок,
+            // возникающий на месте кнопки мгновенно, читается как сбой. Переход
+            // зависит только от этапа, а не от сумм, поэтому взнос не перерисовывает
+            // блок заново, а поля внутри не теряют фокус.
+            //
+            // Удаляемый бюджет уходит вместе со своими цифрами: пока блок гаснет,
+            // он держит последний бюджет, а не превращается в пустую рамку.
+            var lastJar by remember { mutableStateOf(state.jar) }
+            SideEffect { if (state.jar != null) lastJar = state.jar }
+            LaunchedEffect(state.jar) { if (state.jar != null) addingBudget = false }
+            val budgetStage = when {
+                state.jar != null -> BudgetStage.Exists
+                addingBudget -> BudgetStage.Entering
+                else -> BudgetStage.Collapsed
+            }
+            AnimatedContent(
+                targetState = budgetStage,
+                transitionSpec = {
+                    (fadeIn(tween(Motion.CONTENT_MS)) + expandVertically(Motion.resize)) togetherWith
+                        (fadeOut(tween(Motion.CONTENT_MS / 2)) + shrinkVertically(Motion.resize))
+                },
+                label = "goal-budget",
+            ) { stage ->
+                when (stage) {
+                    BudgetStage.Collapsed -> PillButton(
+                        text = stringResource(R.string.goal_budget_add),
+                        onClick = { addingBudget = true },
+                        icon = R.drawable.ic_plus,
+                        modifier = Modifier.padding(
+                            horizontal = Spacing.screenPadding,
+                            vertical = Spacing.m,
                         ),
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.primary,
                     )
-                    Box(
-                        modifier = Modifier
-                            .padding(top = Spacing.s)
-                            .fillMaxWidth()
-                            .height(6.dp)
-                            .clip(RoundedCornerShape(3.dp))
-                            .background(status.surfaceSunken),
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth(
-                                    if (jar.targetMinor > 0L) {
-                                        (state.jarCurrentMinor.toFloat() / jar.targetMinor)
-                                            .coerceIn(0f, 1f)
-                                    } else {
-                                        0f
-                                    },
-                                )
-                                .height(6.dp)
-                                .clip(RoundedCornerShape(3.dp))
-                                .background(MaterialTheme.colorScheme.primary),
-                        )
-                    }
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(top = Spacing.s),
-                    ) {
-                        OutlinedTextField(
-                            value = jarAmount,
-                            onValueChange = { jarAmount = it },
-                            label = { Text(stringResource(R.string.goal_jar_add_hint)) },
-                            singleLine = true,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                            modifier = Modifier.weight(1f),
-                        )
-                        PillButton(
-                            text = stringResource(R.string.goal_jar_add),
-                            onClick = {
-                                viewModel.addContribution(parseMinor(jarAmount))
-                                jarAmount = ""
-                            },
-                            icon = R.drawable.ic_plus,
-                            modifier = Modifier.padding(start = Spacing.s),
-                        )
-                    }
 
-                    // Сумма цели меняется, пополнение снимается, копилка удаляется:
-                    // ошибиться на вводе денег слишком легко, чтобы это было навсегда.
-                    if (editingJar) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(top = Spacing.s),
-                        ) {
+                    BudgetStage.Entering -> InfoBlock(
+                        title = stringResource(R.string.goal_jar_title),
+                        titleColor = status.textTertiary,
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
                             OutlinedTextField(
                                 value = jarTarget,
                                 onValueChange = { jarTarget = it },
                                 label = { Text(stringResource(R.string.goal_jar_target_hint)) },
                                 singleLine = true,
-                                keyboardOptions = KeyboardOptions(
-                                    keyboardType = KeyboardType.Decimal,
-                                ),
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                                 modifier = Modifier.weight(1f),
                             )
                             PillButton(
-                                text = stringResource(R.string.goal_save),
+                                text = stringResource(R.string.goal_jar_create),
                                 onClick = {
-                                    viewModel.setJarTarget(parseMinor(jarTarget))
+                                    // Кнопка не сворачивает ввод сама: блок сменится,
+                                    // когда бюджет появится в базе, без мигания кнопки.
+                                    viewModel.createJar(parseMinor(jarTarget))
                                     jarTarget = ""
-                                    editingJar = false
                                 },
-                                icon = R.drawable.ic_check,
+                                icon = R.drawable.ic_savings,
                                 modifier = Modifier.padding(start = Spacing.s),
                             )
                         }
                     }
 
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(Spacing.s),
-                        modifier = Modifier.padding(top = Spacing.m),
-                    ) {
-                        PillButton(
-                            text = stringResource(R.string.goal_jar_edit),
-                            onClick = {
-                                editingJar = !editingJar
-                                if (editingJar) {
-                                    // Деление на сто теряло копейки и врало
-                                    // в валютах без дробной части.
-                                    jarTarget = Money.formatPlain(
-                                        jar.targetMinor,
-                                        Money.fractionDigitsOf(state.baseCurrency),
+                    BudgetStage.Exists -> {
+                        val jar = state.jar ?: lastJar ?: return@AnimatedContent
+                        InfoBlock(
+                            title = stringResource(R.string.goal_jar_title),
+                            titleColor = status.textTertiary,
+                        ) {
+                            // Суммы досчитываются до нового значения: взнос виден
+                            // как движение, а не как подменённая цифра.
+                            Text(
+                                text = stringResource(
+                                    R.string.finance_jar_progress,
+                                    Money.format(
+                                        animatedMinor(state.jarCurrentMinor),
+                                        state.baseCurrency,
                                         locale,
+                                    ),
+                                    Money.format(
+                                        animatedMinor(jar.targetMinor),
+                                        state.baseCurrency,
+                                        locale,
+                                    ),
+                                ),
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.primary,
+                            )
+                            ProgressLine(
+                                fraction = if (jar.targetMinor > 0L) {
+                                    (state.jarCurrentMinor.toFloat() / jar.targetMinor)
+                                        .coerceIn(0f, 1f)
+                                } else {
+                                    0f
+                                },
+                                color = MaterialTheme.colorScheme.primary,
+                                track = status.surfaceSunken,
+                                modifier = Modifier.padding(top = Spacing.s),
+                            )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.padding(top = Spacing.s),
+                            ) {
+                                OutlinedTextField(
+                                    value = jarAmount,
+                                    onValueChange = { jarAmount = it },
+                                    label = { Text(stringResource(R.string.goal_jar_add_hint)) },
+                                    singleLine = true,
+                                    keyboardOptions = KeyboardOptions(
+                                        keyboardType = KeyboardType.Decimal,
+                                    ),
+                                    modifier = Modifier.weight(1f),
+                                )
+                                PillButton(
+                                    text = stringResource(R.string.goal_jar_add),
+                                    onClick = {
+                                        viewModel.addContribution(parseMinor(jarAmount))
+                                        jarAmount = ""
+                                    },
+                                    icon = R.drawable.ic_plus,
+                                    modifier = Modifier.padding(start = Spacing.s),
+                                )
+                            }
+
+                            // Сумма цели меняется, пополнение снимается, копилка
+                            // удаляется: ошибиться на вводе денег слишком легко,
+                            // чтобы это было навсегда.
+                            AnimatedVisibility(
+                                visible = editingJar,
+                                enter = fadeIn(tween(Motion.CONTENT_MS)) +
+                                    expandVertically(Motion.resize),
+                                exit = fadeOut(tween(Motion.CONTENT_MS / 2)) +
+                                    shrinkVertically(Motion.resize),
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.padding(top = Spacing.s),
+                                ) {
+                                    OutlinedTextField(
+                                        value = jarTarget,
+                                        onValueChange = { jarTarget = it },
+                                        label = {
+                                            Text(stringResource(R.string.goal_jar_target_hint))
+                                        },
+                                        singleLine = true,
+                                        keyboardOptions = KeyboardOptions(
+                                            keyboardType = KeyboardType.Decimal,
+                                        ),
+                                        modifier = Modifier.weight(1f),
+                                    )
+                                    PillButton(
+                                        text = stringResource(R.string.goal_save),
+                                        onClick = {
+                                            viewModel.setJarTarget(parseMinor(jarTarget))
+                                            jarTarget = ""
+                                            editingJar = false
+                                        },
+                                        icon = R.drawable.ic_check,
+                                        modifier = Modifier.padding(start = Spacing.s),
                                     )
                                 }
-                            },
-                            modifier = Modifier.weight(1f),
-                        )
-                        PillButton(
-                            text = stringResource(R.string.goal_jar_undo),
-                            onClick = viewModel::undoLastContribution,
-                            color = status.textSecondary,
-                            modifier = Modifier.weight(1f),
-                        )
+                            }
+
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(Spacing.s),
+                                modifier = Modifier.padding(top = Spacing.m),
+                            ) {
+                                PillButton(
+                                    text = stringResource(R.string.goal_jar_edit),
+                                    onClick = {
+                                        editingJar = !editingJar
+                                        if (editingJar) {
+                                            // Деление на сто теряло копейки и врало
+                                            // в валютах без дробной части.
+                                            jarTarget = Money.formatPlain(
+                                                jar.targetMinor,
+                                                Money.fractionDigitsOf(state.baseCurrency),
+                                                locale,
+                                            )
+                                        }
+                                    },
+                                    modifier = Modifier.weight(1f),
+                                )
+                                PillButton(
+                                    text = stringResource(R.string.goal_jar_undo),
+                                    onClick = viewModel::undoLastContribution,
+                                    color = status.textSecondary,
+                                    modifier = Modifier.weight(1f),
+                                )
+                            }
+                            PillButton(
+                                text = stringResource(R.string.goal_jar_delete),
+                                onClick = viewModel::deleteJar,
+                                color = status.problem,
+                                modifier = Modifier.padding(top = Spacing.s),
+                            )
+                        }
                     }
-                    PillButton(
-                        text = stringResource(R.string.goal_jar_delete),
-                        onClick = viewModel::deleteJar,
-                        color = status.problem,
-                        modifier = Modifier.padding(top = Spacing.s),
-                    )
                 }
-            }
             }
 
             EstimateCard(
@@ -645,115 +691,132 @@ fun GoalDetailScreen(
                 ),
             )
 
-            state.stages.forEach { stageState ->
-                // Воздуха внутри больше, чем было: название этапа упиралось
-                // в рамку и читалось тесно. Слева поле меньше — там номер
-                // и отметка, они сами держат отступ (§9.2).
-                BolhCard(
-                    corner = Radius.block,
-                    contentPadding = PaddingValues(
-                        start = Spacing.s,
-                        end = Spacing.l,
-                        top = Spacing.m,
-                        bottom = Spacing.m,
-                    ),
-                    modifier = Modifier.padding(
-                        horizontal = Spacing.screenPadding,
-                        vertical = Spacing.s,
-                    ),
-                ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .tappable(
-                            onClick = { viewModel.toggleStage(stageState.stage) },
-                            onLongClick = {
-                                pendingStage = stageState.stage.id to stageState.stage.name
-                            },
-                            longClickLabel = stringResource(R.string.goal_rename),
-                        ),
-                ) {
-                    // Номер этапа: порядок — часть смысла, без него список
-                    // читается как набор, а не как путь (§4.1).
-                    Text(
-                        text = (state.stages.indexOf(stageState) + 1).toString(),
-                        style = NumberSmall,
-                        color = if (stageState.stage.isDone) {
-                            status.textTertiary
-                        } else {
-                            MaterialTheme.colorScheme.primary
-                        },
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier
-                            .padding(start = Spacing.s)
-                            .size(24.dp)
-                            .clip(CircleShape)
-                            .background(status.surfaceSunken)
-                            .wrapContentHeight(),
-                    )
-                    BolhCheck(
-                        checked = stageState.stage.isDone,
-                        onCheckedChange = { viewModel.toggleStage(stageState.stage) },
-                    )
-                    Text(
-                        text = stageState.stage.name,
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = if (stageState.stage.isDone) {
-                            status.textTertiary
-                        } else {
-                            MaterialTheme.colorScheme.onBackground
-                        },
-                        textDecoration = if (stageState.stage.isDone) TextDecoration.LineThrough else null,
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(start = Spacing.xs, end = Spacing.s),
-                    )
-                    stageState.stage.dueDate?.let {
-                        Text(
-                            text = monthYear(it, locale),
-                            style = MaterialTheme.typography.labelMedium,
-                            color = status.textTertiary,
-                        )
+            // Новый этап проявляется на своём месте, а список под ним раздвигается
+            // плавно; удалённый схлопывает своё место, а не исчезает щелчком.
+            val firstStages = remember(goal.id) { state.stages.map { it.stage.id }.toSet() }
+            Column(modifier = Modifier.animateContentSize(Motion.resize)) {
+                state.stages.forEach { stageState ->
+                    key(stageState.stage.id) {
+                        val appear = remember {
+                            MutableTransitionState(stageState.stage.id in firstStages).apply {
+                                targetState = true
+                            }
+                        }
+                        AnimatedVisibility(
+                            visibleState = appear,
+                            enter = fadeIn(tween(Motion.CONTENT_MS)) + expandVertically(Motion.resize),
+                        ) {
+                            // Воздуха внутри больше, чем было: название этапа упиралось
+                            // в рамку и читалось тесно. Слева поле меньше — там номер
+                            // и отметка, они сами держат отступ (§9.2).
+                            BolhCard(
+                                corner = Radius.block,
+                                contentPadding = PaddingValues(
+                                    start = Spacing.s,
+                                    end = Spacing.l,
+                                    top = Spacing.m,
+                                    bottom = Spacing.m,
+                                ),
+                                modifier = Modifier.padding(
+                                    horizontal = Spacing.screenPadding,
+                                    vertical = Spacing.s,
+                                ),
+                            ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .tappable(
+                                        onClick = { viewModel.toggleStage(stageState.stage) },
+                                        onLongClick = {
+                                            pendingStage = stageState.stage.id to stageState.stage.name
+                                        },
+                                        longClickLabel = stringResource(R.string.goal_rename),
+                                    ),
+                            ) {
+                                // Номер этапа: порядок — часть смысла, без него список
+                                // читается как набор, а не как путь (§4.1).
+                                Text(
+                                    text = (state.stages.indexOf(stageState) + 1).toString(),
+                                    style = NumberSmall,
+                                    color = if (stageState.stage.isDone) {
+                                        status.textTertiary
+                                    } else {
+                                        MaterialTheme.colorScheme.primary
+                                    },
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier
+                                        .padding(start = Spacing.s)
+                                        .size(24.dp)
+                                        .clip(CircleShape)
+                                        .background(status.surfaceSunken)
+                                        .wrapContentHeight(),
+                                )
+                                BolhCheck(
+                                    checked = stageState.stage.isDone,
+                                    onCheckedChange = { viewModel.toggleStage(stageState.stage) },
+                                )
+                                Text(
+                                    text = stageState.stage.name,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = if (stageState.stage.isDone) {
+                                        status.textTertiary
+                                    } else {
+                                        MaterialTheme.colorScheme.onBackground
+                                    },
+                                    textDecoration = if (stageState.stage.isDone) TextDecoration.LineThrough else null,
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .padding(start = Spacing.xs, end = Spacing.s),
+                                )
+                                stageState.stage.dueDate?.let {
+                                    Text(
+                                        text = monthYear(it, locale),
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = status.textTertiary,
+                                    )
+                                }
+                            }
+                            stageState.tasks.forEach { task ->
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .tappable(
+                                            onClick = { viewModel.toggleTask(task) },
+                                            onLongClick = { pendingTask = task.id to task.name },
+                                            longClickLabel = stringResource(R.string.goal_rename),
+                                        )
+                                        .padding(start = Spacing.xl, top = Spacing.xs, bottom = Spacing.xs),
+                                ) {
+                                    BolhCheck(
+                                        checked = task.isDone,
+                                        onCheckedChange = { viewModel.toggleTask(task) },
+                                        size = 20.dp,
+                                        square = true,
+                                    )
+                                    val taskColor by animateColorAsState(
+                                        targetValue = if (task.isDone) {
+                                            status.textTertiary
+                                        } else {
+                                            status.textSecondary
+                                        },
+                                        animationSpec = Motion.color,
+                                        label = "task-color",
+                                    )
+                                    Text(
+                                        text = task.name,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = taskColor,
+                                        textDecoration = if (task.isDone) TextDecoration.LineThrough else null,
+                                        modifier = Modifier.padding(start = Spacing.xs, end = Spacing.s),
+                                    )
+                                }
+                            }
+                            AddTaskRow(onAdd = { viewModel.addTask(stageState.stage.id, it) })
+                            }
+                        }
                     }
-                }
-                stageState.tasks.forEach { task ->
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .tappable(
-                                onClick = { viewModel.toggleTask(task) },
-                                onLongClick = { pendingTask = task.id to task.name },
-                                longClickLabel = stringResource(R.string.goal_rename),
-                            )
-                            .padding(start = Spacing.xl, top = Spacing.xs, bottom = Spacing.xs),
-                    ) {
-                        BolhCheck(
-                            checked = task.isDone,
-                            onCheckedChange = { viewModel.toggleTask(task) },
-                            size = 20.dp,
-                            square = true,
-                        )
-                        val taskColor by animateColorAsState(
-                            targetValue = if (task.isDone) {
-                                status.textTertiary
-                            } else {
-                                status.textSecondary
-                            },
-                            animationSpec = Motion.color,
-                            label = "task-color",
-                        )
-                        Text(
-                            text = task.name,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = taskColor,
-                            textDecoration = if (task.isDone) TextDecoration.LineThrough else null,
-                            modifier = Modifier.padding(start = Spacing.xs, end = Spacing.s),
-                        )
-                    }
-                }
-                AddTaskRow(onAdd = { viewModel.addTask(stageState.stage.id, it) })
                 }
             }
 
@@ -764,56 +827,66 @@ fun GoalDetailScreen(
                     vertical = Spacing.s,
                 ),
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    OutlinedTextField(
-                        value = newStage,
-                        onValueChange = viewModel::setNewStage,
-                        label = { Text(stringResource(R.string.goal_stage_hint)) },
-                        singleLine = true,
-                        modifier = Modifier.weight(1f),
-                    )
-                    PillButton(
-                        text = stringResource(R.string.goal_add_stage),
-                        onClick = viewModel::addStage,
-                        icon = R.drawable.ic_flag,
-                        modifier = Modifier.padding(start = Spacing.s),
-                    )
-                }
-            }
-
-            if (goal.status == GoalStatus.Done) {
-                Text(
-                    text = goal.doneAt?.let {
-                        stringResource(R.string.goal_completed_at, monthYear(it, locale))
-                    }.orEmpty(),
-                    style = MaterialTheme.typography.titleMedium,
-                    color = status.success,
-                    modifier = Modifier.padding(
-                        horizontal = Spacing.screenPadding,
-                        vertical = Spacing.xl,
-                    ),
+                // Поле во всю ширину, кнопка под ним: рядом с кнопкой поле
+                // сжималось так, что даже подсказка ломалась на две строки.
+                BolhTextField(
+                    value = newStage,
+                    onValueChange = viewModel::setNewStage,
+                    label = { Text(stringResource(R.string.goal_stage_hint)) },
+                    modifier = Modifier.fillMaxWidth(),
                 )
                 PillButton(
-                    text = stringResource(R.string.goal_reopen),
-                    onClick = viewModel::reopen,
-                    color = status.textSecondary,
-                    modifier = Modifier.padding(horizontal = Spacing.screenPadding),
+                    text = stringResource(R.string.goal_add_stage),
+                    onClick = viewModel::addStage,
+                    icon = R.drawable.ic_flag,
+                    modifier = Modifier.padding(top = Spacing.s),
                 )
-            } else {
-                Button(
-                    onClick = {
-                        viewModel.complete()
-                        celebrating = true
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary,
-                    ),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = Spacing.screenPadding, vertical = Spacing.xl),
-                ) {
-                    Text(stringResource(R.string.goal_complete))
+            }
+
+            // Завершение и возврат цели в работу сменяют друг друга переходом.
+            AnimatedContent(
+                targetState = goal.status == GoalStatus.Done,
+                transitionSpec = {
+                    fadeIn(tween(Motion.CONTENT_MS)) togetherWith fadeOut(tween(Motion.CONTENT_MS / 2))
+                },
+                label = "goal-done",
+            ) { done ->
+                Column {
+                    if (done) {
+                        Text(
+                            text = goal.doneAt?.let {
+                                stringResource(R.string.goal_completed_at, monthYear(it, locale))
+                            }.orEmpty(),
+                            style = MaterialTheme.typography.titleMedium,
+                            color = status.success,
+                            modifier = Modifier.padding(
+                                horizontal = Spacing.screenPadding,
+                                vertical = Spacing.xl,
+                            ),
+                        )
+                        PillButton(
+                            text = stringResource(R.string.goal_reopen),
+                            onClick = viewModel::reopen,
+                            color = status.textSecondary,
+                            modifier = Modifier.padding(horizontal = Spacing.screenPadding),
+                        )
+                    } else {
+                        Button(
+                            onClick = {
+                                viewModel.complete()
+                                celebrating = true
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                contentColor = MaterialTheme.colorScheme.onPrimary,
+                            ),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = Spacing.screenPadding, vertical = Spacing.xl),
+                        ) {
+                            Text(stringResource(R.string.goal_complete))
+                        }
+                    }
                 }
             }
 
@@ -850,49 +923,61 @@ fun GoalDetailScreen(
 private fun AddTaskRow(onAdd: (String) -> Unit) {
     var text by remember { mutableStateOf("") }
     var open by remember { mutableStateOf(false) }
+    val fallback = stringResource(R.string.goal_task_default)
 
     // Поле под каждым этапом превращает список в простыню: пока не позвали —
-    // это одна строка текста.
-    if (!open) {
-        // Строка серого текста не читалась как действие: теперь это кнопка
-        // со значком задачи, в том же ритме, что остальные кнопки.
-        PillButton(
-            text = stringResource(R.string.goal_add_task),
-            onClick = { open = true },
-            icon = R.drawable.ic_task,
-            modifier = Modifier.padding(
-                start = Spacing.xl,
-                top = Spacing.xs,
-                bottom = Spacing.s,
-            ),
-        )
-        return
-    }
-
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.padding(start = Spacing.xxl, end = Spacing.s, bottom = Spacing.s),
-    ) {
-        OutlinedTextField(
-            value = text,
-            onValueChange = { text = it },
-            label = { Text(stringResource(R.string.goal_task_hint)) },
-            singleLine = true,
-            modifier = Modifier.weight(1f),
-        )
-        // Поле остаётся открытым, а пустая задача заводится с именем по
-        // умолчанию: человек может набросать пять пустых строк и заполнить их
-        // потом, переименовав долгим нажатием.
-        val fallback = stringResource(R.string.goal_task_default)
-        PillButton(
-            text = stringResource(R.string.goal_add_task),
-            onClick = {
-                onAdd(text.ifBlank { fallback })
-                text = ""
-            },
-            icon = R.drawable.ic_task,
-            modifier = Modifier.padding(start = Spacing.s),
-        )
+    // это одна кнопка. Кнопка и поле сменяют друг друга переходом, а поле сразу
+    // получает клавиатуру: раз позвали, значит, будут писать.
+    AnimatedContent(
+        targetState = open,
+        transitionSpec = {
+            (fadeIn(tween(Motion.CONTENT_MS)) + expandVertically(Motion.resize)) togetherWith
+                (fadeOut(tween(Motion.CONTENT_MS / 2)) + shrinkVertically(Motion.resize))
+        },
+        label = "add-task",
+    ) { writing ->
+        if (!writing) {
+            // Строка серого текста не читалась как действие: теперь это кнопка
+            // со значком задачи, в том же ритме, что остальные кнопки.
+            PillButton(
+                text = stringResource(R.string.goal_add_task),
+                onClick = { open = true },
+                icon = R.drawable.ic_task,
+                modifier = Modifier.padding(
+                    start = Spacing.xl,
+                    top = Spacing.xs,
+                    bottom = Spacing.s,
+                ),
+            )
+        } else {
+            val focus = remember { FocusRequester() }
+            LaunchedEffect(Unit) { focus.requestFocus() }
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(start = Spacing.xxl, end = Spacing.s, bottom = Spacing.s),
+            ) {
+                BolhTextField(
+                    value = text,
+                    onValueChange = { text = it },
+                    label = { Text(stringResource(R.string.goal_task_hint)) },
+                    modifier = Modifier
+                        .weight(1f)
+                        .focusRequester(focus),
+                )
+                // Поле остаётся открытым, а пустая задача заводится с именем по
+                // умолчанию: человек может набросать пять пустых строк и заполнить их
+                // потом, переименовав долгим нажатием.
+                PillButton(
+                    text = stringResource(R.string.goal_add_task),
+                    onClick = {
+                        onAdd(text.ifBlank { fallback })
+                        text = ""
+                    },
+                    icon = R.drawable.ic_task,
+                    modifier = Modifier.padding(start = Spacing.s),
+                )
+            }
+        }
     }
 }
 
@@ -964,8 +1049,8 @@ private fun EstimateCard(
                 Text(
                     text = stringResource(
                         R.string.goal_estimate_total,
-                        Money.format(state.costPaidMinor, state.baseCurrency, locale),
-                        Money.format(state.costPlannedMinor, state.baseCurrency, locale),
+                        Money.format(animatedMinor(state.costPaidMinor), state.baseCurrency, locale),
+                        Money.format(animatedMinor(state.costPlannedMinor), state.baseCurrency, locale),
                     ),
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.primary,
@@ -1004,7 +1089,7 @@ private fun EstimateCard(
             Text(
                 text = stringResource(
                     R.string.goal_estimate_unassigned,
-                    Money.format(state.unassignedMinor, state.baseCurrency, locale),
+                    Money.format(animatedMinor(state.unassignedMinor), state.baseCurrency, locale),
                 ),
                 style = MaterialTheme.typography.labelMedium,
                 color = status.textTertiary,
@@ -1017,11 +1102,10 @@ private fun EstimateCard(
             horizontalArrangement = Arrangement.spacedBy(Spacing.s),
             modifier = Modifier.padding(top = Spacing.m),
         ) {
-            OutlinedTextField(
+            BolhTextField(
                 value = name,
                 onValueChange = { name = it },
                 label = { Text(stringResource(R.string.goal_estimate_item_hint)) },
-                singleLine = true,
                 modifier = Modifier.weight(1.4f),
             )
             OutlinedTextField(
@@ -1114,7 +1198,7 @@ private fun CostItemRow(
             Text(
                 text = stringResource(
                     R.string.goal_estimate_paid_of,
-                    Money.format(row.paidMinor, currency, locale),
+                    Money.format(animatedMinor(row.paidMinor), currency, locale),
                     Money.format(row.item.plannedMinor, currency, locale),
                 ),
                 style = NumberSmall,
@@ -1176,3 +1260,6 @@ private fun ProgressLine(
         )
     }
 }
+
+/** Этап блока бюджета в цели: кнопка, ввод суммы или сам бюджет. */
+private enum class BudgetStage { Collapsed, Entering, Exists }

@@ -1,5 +1,7 @@
 package eu.bolh.app.ui.navigation
 
+import androidx.compose.foundation.layout.consumeWindowInsets
+
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -165,7 +167,12 @@ fun BolhApp(navController: NavHostController = rememberNavController()) {
             NavHost(
                 navController = navController,
                 startDestination = BolhDestination.start.route,
-                modifier = Modifier.padding(innerPadding),
+                // Отступы общего каркаса помечаются израсходованными. Без этого
+                // экран со своей шапкой добавлял высоту строки состояния второй
+                // раз, и над заголовком висела пустая полоса.
+                modifier = Modifier
+                    .padding(innerPadding)
+                    .consumeWindowInsets(innerPadding),
                 enterTransition = {
                     slideInHorizontally(tween(SCREEN_MOVE_MS)) { it / 6 } +
                         fadeIn(tween(SCREEN_FADE_MS))

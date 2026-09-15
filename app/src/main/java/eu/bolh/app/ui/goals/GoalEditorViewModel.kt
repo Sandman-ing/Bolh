@@ -32,7 +32,12 @@ data class DeadlineCheck(
 )
 
 /** Этап в черновике цели: имя и задачи, которые ещё нигде не сохранены. */
-data class StageDraft(val name: String, val tasks: List<String> = emptyList())
+data class StageDraft(
+    val name: String,
+    val tasks: List<String> = emptyList(),
+    /** Постоянный ключ: по нему этапы переставляются плавно, а поле не теряет фокус. */
+    val id: String = UUID.randomUUID().toString(),
+)
 
 data class GoalDraft(
     val id: String? = null,

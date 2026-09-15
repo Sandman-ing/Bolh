@@ -1,5 +1,12 @@
 package eu.bolh.app.ui.stats
 
+import eu.bolh.app.ui.common.tappable
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -199,7 +206,7 @@ fun StatsScreen(
                             .clip(CircleShape)
                             .background(status.surfaceRaised)
                             .border(1.dp, status.stroke, CircleShape)
-                            .clickable { blocksMenu = true }
+                            .tapIcon { blocksMenu = true }
                             .padding(Spacing.s)
                             .size(20.dp),
                     )
@@ -290,10 +297,14 @@ fun StatsScreen(
             SectionCard(
                 title = stringResource(R.string.stats_block_habits),
                 titleColor = HabitsViolet,
-                modifier = Modifier.padding(
-                    horizontal = Spacing.screenPadding,
-                    vertical = Spacing.s,
-                ),
+                // Блок, включённый или выключенный в настройке вида, проявляется
+                // на месте, а соседние блоки съезжают к нему плавно.
+                modifier = Modifier
+                    .animateItem()
+                    .padding(
+                        horizontal = Spacing.screenPadding,
+                        vertical = Spacing.s,
+                    ),
             ) {
                 if (state.habitRows.isEmpty()) {
                     EmptyLine(stringResource(R.string.stats_no_habits))
@@ -310,10 +321,10 @@ fun StatsScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clip(RoundedCornerShape(Radius.block))
-                                .clickable {
+                                .tappable(onClick = {
                                     openHabit = if (open) null else row.id
                                     month = YearMonth.now()
-                                }
+                                })
                                 .padding(vertical = Spacing.xs),
                         ) {
                             Text(
@@ -337,13 +348,20 @@ fun StatsScreen(
                                 modifier = Modifier.padding(top = Spacing.xs),
                             )
                         }
-                        if (open) {
-                            HabitCalendar(
-                                days = row.days,
-                                month = month,
-                                onPrevious = { month = month.minusMonths(1) },
-                                onNext = { month = month.plusMonths(1) },
-                            )
+                        // Календарь раскрывается, а не возникает: строки под ним уезжают
+                        // вниз, и видно, откуда он взялся.
+                        AnimatedVisibility(
+                            visible = open,
+                            enter = fadeIn(tween(Motion.CONTENT_MS)) + expandVertically(Motion.resize),
+                            exit = fadeOut(tween(Motion.CONTENT_MS / 2)) + shrinkVertically(Motion.resize),
+                            label = "habit-calendar",
+                        ) {
+                                HabitCalendar(
+                                    days = row.days,
+                                    month = month,
+                                    onPrevious = { month = month.minusMonths(1) },
+                                    onNext = { month = month.plusMonths(1) },
+                                )
                         }
                     }
                 }
@@ -354,10 +372,12 @@ fun StatsScreen(
             SectionCard(
                 title = stringResource(R.string.stats_block_goals),
                 titleColor = GoalsTeal,
-                modifier = Modifier.padding(
-                    horizontal = Spacing.screenPadding,
-                    vertical = Spacing.s,
-                ),
+                modifier = Modifier
+                    .animateItem()
+                    .padding(
+                        horizontal = Spacing.screenPadding,
+                        vertical = Spacing.s,
+                    ),
             ) {
                 if (state.goalRows.isEmpty()) {
                     EmptyLine(stringResource(R.string.stats_no_goals))
@@ -393,10 +413,12 @@ fun StatsScreen(
             SectionCard(
                 title = stringResource(R.string.stats_block_finance),
                 titleColor = FinanceBlue,
-                modifier = Modifier.padding(
-                    horizontal = Spacing.screenPadding,
-                    vertical = Spacing.s,
-                ),
+                modifier = Modifier
+                    .animateItem()
+                    .padding(
+                        horizontal = Spacing.screenPadding,
+                        vertical = Spacing.s,
+                    ),
             ) {
                 if (state.categories.isEmpty()) {
                     EmptyLine(stringResource(R.string.stats_no_spend))

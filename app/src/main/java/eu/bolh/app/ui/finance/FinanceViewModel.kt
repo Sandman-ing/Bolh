@@ -1,5 +1,6 @@
 package eu.bolh.app.ui.finance
 
+import eu.bolh.app.domain.analytics.CurrencyMath
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -76,6 +77,19 @@ data class JarRow(val jar: SavingsJar, val goal: Goal?, val currentMinor: Long)
 
 data class MonthSpend(val month: YearMonth, val amountMinor: Long)
 
+/**
+ * Примерный итог по всем счетам в одной валюте (§6.3).
+ *
+ * [missing] — валюты, для которых курса ещё нет: сложить их честно нельзя,
+ * и об этом говорится прямо, а не молча.
+ */
+data class ApproxTotal(
+    val minor: Long,
+    val currency: String,
+    val ratesDate: LocalDate?,
+    val missing: List<String>,
+)
+
 data class FinanceUiState(
     val accounts: List<AccountBalance> = emptyList(),
     val totalMinor: Long = 0L,
@@ -99,11 +113,15 @@ data class FinanceUiState(
     /**
      * Валюта, в которой сейчас считается разбор.
      *
-     * Курсов приложение не тянет, поэтому складывать драмы с евро оно не
-     * вправе: итог, кольцо и категории показывают одну валюту за раз, а
-     * список счетов — все, каждый в своей (§6.3).
+     * Разбор по курсу не пересчитывается: курс меняется каждый день, а
+     * записанные суммы — нет, и кольцо из пересчитанных драмов врало бы.
+     * Поэтому итог, кольцо и категории показывают одну валюту за раз, список
+     * счетов — все, каждый в своей, а общий итог по курсу стоит отдельной
+     * строкой и помечен как примерный (§6.3).
      */
     val analysedCurrency: String = "EUR",
+    /** Примерный общий итог — только когда счета в разных валютах. */
+    val approxTotal: ApproxTotal? = null,
     val loaded: Boolean = false,
 ) {
     val isEmpty: Boolean get() = loaded && accounts.isEmpty()
@@ -168,7 +186,8 @@ class FinanceViewModel(
         moneyFlow,
         extrasFlow,
         finance.currency,
-    ) { money, extras, currency ->
+        finance.observeRates(),
+    ) { money, extras, currency, rates ->
         val today = finance.today()
         val month = YearMonth.from(today)
         val choices = extras.choices
@@ -190,6 +209,26 @@ class FinanceViewModel(
         // Операции чужих валют в разбор не идут вовсе: без курса их сумма
         // была бы просто сложением разных единиц.
         val txHere = money.transactions.filter { it.accountId in idsHere }
+
+        // Примерный итог нужен, только когда валют больше одной: в одной
+        // валюте точная сумма уже стоит в кольце, и «примерно» только сбивало бы.
+        val approx = if (currencies.size > 1) {
+            val perEur = rates?.perEur.orEmpty()
+            var sum = 0L
+            val missing = mutableListOf<String>()
+            money.accounts.forEach { account ->
+                val balance = FinanceAnalytics.balanceOf(account, money.transactions)
+                val converted = CurrencyMath.convert(balance, account.currencyCode, currency, perEur)
+                if (converted == null) {
+                    if (account.currencyCode !in missing) missing += account.currencyCode
+                } else {
+                    sum += converted
+                }
+            }
+            ApproxTotal(sum, currency, rates?.date, missing)
+        } else {
+            null
+        }
 
         val categoriesById = money.categories.associateBy { it.id }
         val obligatoryIds = money.categories
@@ -288,6 +327,7 @@ class FinanceViewModel(
             baseCurrency = currency,
             currencies = currencies,
             analysedCurrency = analysed,
+            approxTotal = approx,
             loaded = true,
         )
     }.stateIn(
@@ -297,6 +337,9 @@ class FinanceViewModel(
     )
 
     init {
+        // Курсы — отдельной задачей: без сети она просто ничего не сделает и не
+        // задержит заведение готовых категорий.
+        viewModelScope.launch { finance.refreshRatesIfStale() }
         viewModelScope.launch {
             finance.ensureSystemCategories()
             // Палитра догоняется один раз: дальше цвет принадлежит человеку.

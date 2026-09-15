@@ -1,5 +1,6 @@
 package eu.bolh.app
 
+import eu.bolh.app.data.rates.RatesClient
 import android.app.Application
 import android.content.Context
 import eu.bolh.app.data.backup.BackupService
@@ -41,6 +42,7 @@ class BolhContainer(context: Context, val clock: Clock = Clock.systemDefaultZone
         dao = database.financeDao(),
         clock = clock,
         initialCurrency = CurrencyPrefs.get(context),
+        ratesClient = RatesClient(),
     )
 
     val settings: SettingsStore = SettingsStore(context.applicationContext)
@@ -73,6 +75,8 @@ class BolhApplication : Application() {
         ThemeMode.load(this)
         BolhNotifications.ensureChannel(this)
         syncReminders()
+        // Курсы раз в полсуток; без сети — молча остаются последние известные.
+        scope.launch { container.financeRepository.refreshRatesIfStale() }
     }
 
     /**

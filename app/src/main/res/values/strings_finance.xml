@@ -45,8 +45,11 @@
 
     <string name="account_new_title">New account</string>
     <string name="account_currency">Account currency</string>
-    <string name="account_currency_note">Amounts on this account are counted in its own currency. There is no conversion: totals are shown per currency.</string>
+    <string name="account_currency_note">Amounts on this account are counted in its own currency and are never converted. Only the combined total across accounts is shown roughly, at the latest exchange rate.</string>
     <string name="finance_currency_scope">Currency</string>
+    <string name="finance_approx_total">Roughly in total</string>
+    <string name="finance_approx_note">At the rate of %1$s. Offline, the last known rate stays.</string>
+    <string name="finance_approx_missing">No rate for %1$s yet — the internet is needed at least once.</string>
     <string name="account_name_hint">Name</string>
     <string name="account_balance_hint">Current balance</string>
     <string name="account_new_balance">New balance</string>

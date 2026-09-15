@@ -1,5 +1,8 @@
 package eu.bolh.app.ui.finance
 
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.consumeWindowInsets
+import eu.bolh.app.ui.common.BolhTextField
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -183,6 +186,8 @@ fun AccountEditorScreen(
         Column(
             modifier = Modifier
                 .padding(innerPadding)
+                .consumeWindowInsets(innerPadding)
+                .imePadding()
                 .verticalScroll(rememberScrollState()),
         ) {
             LazyRow(
@@ -202,17 +207,16 @@ fun AccountEditorScreen(
                         modifier = Modifier
                             .size(44.dp)
                             .clip(CircleShape)
-                            .clickable { icon = key }
+                            .tapIcon { icon = key }
                             .padding(10.dp),
                     )
                 }
             }
 
-            OutlinedTextField(
+            BolhTextField(
                 value = name,
                 onValueChange = { name = it },
                 label = { Text(stringResource(R.string.account_name_hint)) },
-                singleLine = true,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = Spacing.screenPadding, vertical = Spacing.s),

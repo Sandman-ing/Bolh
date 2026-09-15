@@ -34,8 +34,12 @@ object Money {
         if (currency != null) format.currency = currency
         format.minimumFractionDigits = if (minor % pow10(fraction) == 0L) 0 else fraction
         format.maximumFractionDigits = fraction
-        return format.format(amount)
+        // Буквенный код перед числом слипался с ним: «AMD800». Знаку «€»
+        // пробел не нужен, а код без пробела читается как одно слово.
+        return format.format(amount).replace(LEADING_CODE, "\$1\$2 ")
     }
+
+    private val LEADING_CODE = Regex("^(-?)([A-Z]{3})(?=\\d)")
 
     /**
      * Разбор введённой суммы в минорные единицы.

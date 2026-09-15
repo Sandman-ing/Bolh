@@ -19,6 +19,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.graphics.graphicsLayer
+import kotlin.math.roundToLong
 
 /**
  * Движение в Bolh.
@@ -156,4 +157,22 @@ fun Modifier.tapIcon(
             enabled = enabled,
             onClick = onClick,
         )
+}
+
+/**
+ * Сумма, которая досчитывается до нового значения.
+ *
+ * Взнос, после которого цифра подменяется мгновенно, читается как опечатка:
+ * было одно число, стало другое. Когда сумма доезжает до нового значения,
+ * видно, что именно изменилось и на сколько. На первом показе движения нет —
+ * досчитывать не от чего.
+ */
+@Composable
+fun animatedMinor(target: Long): Long {
+    val animatable = remember { Animatable(target.toFloat()) }
+    LaunchedEffect(target) {
+        animatable.animateTo(target.toFloat(), tween(durationMillis = Motion.CONTENT_MS * 2))
+    }
+    // По окончании — точная сумма: у Float не хватает знаков на крупные суммы.
+    return if (animatable.isRunning) animatable.value.roundToLong() else target
 }

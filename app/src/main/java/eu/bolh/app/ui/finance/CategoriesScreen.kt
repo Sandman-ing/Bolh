@@ -1,5 +1,6 @@
 package eu.bolh.app.ui.finance
 
+import eu.bolh.app.ui.common.BolhTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.foundation.background
@@ -409,11 +410,10 @@ private fun CategorySheet(
                     bottom = Spacing.xxl,
                 ),
         ) {
-            OutlinedTextField(
+            BolhTextField(
                 value = name,
                 onValueChange = { name = it },
                 label = { Text(stringResource(R.string.category_name_hint)) },
-                singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
             )
 
@@ -467,7 +467,7 @@ private fun CategorySheet(
                                 color = if (chosen) Color(color) else status.strokeInner,
                                 shape = CircleShape,
                             )
-                            .clickable { icon = key },
+                            .tapIcon { icon = key },
                     ) {
                         Icon(
                             painter = painterResource(BolhIcons.resFor(key)),
@@ -506,7 +506,7 @@ private fun CategorySheet(
                                 },
                                 shape = CircleShape,
                             )
-                            .clickable { color = value },
+                            .tapIcon { color = value },
                     )
                 }
             }
