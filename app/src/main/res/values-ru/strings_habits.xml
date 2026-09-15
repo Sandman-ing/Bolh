@@ -61,6 +61,9 @@
     <string name="habit_times_done">%1$d из %2$d</string>
     <string name="habit_cost_hint">Стоимость одного случая</string>
     <string name="habit_estimate_hint">Минут за раз</string>
+    <string name="habit_duration_minutes">%d мин</string>
+    <string name="habit_duration_hours">%d ч</string>
+    <string name="habit_duration_hours_minutes">%1$d ч %2$d мин</string>
     <string name="habit_reminder">Напоминание</string>
     <string name="habit_reminder_evening">Вечерний повтор с предложением минимума</string>
     <string name="habit_reminder_off">Выключить</string>

@@ -57,6 +57,9 @@
     <string name="habit_times_done">%1$d of %2$d</string>
     <string name="habit_cost_hint">Cost of one occurrence</string>
     <string name="habit_estimate_hint">Minutes per time</string>
+    <string name="habit_duration_minutes">%d min</string>
+    <string name="habit_duration_hours">%d h</string>
+    <string name="habit_duration_hours_minutes">%1$d h %2$d min</string>
     <string name="habit_reminder">Reminder</string>
     <string name="habit_reminder_evening">Evening repeat offering the minimum</string>
     <string name="habit_reminder_off">Off</string>

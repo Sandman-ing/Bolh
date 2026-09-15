@@ -111,6 +111,10 @@ fun HabitRowItem(
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
+            // Время за раз — на самой карточке, а не только в настройках (§5.8).
+            row.habit.estimatedMinutes
+                ?.takeIf { it > 0 && row.habit.kind != HabitKind.Bad }
+                ?.let { DurationTag(minutes = it, modifier = Modifier.padding(top = 4.dp)) }
             Text(
                 text = contextLine(row),
                 style = MaterialTheme.typography.labelMedium,
@@ -309,6 +313,46 @@ private fun LevelLine(
             overflow = TextOverflow.Ellipsis,
         )
     }
+}
+
+/**
+ * Сколько времени привычка занимает за раз.
+ *
+ * Число жило только в расширенных настройках, и перед началом его приходилось
+ * вспоминать. На карточке оно отвечает на «сколько на это нужно» сразу.
+ */
+@Composable
+private fun DurationTag(minutes: Int, modifier: Modifier = Modifier) {
+    val accent = MaterialTheme.colorScheme.primary
+
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        modifier = modifier
+            .clip(RoundedCornerShape(Radius.chip))
+            .background(accent.copy(alpha = 0.12f))
+            .padding(horizontal = 8.dp, vertical = 2.dp),
+    ) {
+        Icon(
+            painter = painterResource(R.drawable.ic_timer),
+            contentDescription = null,
+            tint = accent,
+            modifier = Modifier.size(14.dp),
+        )
+        Text(
+            text = durationLabel(minutes),
+            style = MaterialTheme.typography.labelMedium,
+            color = accent,
+            maxLines = 1,
+        )
+    }
+}
+
+@Composable
+private fun durationLabel(minutes: Int): String = when {
+    minutes < 60 -> stringResource(R.string.habit_duration_minutes, minutes)
+    minutes % 60 == 0 -> stringResource(R.string.habit_duration_hours, minutes / 60)
+    else -> stringResource(R.string.habit_duration_hours_minutes, minutes / 60, minutes % 60)
 }
 
 @Composable
