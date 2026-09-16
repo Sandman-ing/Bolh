@@ -14,6 +14,7 @@ import java.time.Clock
 import java.time.LocalDate
 import java.util.UUID
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
 /**
@@ -41,6 +42,13 @@ class HabitRepository(
     /** Отмечен ли день хоть чем-то. Срыв отметкой выполнения не считается. */
     suspend fun isMarked(habitId: String, date: LocalDate): Boolean =
         dao.entriesOn(habitId, date).any { it.level != EntryLevel.Slip }
+
+    /** Сколько отметок выполнения стоит на день: у привычки «трижды в день» их три. */
+    suspend fun doneMarksOn(habitId: String, date: LocalDate): Int =
+        dao.entriesOn(habitId, date).count { it.level != EntryLevel.Slip }
+
+    /** Все действующие привычки разом — для перестановки напоминаний. */
+    suspend fun allHabits(): List<Habit> = observeAllHabits().first()
 
     /** Отметки за окно, разложенные по привычкам. */
     fun observeMarks(from: LocalDate, to: LocalDate): Flow<Map<String, List<Mark>>> =

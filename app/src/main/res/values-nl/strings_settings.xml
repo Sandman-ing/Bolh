@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_backup">Back-up</string>
+    <string name="settings_backup_howto">Alle gegevens staan alleen op deze telefoon. Een back-up bewaart ze samen met de instellingen in één bestand.\n\nZo zet je je gegevens over naar een nieuwe telefoon:\n1. Tik op ‘Back-up opslaan’ en bewaar het bestand, bijvoorbeeld in Google Drive.\n2. Installeer Bolh op de nieuwe telefoon en open de instellingen.\n3. Tik op ‘Back-up terugzetten’ en kies dat bestand.\n\nBij het terugzetten worden de gegevens op de telefoon vervangen door die uit het bestand.</string>
+    <string name="settings_backup_save">Back-up opslaan</string>
+    <string name="settings_backup_restore">Back-up terugzetten</string>
+    <string name="settings_restore_title">Back-up terugzetten?</string>
+    <string name="settings_restore_text">De gegevens op deze telefoon worden vervangen door die uit het bestand.</string>
+    <string name="settings_restore_confirm">Terugzetten</string>
+    <string name="settings_backup_saved">Back-up opgeslagen. Records: %1$d</string>
+    <string name="settings_backup_restored">Gegevens teruggezet. Records: %1$d</string>
+    <string name="settings_backup_not_bolh">Dit bestand is geen back-up van Bolh.</string>
+    <string name="settings_export_saved">Bestand opgeslagen. Records: %1$d</string>
+    <string name="settings_reports">Rapporten</string>
+    <string name="settings_export_csv">Transacties als CSV</string>
+    <string name="settings_export_pdf">Rapport als PDF</string>
+    <string name="settings_error">Mislukt: %1$s</string>
+    <string name="settings_error_no_file">kon het bestand niet openen</string>
+    <string name="settings_version">Versie %1$s</string>
+    <string name="settings_language">Taal</string>
+    <string name="settings_language_system">Zoals de telefoon</string>
+    <string name="settings_currency">Valuta</string>
+    <string name="settings_currency_search">Zoeken</string>
+    <string name="settings_appearance">Weergave</string>
+    <string name="settings_reminders">Herinneringen</string>
+    <string name="settings_reminders_open">Meldingen</string>
+    <string name="settings_reminders_exact">Exacte tijd voor herinneringen</string>
+    <string name="settings_reminders_battery">Batterijbesparing</string>
+    <string name="settings_off">uit</string>
+    <string name="settings_not_allowed">niet toegestaan</string>
+    <string name="settings_theme_dark">Donker</string>
+    <string name="settings_theme_system">Zoals de telefoon</string>
+    <string name="settings_theme_light">Licht</string>
+</resources>

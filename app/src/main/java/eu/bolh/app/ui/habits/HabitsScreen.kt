@@ -42,6 +42,7 @@ import eu.bolh.app.ui.common.Motion
 import eu.bolh.app.ui.common.BolhCard
 import eu.bolh.app.ui.common.PillButton
 import eu.bolh.app.ui.common.EmptyState
+import eu.bolh.app.ui.common.NoticeBanner
 import eu.bolh.app.ui.theme.Radius
 import eu.bolh.app.ui.common.rememberLocale
 import eu.bolh.app.ui.habits.components.HabitRowItem
@@ -114,25 +115,24 @@ fun HabitsScreen(
                 top = Spacing.s,
                 bottom = Spacing.fabClearance,
             ),
-            verticalArrangement = Arrangement.spacedBy(Spacing.s),
+            verticalArrangement = Arrangement.spacedBy(Spacing.m),
         ) {
             // Пустой список в день, когда привычек не ждут, читался бы как потеря данных.
             if (state.goodToday.isEmpty() && state.good.isNotEmpty()) {
                 item(key = "nothing-today") {
-                    BolhCard(corner = Radius.block, modifier = Modifier.animateItem()) {
-                        Text(
-                            text = stringResource(R.string.habits_nothing_today),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = status.textTertiary,
-                        )
-                    }
+                    NoticeBanner(
+                        text = stringResource(R.string.habits_nothing_today),
+                        color = MaterialTheme.colorScheme.primary,
+                        icon = R.drawable.ic_event_available,
+                        modifier = Modifier.animateItem(),
+                    )
                 }
             }
 
             items(state.goodToday, key = { it.habit.id }) { row ->
                 BolhCard(
                     modifier = Modifier.animateItem(),
-                    corner = Radius.block,
+                    corner = Radius.card,
                     contentPadding = PaddingValues(0.dp),
                     // Отмеченная привычка обведена своим цветом: строка сама
                     // говорит о состоянии, без чтения текста.
@@ -179,7 +179,7 @@ fun HabitsScreen(
                     items(state.goodOtherDays, key = { "other-" + it.habit.id }) { row ->
                         BolhCard(
                             modifier = Modifier.animateItem(),
-                            corner = Radius.block,
+                            corner = Radius.card,
                             contentPadding = PaddingValues(0.dp),
                         ) {
                             HabitRowItem(
@@ -194,23 +194,30 @@ fun HabitsScreen(
 
             if (state.badToday.isNotEmpty()) {
                 item(key = "bad-header") {
-                    Text(
-                        text = stringResource(R.string.habits_bad_section),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = status.textSecondary,
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(Spacing.s),
                         modifier = Modifier
                             .animateItem()
-                            .padding(
-                                start = Spacing.s,
-                                top = Spacing.l,
-                                bottom = Spacing.xs,
-                            ),
-                    )
+                            .padding(start = Spacing.xs, top = Spacing.l),
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_shield),
+                            contentDescription = null,
+                            tint = status.problem,
+                            modifier = Modifier.size(18.dp),
+                        )
+                        Text(
+                            text = stringResource(R.string.habits_bad_section),
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onBackground,
+                        )
+                    }
                 }
                 items(state.badToday, key = { it.habit.id }) { row ->
                     BolhCard(
                         modifier = Modifier.animateItem(),
-                        corner = Radius.block,
+                        corner = Radius.card,
                         contentPadding = PaddingValues(0.dp),
                     ) {
                         HabitRowItem(

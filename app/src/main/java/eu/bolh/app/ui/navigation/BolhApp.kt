@@ -61,6 +61,7 @@ import eu.bolh.app.ui.habits.HabitEditorViewModel
 import eu.bolh.app.ui.habits.HabitsScreen
 import eu.bolh.app.ui.settings.SettingsScreen
 import eu.bolh.app.ui.stats.StatsScreen
+import eu.bolh.app.ui.common.AskNotificationsForReminders
 import eu.bolh.app.data.prefs.ThemePrefs
 import eu.bolh.app.ui.theme.ThemeMode
 import eu.bolh.app.ui.theme.BolhTheme
@@ -112,6 +113,7 @@ fun BolhApp(navController: NavHostController = rememberNavController()) {
     // доходить до экрана сразу, без пересоздания Activity.
     val context = LocalContext.current
     val themeMode by ThemeMode.current.collectAsStateWithLifecycle()
+    AskNotificationsForReminders(trigger = Unit)
     val dark = ThemePrefs.isDark(themeMode, isSystemInDarkTheme())
 
     // Значки системной строки — часов, батареи, жестов — рисует система, и
@@ -219,7 +221,10 @@ fun BolhApp(navController: NavHostController = rememberNavController()) {
                 }
 
                 composable(BolhDestination.Stats.route) {
-                    StatsScreen(onOpenSettings = { navController.navigate(Routes.SETTINGS) })
+                    StatsScreen(
+                        onOpenSettings = { navController.navigate(Routes.SETTINGS) },
+                        onOpenGoal = { id -> navController.navigate(Routes.goalDetail(id)) },
+                    )
                 }
 
                 composable(Routes.SETTINGS) {
@@ -330,6 +335,9 @@ private fun sectionFor(route: String?, tab: BolhDestination?): Section = when {
     route.startsWith("habits") -> Section.Habits
     route.startsWith("goals") -> Section.Goals
     route.startsWith("finance") -> Section.Finance
+    // У статистики цвет серый, и кнопки настроек в нём выглядели
+    // выключенными. Настройкам достаётся цвет приложения.
+    route.startsWith(Routes.SETTINGS) -> Section.Goals
     else -> Section.Stats
 }
 

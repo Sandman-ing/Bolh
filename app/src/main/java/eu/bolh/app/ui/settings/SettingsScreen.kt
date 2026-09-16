@@ -1,50 +1,49 @@
 package eu.bolh.app.ui.settings
 
-import android.content.Context
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.unit.dp
 import android.net.Uri
+import android.os.Build
+import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
-import android.content.Intent
-import android.provider.Settings
-import androidx.activity.compose.LocalActivity
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -52,12 +51,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -67,69 +71,103 @@ import eu.bolh.app.BolhApplication
 import eu.bolh.app.BuildConfig
 import eu.bolh.app.R
 import eu.bolh.app.data.backup.BackupService
-import eu.bolh.app.data.backup.PdfReport
+import eu.bolh.app.data.backup.NotBolhBackupException
+import eu.bolh.app.data.notifications.BolhNotifications
 import eu.bolh.app.data.prefs.CurrencyPrefs
-import eu.bolh.app.data.prefs.ThemePrefs
 import eu.bolh.app.data.prefs.LanguagePrefs
-import eu.bolh.app.ui.common.tapIcon
-import eu.bolh.app.ui.common.Motion
-import eu.bolh.app.ui.common.pressScale
-import eu.bolh.app.ui.common.rememberPressSource
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.material3.ripple
+import eu.bolh.app.data.prefs.ThemePrefs
 import eu.bolh.app.ui.common.BolhCard
-import eu.bolh.app.ui.common.PillButton
-import eu.bolh.app.ui.common.rememberLocale
-import eu.bolh.app.ui.common.SectionTitle
 import eu.bolh.app.ui.common.CurrencySheet
-import eu.bolh.app.ui.common.Hint
+import eu.bolh.app.ui.common.Motion
+import eu.bolh.app.ui.common.PillButton
+import eu.bolh.app.ui.common.SectionTitle
+import eu.bolh.app.ui.common.SystemSettings
+import eu.bolh.app.ui.common.pressScale
+import eu.bolh.app.ui.common.rememberLocale
+import eu.bolh.app.ui.common.rememberPressSource
+import eu.bolh.app.ui.common.tapIcon
 import eu.bolh.app.ui.theme.LocalStatusColors
-import eu.bolh.app.ui.theme.NumberSmall
 import eu.bolh.app.ui.theme.Radius
-import eu.bolh.app.ui.theme.ThemeMode
 import eu.bolh.app.ui.theme.Spacing
+import eu.bolh.app.ui.theme.ThemeMode
 import java.time.LocalDate
+import eu.bolh.app.ui.common.AskNotificationsForReminders
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 sealed interface BackupMessage {
+    data class Saved(val rows: Int) : BackupMessage
     data class Exported(val rows: Int) : BackupMessage
-    data class Imported(val rows: Int) : BackupMessage
+    data class Restored(val rows: Int) : BackupMessage
+    data object NotBolh : BackupMessage
     data class Failed(val reason: String) : BackupMessage
 }
 
-class SettingsViewModel(
-    private val backup: BackupService,
-    private val report: PdfReport,
-) : ViewModel() {
-
-    fun exportPdf(context: Context, uri: Uri) = run(context) {
-        context.contentResolver.openOutputStream(uri)?.use { BackupMessage.Exported(report.write(it)) }
-    }
+class SettingsViewModel(private val app: BolhApplication) : ViewModel() {
 
     private val _message = MutableStateFlow<BackupMessage?>(null)
     val message: StateFlow<BackupMessage?> = _message.asStateFlow()
 
-    fun exportJson(context: Context, uri: Uri) = run(context) {
-        context.contentResolver.openOutputStream(uri)?.use { BackupMessage.Exported(backup.exportJson(it)) }
+    /**
+     * Язык из восстановленной копии, если он отличается от текущего.
+     *
+     * Это разовое событие: модель переживает пересоздание экрана, и
+     * неснятое значение после смены языка снова запускало бы пересоздание,
+     * и так по кругу.
+     */
+    private val _restoredLanguage = MutableStateFlow<String?>(null)
+    val restoredLanguage: StateFlow<String?> = _restoredLanguage.asStateFlow()
+
+    fun consumeRestoredLanguage() {
+        _restoredLanguage.value = null
     }
 
-    fun exportCsv(context: Context, uri: Uri) = run(context) {
-        context.contentResolver.openOutputStream(uri)?.use {
-            BackupMessage.Exported(backup.exportTransactionsCsv(it))
+    fun saveBackup(uri: Uri) = run {
+        app.contentResolver.openOutputStream(uri)?.use {
+            BackupMessage.Saved(app.container.backupService.exportJson(it))
         }
     }
 
-    fun importJson(context: Context, uri: Uri) = run(context) {
-        context.contentResolver.openInputStream(uri)?.use { BackupMessage.Imported(backup.importJson(it)) }
+    fun exportCsv(uri: Uri) = run {
+        app.contentResolver.openOutputStream(uri)?.use {
+            BackupMessage.Exported(app.container.backupService.exportTransactionsCsv(it))
+        }
     }
 
-    private fun run(context: Context, block: suspend () -> BackupMessage?) {
+    fun exportPdf(uri: Uri) = run {
+        app.contentResolver.openOutputStream(uri)?.use {
+            BackupMessage.Exported(app.container.pdfReport.write(it))
+        }
+    }
+
+    fun restore(uri: Uri, currentLanguage: String) = run {
+        app.contentResolver.openInputStream(uri)?.use { input ->
+            val result = app.container.backupService.importJson(input)
+            // Настройки из копии применяются сразу, без перезапуска.
+            app.container.financeRepository.baseCurrency = CurrencyPrefs.get(app)
+            ThemeMode.load(app)
+            app.rescheduleReminders()
+            // Копия могла принести старые курсы или не принести никаких.
+            viewModelScope.launch {
+                runCatching { app.container.financeRepository.refreshRatesIfStale() }
+            }
+            if (result.language != null && result.language != currentLanguage) {
+                _restoredLanguage.value = result.language
+            }
+            BackupMessage.Restored(result.rows)
+        }
+    }
+
+    private fun run(block: suspend () -> BackupMessage?) {
         viewModelScope.launch {
             _message.value = try {
-                block() ?: BackupMessage.Failed(context.getString(R.string.settings_error_no_file))
+                block() ?: BackupMessage.Failed(
+                    LanguagePrefs.localized(app).getString(R.string.settings_error_no_file),
+                )
+            } catch (notOurs: NotBolhBackupException) {
+                BackupMessage.NotBolh
             } catch (error: Exception) {
                 BackupMessage.Failed(error.message ?: error::class.java.simpleName)
             }
@@ -139,10 +177,8 @@ class SettingsViewModel(
     companion object {
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {
-                val app = this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as BolhApplication
                 SettingsViewModel(
-                    backup = app.container.backupService,
-                    report = app.container.pdfReport,
+                    app = this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as BolhApplication,
                 )
             }
         }
@@ -150,8 +186,10 @@ class SettingsViewModel(
 }
 
 /**
- * Настройки. Здесь же живёт резервная копия — единственная защита от того,
+ * Настройки. Здесь же живёт резервная копия: единственная защита от того,
  * что данные лежат только на устройстве (§8.1).
+ *
+ * Пояснений здесь нет, кроме инструкции к копии: остальное понятно и так.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -161,17 +199,50 @@ fun SettingsScreen(
     viewModel: SettingsViewModel = viewModel(factory = SettingsViewModel.Factory),
 ) {
     val message by viewModel.message.collectAsStateWithLifecycle()
+    val restoredLanguage by viewModel.restoredLanguage.collectAsStateWithLifecycle()
     val status = LocalStatusColors.current
     val context = LocalContext.current
     val activity = LocalActivity.current
-    val stamp = LocalDate.now().toString()
+    val locale = rememberLocale()
+    val today = LocalDate.now()
+
     var language by remember { mutableStateOf(LanguagePrefs.get(context)) }
+    var languagePicker by remember { mutableStateOf(false) }
     var currency by remember { mutableStateOf(CurrencyPrefs.get(context)) }
     var currencyPicker by remember { mutableStateOf(false) }
     var theme by remember { mutableStateOf(ThemePrefs.get(context)) }
     var switchingLanguage by remember { mutableStateOf(false) }
+    var pendingRestore by remember { mutableStateOf<Uri?>(null) }
 
-    val locale = rememberLocale()
+    val alarms = remember { (context.applicationContext as BolhApplication).container.reminders }
+    var exactAllowed by remember { mutableStateOf(alarms.canScheduleExact()) }
+    var notificationsOn by remember { mutableStateOf(BolhNotifications.allowed(context)) }
+    LifecycleResumeEffect(Unit) {
+        exactAllowed = alarms.canScheduleExact()
+        notificationsOn = BolhNotifications.allowed(context)
+        onPauseOrDispose { }
+    }
+
+    // Копия могла принести напоминания, а на новом телефоне уведомления
+    // ещё не разрешены. При смене языка спросит уже пересозданный экран.
+    AskNotificationsForReminders(
+        trigger = (message as? BackupMessage.Restored)?.takeIf { !switchingLanguage && restoredLanguage == null },
+    )
+
+    // Копия могла принести другой язык, валюту и тему.
+    LaunchedEffect(message) {
+        if (message is BackupMessage.Restored) {
+            currency = CurrencyPrefs.get(context)
+            theme = ThemePrefs.get(context)
+        }
+    }
+    LaunchedEffect(restoredLanguage) {
+        restoredLanguage?.let {
+            viewModel.consumeRestoredLanguage()
+            language = it
+            switchingLanguage = true
+        }
+    }
 
     if (currencyPicker) {
         CurrencySheet(
@@ -181,7 +252,7 @@ fun SettingsScreen(
             onSelect = { code ->
                 CurrencyPrefs.set(context, code)
                 // Репозиторий живёт дольше экрана, и валюта в нём — поток:
-                // суммы перерисуются сами, без рывка от пересоздания Activity.
+                // суммы перерисуются сами, без пересоздания экрана.
                 (context.applicationContext as BolhApplication)
                     .container
                     .financeRepository
@@ -192,21 +263,62 @@ fun SettingsScreen(
         )
     }
 
-    val exportJson = rememberLauncherForActivityResult(
+    if (languagePicker) {
+        LanguageSheet(
+            current = language,
+            onDismiss = { languagePicker = false },
+            onSelect = { code ->
+                languagePicker = false
+                if (code != language) {
+                    LanguagePrefs.set(context, code)
+                    language = code
+                    // Экран гаснет и только потом пересоздаётся: язык
+                    // применяется при создании Activity.
+                    switchingLanguage = true
+                }
+            },
+        )
+    }
+
+    pendingRestore?.let { uri ->
+        AlertDialog(
+            onDismissRequest = { pendingRestore = null },
+            containerColor = status.surfaceRaised,
+            title = { Text(stringResource(R.string.settings_restore_title)) },
+            text = { Text(stringResource(R.string.settings_restore_text)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.restore(uri, language)
+                        pendingRestore = null
+                    },
+                ) {
+                    Text(stringResource(R.string.settings_restore_confirm), color = status.problem)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { pendingRestore = null }) {
+                    Text(stringResource(R.string.common_cancel))
+                }
+            },
+        )
+    }
+
+    val saveBackup = rememberLauncherForActivityResult(
         ActivityResultContracts.CreateDocument("application/json"),
-    ) { uri -> uri?.let { viewModel.exportJson(context, it) } }
+    ) { uri -> uri?.let(viewModel::saveBackup) }
+
+    val openBackup = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument(),
+    ) { uri -> uri?.let { pendingRestore = it } }
 
     val exportCsv = rememberLauncherForActivityResult(
         ActivityResultContracts.CreateDocument("text/csv"),
-    ) { uri -> uri?.let { viewModel.exportCsv(context, it) } }
-
-    val importJson = rememberLauncherForActivityResult(
-        ActivityResultContracts.OpenDocument(),
-    ) { uri -> uri?.let { viewModel.importJson(context, it) } }
+    ) { uri -> uri?.let(viewModel::exportCsv) }
 
     val exportPdf = rememberLauncherForActivityResult(
         ActivityResultContracts.CreateDocument("application/pdf"),
-    ) { uri -> uri?.let { viewModel.exportPdf(context, it) } }
+    ) { uri -> uri?.let(viewModel::exportPdf) }
 
     Scaffold(
         modifier = modifier,
@@ -239,8 +351,6 @@ fun SettingsScreen(
             )
         },
     ) { innerPadding ->
-        // Экран длиннее телефона: без прокрутки нижние строки — экспорт и
-        // отчёт — оставались недосягаемыми.
         Column(
             modifier = Modifier
                 .padding(innerPadding)
@@ -249,57 +359,39 @@ fun SettingsScreen(
                 .padding(bottom = Spacing.xxl),
         ) {
             SectionTitle(stringResource(R.string.settings_language))
-            LanguageRow(
-                current = language,
-                onSelect = { code ->
-                    if (code != language) {
-                        LanguagePrefs.set(context, code)
-                        language = code
-                        // Экран гаснет и только потом пересоздаётся: язык
-                        // применяется при создании Activity, и без затемнения
-                        // подмена всего экрана читается как рывок.
-                        switchingLanguage = true
-                    }
-                },
+            ValueRow(
+                icon = R.drawable.ic_language,
+                value = LanguagePrefs.nameOf(language)
+                    ?: stringResource(R.string.settings_language_system),
+                onClick = { languagePicker = true },
             )
 
             SectionTitle(stringResource(R.string.settings_currency))
-            // Валют в мире больше сотни, полосой чипов их не разложить —
-            // выбор живёт в листе с поиском.
-            PillButton(
-                text = "$currency · " + CurrencyPrefs.nameOf(currency, locale),
+            ValueRow(
+                icon = R.drawable.ic_payments,
+                value = "$currency · " + CurrencyPrefs.nameOf(currency, locale),
                 onClick = { currencyPicker = true },
-                icon = R.drawable.ic_chevron_down,
-                iconAtEnd = true,
-                modifier = Modifier.padding(horizontal = Spacing.screenPadding),
-            )
-            Hint(
-            text = stringResource(R.string.settings_currency_note),
-                modifier = Modifier.padding(
-                    horizontal = Spacing.screenPadding,
-                    vertical = Spacing.s,
-        ),
             )
 
             SectionTitle(stringResource(R.string.settings_reminders))
             SettingsRow(
-                icon = R.drawable.ic_settings,
+                icon = R.drawable.ic_notifications_active,
                 text = stringResource(R.string.settings_reminders_open),
-                onClick = {
-                    // Ведём в системные настройки уведомлений приложения:
-                    // разрешения и режим сна живут там, а не у нас.
-                    val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
-                        .putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
-                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    runCatching { context.startActivity(intent) }
-                },
+                badge = if (notificationsOn) null else stringResource(R.string.settings_off),
+                onClick = { SystemSettings.openNotifications(context) },
             )
-            Hint(
-                text = stringResource(R.string.settings_reminders_note),
-                modifier = Modifier.padding(
-                    horizontal = Spacing.screenPadding,
-                    vertical = Spacing.s,
-                ),
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                SettingsRow(
+                    icon = R.drawable.ic_schedule,
+                    text = stringResource(R.string.settings_reminders_exact),
+                    badge = if (exactAllowed) null else stringResource(R.string.settings_not_allowed),
+                    onClick = { SystemSettings.openExactAlarms(context) },
+                )
+            }
+            SettingsRow(
+                icon = R.drawable.ic_battery_alert,
+                text = stringResource(R.string.settings_reminders_battery),
+                onClick = { SystemSettings.openBatteryOptimization(context) },
             )
 
             SectionTitle(stringResource(R.string.settings_appearance))
@@ -318,73 +410,90 @@ fun SettingsScreen(
                     }
                 },
             )
-            Hint(
-                text = stringResource(R.string.settings_theme_note),
-                modifier = Modifier.padding(
-                    horizontal = Spacing.screenPadding,
-                    vertical = Spacing.xs,
-                ),
-            )
 
-            Text(
-                text = stringResource(R.string.settings_backup),
-                style = MaterialTheme.typography.labelMedium,
-                color = status.textTertiary,
-                modifier = Modifier.padding(
-                    start = Spacing.screenPadding,
-                    top = Spacing.m,
-                    bottom = Spacing.xs,
-                ),
-            )
-            Hint(
-                text = stringResource(R.string.settings_local_note),
-                modifier = Modifier.padding(
-                    horizontal = Spacing.screenPadding,
-                    vertical = Spacing.xs,
-                ),
-            )
-
-            SettingsRow(
-                icon = R.drawable.ic_download,
-                text = stringResource(R.string.settings_export_json),
-                onClick = { exportJson.launch("bolh-$stamp.json") },
-            )
-            SettingsRow(
-                icon = R.drawable.ic_download,
-                text = stringResource(R.string.settings_export_csv),
-                onClick = { exportCsv.launch("bolh-transactions-$stamp.csv") },
-            )
-            SettingsRow(
-                icon = R.drawable.ic_upload_file,
-                text = stringResource(R.string.settings_import),
-                onClick = { importJson.launch(arrayOf("application/json", "*/*")) },
-            )
-            SettingsRow(
-                icon = R.drawable.ic_download,
-                text = stringResource(R.string.settings_export_pdf),
-                onClick = { exportPdf.launch("bolh-$stamp.pdf") },
-            )
-
-            message?.let { current ->
-                Text(
-                    text = when (current) {
-                        is BackupMessage.Exported ->
-                            stringResource(R.string.settings_export_done, current.rows)
-
-                        is BackupMessage.Imported ->
-                            stringResource(R.string.settings_import_done, current.rows)
-
-                        is BackupMessage.Failed ->
-                            stringResource(R.string.settings_error, current.reason)
-                    },
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = if (current is BackupMessage.Failed) status.problem else status.success,
-                    modifier = Modifier.padding(
-                        horizontal = Spacing.screenPadding,
-                        vertical = Spacing.m,
-                    ),
+            SectionTitle(stringResource(R.string.settings_backup))
+            BolhCard(
+                modifier = Modifier.padding(horizontal = Spacing.screenPadding, vertical = Spacing.xs),
+            ) {
+                Row(verticalAlignment = Alignment.Top) {
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)),
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_backup),
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(20.dp),
+                        )
+                    }
+                    Text(
+                        text = stringResource(R.string.settings_backup_howto),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onBackground,
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(start = Spacing.m),
+                    )
+                }
+                PillButton(
+                    text = stringResource(R.string.settings_backup_save),
+                    onClick = { saveBackup.launch(BackupService.fileName(today)) },
+                    icon = R.drawable.ic_download,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = Spacing.l),
                 )
+                PillButton(
+                    text = stringResource(R.string.settings_backup_restore),
+                    onClick = { openBackup.launch(arrayOf("application/json", "application/octet-stream", "*/*")) },
+                    icon = R.drawable.ic_restore,
+                    color = status.textSecondary,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = Spacing.s),
+                )
+
+                AnimatedContent(
+                    targetState = message,
+                    transitionSpec = {
+                        (fadeIn(tween(Motion.CONTENT_MS)) + expandVertically(Motion.resize)) togetherWith
+                            (fadeOut(tween(Motion.CONTENT_MS / 2)) + shrinkVertically(Motion.resize))
+                    },
+                    label = "backup-message",
+                ) { current ->
+                    if (current != null) {
+                        val failed = current is BackupMessage.Failed || current is BackupMessage.NotBolh
+                        Text(
+                            text = when (current) {
+                                is BackupMessage.Saved -> stringResource(R.string.settings_backup_saved, current.rows)
+                                is BackupMessage.Exported -> stringResource(R.string.settings_export_saved, current.rows)
+                                is BackupMessage.Restored -> stringResource(R.string.settings_backup_restored, current.rows)
+                                BackupMessage.NotBolh -> stringResource(R.string.settings_backup_not_bolh)
+                                is BackupMessage.Failed -> stringResource(R.string.settings_error, current.reason)
+                            },
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = if (failed) status.problem else status.success,
+                            modifier = Modifier.padding(top = Spacing.m),
+                        )
+                    }
+                }
             }
+
+            SectionTitle(stringResource(R.string.settings_reports))
+            SettingsRow(
+                icon = R.drawable.ic_receipt_long,
+                text = stringResource(R.string.settings_export_pdf),
+                onClick = { exportPdf.launch("bolh-report-$today.pdf") },
+            )
+            SettingsRow(
+                icon = R.drawable.ic_payments,
+                text = stringResource(R.string.settings_export_csv),
+                onClick = { exportCsv.launch("bolh-transactions-$today.csv") },
+            )
 
             HorizontalDivider(
                 color = status.divider,
@@ -402,10 +511,13 @@ fun SettingsScreen(
         }
     }
 
-    // Затемнение рисуется ПОСЛЕ Scaffold: сиблингом до него оно оказывалось
-    // под экраном, и смена языка выглядела рывком без всякого перехода.
-    // Обратный переход — появление — живёт в MainActivity.
-    if (switchingLanguage) {
+    // Затемнение рисуется после Scaffold: сиблингом до него оно оказывалось
+    // под экраном. Обратный переход, появление, живёт в MainActivity.
+    AnimatedVisibility(
+        visible = switchingLanguage,
+        enter = fadeIn(tween(0)),
+        label = "language-fade",
+    ) {
         val fade = remember { Animatable(0f) }
         LaunchedEffect(Unit) {
             fade.animateTo(1f, tween(Motion.CONTENT_MS))
@@ -420,22 +532,43 @@ fun SettingsScreen(
     }
 }
 
-/** Язык переключается здесь же, не выходя в настройки телефона (§9.6). */
-@OptIn(ExperimentalLayoutApi::class)
+/** Настройка с текущим значением: язык, валюта. */
 @Composable
-private fun LanguageRow(current: String, onSelect: (String) -> Unit) {
-    ChipRow(
-        options = listOf(
-            LanguagePrefs.SYSTEM to stringResource(R.string.settings_language_system),
-            "ru" to stringResource(R.string.settings_language_ru),
-            "en" to stringResource(R.string.settings_language_en),
-        ),
-        current = current,
-        onSelect = onSelect,
-    )
+private fun ValueRow(icon: Int, value: String, onClick: () -> Unit) {
+    BolhCard(
+        corner = Radius.block,
+        onClick = onClick,
+        contentPadding = PaddingValues(horizontal = Spacing.l, vertical = Spacing.m),
+        modifier = Modifier.padding(horizontal = Spacing.screenPadding, vertical = Spacing.xs),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                painter = painterResource(icon),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(20.dp),
+            )
+            Text(
+                text = value,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onBackground,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = Spacing.m),
+            )
+            Icon(
+                painter = painterResource(R.drawable.ic_chevron_down),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(18.dp),
+            )
+        }
+    }
 }
 
-/** Полоса чипов с одним выбранным: язык и валюта выбираются одинаково. */
+/** Полоса чипов с одним выбранным. */
 @Composable
 private fun ChipRow(
     options: List<Pair<String, String>>,
@@ -453,13 +586,14 @@ private fun ChipRow(
             val selected = code == current
             val press = rememberPressSource()
             val fill by animateColorAsState(
-                targetValue = if (selected) {
-                    MaterialTheme.colorScheme.primary
-                } else {
-                    Color.Transparent
-                },
+                targetValue = if (selected) MaterialTheme.colorScheme.primary else Color.Transparent,
                 animationSpec = Motion.color,
                 label = "settings-chip-fill",
+            )
+            val border by animateColorAsState(
+                targetValue = if (selected) MaterialTheme.colorScheme.primary else status.divider,
+                animationSpec = Motion.color,
+                label = "settings-chip-border",
             )
             val textColor by animateColorAsState(
                 targetValue = if (selected) MaterialTheme.colorScheme.onPrimary else status.textSecondary,
@@ -475,15 +609,8 @@ private fun ChipRow(
                     .pressScale(press)
                     .clip(RoundedCornerShape(percent = 50))
                     .background(fill)
-                    .border(
-                        width = 1.dp,
-                        color = if (selected) MaterialTheme.colorScheme.primary else status.divider,
-                        shape = RoundedCornerShape(percent = 50),
-                    )
-                    .clickable(
-                        interactionSource = press,
-                        indication = ripple(),
-                    ) { onSelect(code) }
+                    .border(width = 1.dp, color = border, shape = RoundedCornerShape(percent = 50))
+                    .clickable(interactionSource = press, indication = ripple()) { onSelect(code) }
                     .padding(horizontal = Spacing.m, vertical = Spacing.s),
             )
         }
@@ -491,11 +618,11 @@ private fun ChipRow(
 }
 
 @Composable
-private fun SettingsRow(icon: Int, text: String, onClick: () -> Unit) {
+private fun SettingsRow(icon: Int, text: String, onClick: () -> Unit, badge: String? = null) {
     val status = LocalStatusColors.current
 
     // В рамке и со стрелкой: без них строка читалась как заголовок раздела,
-    // а не как то, что можно нажать. Кегль обычный, а не заголовочный (§9.2).
+    // а не как то, что можно нажать (§9.2).
     BolhCard(
         corner = Radius.block,
         onClick = onClick,
@@ -522,6 +649,23 @@ private fun SettingsRow(icon: Int, text: String, onClick: () -> Unit) {
                     .weight(1f)
                     .padding(start = Spacing.m),
             )
+            AnimatedVisibility(
+                visible = badge != null,
+                enter = fadeIn(tween(Motion.CONTENT_MS)),
+                exit = fadeOut(tween(Motion.CONTENT_MS / 2)),
+                label = "settings-badge",
+            ) {
+                Text(
+                    text = badge.orEmpty(),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = status.attention,
+                    modifier = Modifier
+                        .padding(end = Spacing.s)
+                        .clip(RoundedCornerShape(percent = 50))
+                        .background(status.attention.copy(alpha = 0.14f))
+                        .padding(horizontal = Spacing.s, vertical = 2.dp),
+                )
+            }
             Icon(
                 painter = painterResource(R.drawable.ic_chevron_right),
                 contentDescription = null,

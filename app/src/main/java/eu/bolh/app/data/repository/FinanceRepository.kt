@@ -1,5 +1,6 @@
 package eu.bolh.app.data.repository
 
+import eu.bolh.app.domain.analytics.CurrencyMath
 import eu.bolh.app.data.rates.RatesSnapshot
 import eu.bolh.app.data.rates.RatesClient
 import eu.bolh.app.data.db.entity.CurrencyRateEntity
@@ -42,7 +43,12 @@ class FinanceRepository(
     initialCurrency: String = "EUR",
     /** Откуда брать курсы. Пусто — курсов нет, итог в разных валютах не считается. */
     private val ratesClient: RatesClient? = null,
+    /** Как выполнить несколько записей одной транзакцией. В тестах — просто подряд. */
+    private val inTransaction: suspend (suspend () -> Unit) -> Unit = { it() },
 ) {
+
+    /** Итог смены валюты счёта. */
+    enum class CurrencyChange { Done, NoRate }
 
     /**
      * Валюта приложения потоком.
@@ -148,6 +154,88 @@ class FinanceRepository(
                 updatedAt = clock.millis(),
             ),
         )
+    }
+
+    /**
+     * Смена валюты счёта (§6.3).
+     *
+     * С пересчётом деньги счёта переводятся по курсу: начальный остаток,
+     * операции и регулярные платежи. Без пересчёта меняется только валюта,
+     * а числа остаются: так исправляют счёт, заведённый не в той валюте.
+     *
+     * Перевод принадлежит двум счетам, и у второго своя валюта, поэтому сумма
+     * перевода не трогается. Чтобы остаток этого счёта всё равно сошёлся,
+     * разницу берёт на себя его начальный остаток.
+     *
+     * Если курса нет даже после попытки его скачать, ничего не меняется.
+     */
+    suspend fun changeAccountCurrency(
+        accountId: String,
+        newCode: String,
+        convert: Boolean,
+    ): CurrencyChange {
+        val account = dao.accountById(accountId) ?: return CurrencyChange.Done
+        val oldCode = account.currencyCode
+        if (oldCode == newCode) return CurrencyChange.Done
+
+        val rates = if (convert) {
+            ratesFor(oldCode, newCode) ?: return CurrencyChange.NoRate
+        } else {
+            emptyMap()
+        }
+        val move = { minor: Long, from: String ->
+            if (convert) CurrencyMath.convert(minor, from, newCode, rates) ?: minor else minor
+        }
+        val now = clock.millis()
+
+        inTransaction {
+            var transferShift = 0L
+            dao.transactionsOfAccount(accountId).forEach { tx ->
+                val from = tx.currencyCode.ifBlank { oldCode }
+                if (tx.type == TransactionType.Transfer.name) {
+                    val moved = move(tx.amountMinor, from)
+                    if (tx.accountId == accountId) transferShift += tx.amountMinor - moved
+                    if (tx.toAccountId == accountId) transferShift += moved - tx.amountMinor
+                } else if (tx.accountId == accountId) {
+                    dao.upsertTransaction(
+                        tx.copy(
+                            amountMinor = move(tx.amountMinor, from),
+                            currencyCode = newCode,
+                            rateToBase = null,
+                            updatedAt = now,
+                        ),
+                    )
+                }
+            }
+            dao.recurringOfAccount(accountId).forEach { payment ->
+                dao.upsertRecurring(
+                    payment.copy(
+                        amountMinor = move(payment.amountMinor, payment.currencyCode.ifBlank { oldCode }),
+                        currencyCode = newCode,
+                        updatedAt = now,
+                    ),
+                )
+            }
+            dao.upsertAccount(
+                account.copy(
+                    currencyCode = newCode,
+                    initialBalanceMinor = move(account.initialBalanceMinor, oldCode) + transferShift,
+                    updatedAt = now,
+                ),
+            )
+        }
+        return CurrencyChange.Done
+    }
+
+    /** Курсы для нужных валют: сначала из базы, при нехватке — свежие из сети. */
+    private suspend fun ratesFor(vararg codes: String): Map<String, Double>? {
+        fun complete(map: Map<String, Double>) = codes.all { it in map }
+        var map = dao.latestRates().associate { it.code to it.rateToBase }
+        if (!complete(map)) {
+            refreshRatesIfStale(maxAgeMillis = 0L)
+            map = dao.latestRates().associate { it.code to it.rateToBase }
+        }
+        return map.takeIf { complete(it) }
     }
 
     suspend fun deleteAccount(id: String) {

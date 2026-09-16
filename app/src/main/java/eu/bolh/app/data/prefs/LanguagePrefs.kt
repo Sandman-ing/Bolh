@@ -16,11 +16,32 @@ object LanguagePrefs {
 
     const val SYSTEM = "system"
 
+    /**
+     * Язык, пока человек не выбрал свой. Основной язык приложения английский:
+     * так оно выглядит одинаково на любом телефоне, а русский и остальные
+     * включаются в настройках одним касанием.
+     */
+    const val DEFAULT = "en"
+
+    /**
+     * Языки приложения с их собственными названиями.
+     *
+     * Название языка пишется на нём самом: человек, случайно включивший
+     * незнакомый язык, должен найти свой, не зная ни слова вокруг.
+     */
+    val languages: List<Pair<String, String>> = listOf(
+        "ru" to "Русский",
+        "en" to "English",
+        "nl" to "Nederlands",
+        "de" to "Deutsch",
+        "fr" to "Français",
+    )
+
     private const val FILE = "language"
     private const val KEY = "code"
 
     fun get(context: Context): String =
-        context.getSharedPreferences(FILE, Context.MODE_PRIVATE).getString(KEY, SYSTEM) ?: SYSTEM
+        context.getSharedPreferences(FILE, Context.MODE_PRIVATE).getString(KEY, DEFAULT) ?: DEFAULT
 
     fun set(context: Context, code: String) {
         context.getSharedPreferences(FILE, Context.MODE_PRIVATE)
@@ -28,6 +49,9 @@ object LanguagePrefs {
             .putString(KEY, code)
             .apply()
     }
+
+    /** Название выбранного языка для кнопки выбора. Пусто — язык системы. */
+    fun nameOf(code: String): String? = languages.firstOrNull { it.first == code }?.second
 
     /**
      * Контекст экрана с выбранным языком.
@@ -45,5 +69,28 @@ object LanguagePrefs {
         Locale.setDefault(locale)
         configuration.setLocales(LocaleList(locale))
         return base.createConfigurationContext(configuration)
+    }
+
+    /**
+     * Контекст с выбранным языком для того, что живёт вне экрана.
+     *
+     * Уведомления строятся из контекста приложения, а он знает только язык
+     * системы: без этого напоминание приходило бы на другом языке, чем всё
+     * остальное в Bolh.
+     */
+    fun localized(context: Context): Context {
+        val code = get(context)
+        if (code == SYSTEM) return context
+        val configuration = Configuration(context.resources.configuration)
+        configuration.setLocales(LocaleList(Locale.forLanguageTag(code)))
+        return context.createConfigurationContext(configuration)
+    }
+
+    /** Локаль для сумм и дат вне экрана. */
+    fun locale(context: Context): Locale {
+        val code = get(context)
+        if (code != SYSTEM) return Locale.forLanguageTag(code)
+        val locales = context.resources.configuration.locales
+        return if (locales.isEmpty) Locale.getDefault() else locales[0]
     }
 }

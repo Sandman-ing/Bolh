@@ -1,5 +1,6 @@
 package eu.bolh.app.ui.finance
 
+import androidx.compose.ui.text.style.TextAlign
 import eu.bolh.app.ui.common.Motion
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeOut
@@ -126,7 +127,9 @@ fun TransactionSheet(
                 onValueChange = viewModel::setAmount,
                 label = { Text(stringResource(R.string.tx_amount)) },
                 singleLine = true,
-                textStyle = MoneyLarge,
+                // Ввод слева, как во всех остальных полях: справа число
+                // читалось как готовый итог, а не как то, что сейчас набирают.
+                textStyle = MoneyLarge.copy(textAlign = TextAlign.Start),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 modifier = Modifier
                     .fillMaxWidth()

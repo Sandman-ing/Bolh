@@ -9,7 +9,6 @@
     <string name="goal_progress">%1$d%% · %2$d of %3$s</string>
     <string name="goal_tempo">tempo %1$d%%</string>
     <string name="goal_tempo_unknown">no habits</string>
-    <string name="goal_next_stage">Next — %1$s, %2$s</string>
 
     <string name="goal_forecast_title">At the current pace</string>
     <string name="goal_forecast_later">%1$s — %2$s later</string>
@@ -79,10 +78,27 @@
     <string name="goal_habits_add">Attach a habit</string>
     <string name="goal_habits_none">No habits attached. Without them the goal has no tempo.</string>
     <string name="goal_habits_free">No free habits left</string>
-    <string name="goal_completed_stages">%1$s closed</string>
     <string name="goal_budget_add">Add a budget</string>
     <plurals name="goal_no_estimate">
         <item quantity="one">%d linked habit has no duration set</item>
         <item quantity="other">%d linked habits have no duration set</item>
+    </plurals>
+    <string name="goal_stages_passed">%1$d of %2$s done</string>
+    <string name="goal_no_stages">No stages yet</string>
+    <string name="goal_stage_number">Stage %1$d of %2$d</string>
+    <string name="goal_stage_due">by %1$s</string>
+    <string name="goal_stage_done_action">Stage done</string>
+    <string name="goal_stage_closed">Stage done</string>
+    <string name="goal_stage_undo">Undo</string>
+    <string name="goal_all_stages_done">All stages done</string>
+    <string name="goal_habits_today">Today %1$d of %2$d</string>
+    <string name="goal_due_today">due today</string>
+    <plurals name="goal_days_left">
+        <item quantity="one">%d day left</item>
+        <item quantity="other">%d days left</item>
+    </plurals>
+    <plurals name="goal_days_overdue">
+        <item quantity="one">%d day overdue</item>
+        <item quantity="other">%d days overdue</item>
     </plurals>
 </resources>

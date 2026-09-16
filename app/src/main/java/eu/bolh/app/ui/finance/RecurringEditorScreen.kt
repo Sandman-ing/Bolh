@@ -61,7 +61,7 @@ import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.viewModelFactory
 import eu.bolh.app.BolhApplication
 import eu.bolh.app.R
-import eu.bolh.app.data.notifications.RecurringReminderScheduler
+import eu.bolh.app.data.notifications.ReminderAlarms
 import eu.bolh.app.data.repository.FinanceRepository
 import eu.bolh.app.domain.model.Account
 import eu.bolh.app.domain.model.Category
@@ -98,7 +98,7 @@ data class RecurringOptions(
 
 class RecurringEditorViewModel(
     private val finance: FinanceRepository,
-    private val reminders: RecurringReminderScheduler,
+    private val reminders: ReminderAlarms,
     /** Пусто — заводим новый платёж; иначе правим существующий. */
     private val paymentId: String? = null,
 ) : ViewModel() {
@@ -152,7 +152,7 @@ class RecurringEditorViewModel(
                 finance.updateRecurring(payment)
             }
             // Напоминание перезаводится по новой дате: иначе оно придёт по старой.
-            reminders.schedule(payment)
+            reminders.schedulePayment(payment)
             _saved.value = true
         }
     }
@@ -166,7 +166,7 @@ class RecurringEditorViewModel(
                 val handle: SavedStateHandle = createSavedStateHandle()
                 RecurringEditorViewModel(
                     finance = app.container.financeRepository,
-                    reminders = app.container.recurringScheduler,
+                    reminders = app.container.reminders,
                     paymentId = handle.get<String>(ARG_PAYMENT_ID),
                 )
             }

@@ -9,7 +9,6 @@
     <string name="goal_progress">%1$d%% · %2$d из %3$s</string>
     <string name="goal_tempo">темп %1$d%%</string>
     <string name="goal_tempo_unknown">без привычек</string>
-    <string name="goal_next_stage">Дальше — %1$s, %2$s</string>
 
     <string name="goal_forecast_title">При нынешнем темпе</string>
     <string name="goal_forecast_later">%1$s — на %2$s позже</string>
@@ -81,12 +80,33 @@
     <string name="goal_habits_add">Привязать привычку</string>
     <string name="goal_habits_none">Привычки не привязаны. Без них у цели нет темпа.</string>
     <string name="goal_habits_free">Свободных привычек не осталось</string>
-    <string name="goal_completed_stages">%1$s закрыто</string>
     <string name="goal_budget_add">Добавить бюджет</string>
     <plurals name="goal_no_estimate">
         <item quantity="one">У %d привязанной привычки не задана длительность</item>
         <item quantity="few">У %d привязанных привычек не задана длительность</item>
         <item quantity="many">У %d привязанных привычек не задана длительность</item>
         <item quantity="other">У %d привязанных привычек не задана длительность</item>
+    </plurals>
+    <string name="goal_stages_passed">Пройдено %1$d из %2$s</string>
+    <string name="goal_no_stages">Этапов пока нет</string>
+    <string name="goal_stage_number">Этап %1$d из %2$d</string>
+    <string name="goal_stage_due">до %1$s</string>
+    <string name="goal_stage_done_action">Этап пройден</string>
+    <string name="goal_stage_closed">Этап пройден</string>
+    <string name="goal_stage_undo">Отменить</string>
+    <string name="goal_all_stages_done">Все этапы пройдены</string>
+    <string name="goal_habits_today">Сегодня %1$d из %2$d</string>
+    <string name="goal_due_today">срок сегодня</string>
+    <plurals name="goal_days_left">
+        <item quantity="one">ещё %d день</item>
+        <item quantity="few">ещё %d дня</item>
+        <item quantity="many">ещё %d дней</item>
+        <item quantity="other">ещё %d дня</item>
+    </plurals>
+    <plurals name="goal_days_overdue">
+        <item quantity="one">просрочено на %d день</item>
+        <item quantity="few">просрочено на %d дня</item>
+        <item quantity="many">просрочено на %d дней</item>
+        <item quantity="other">просрочено на %d дня</item>
     </plurals>
 </resources>

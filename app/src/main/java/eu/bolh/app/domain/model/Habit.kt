@@ -71,8 +71,11 @@ data class Habit(
     val skipAllowancePerMonth: Int = 0,
     /** Сколько раз за день привычку ждут. Один — обычный случай. */
     val timesPerDay: Int = 1,
-    val reminderMinuteOfDay: Int? = null,
+    /** Времена напоминаний, минуты от полуночи, по возрастанию. Пусто — не напоминать. */
+    val reminderTimes: List<Int> = emptyList(),
     val reminderRepeatEvening: Boolean = false,
+    /** Напоминать как будильник: громко и до тех пор, пока не откроют. */
+    val reminderAlarm: Boolean = false,
     val categoryId: String? = null,
     val goalId: String? = null,
     val startDate: LocalDate,

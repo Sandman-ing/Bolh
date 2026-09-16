@@ -8,7 +8,9 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import eu.bolh.app.BolhApplication
-import eu.bolh.app.data.notifications.HabitReminderScheduler
+import eu.bolh.app.data.notifications.BolhNotifications
+import eu.bolh.app.data.notifications.ReminderAlarms
+import eu.bolh.app.data.mapper.normalizeReminderTimes
 import eu.bolh.app.data.repository.GoalRepository
 import eu.bolh.app.data.repository.HabitRepository
 import eu.bolh.app.domain.model.Goal
@@ -28,6 +30,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.Dispatchers
 
 /** Черновик привычки. Быстрый путь трогает три верхних поля, остальное живёт под кнопкой. */
 /** Причина, по которой привычку пока нельзя сохранить. */
@@ -49,8 +53,10 @@ data class HabitDraft(
     val costMinor: Long? = null,
     val estimatedMinutes: Int? = null,
     val skipAllowancePerMonth: Int = 2,
-    val reminderMinuteOfDay: Int? = null,
+    /** Времена напоминаний, минуты от полуночи, по возрастанию. */
+    val reminderTimes: List<Int> = emptyList(),
     val reminderRepeatEvening: Boolean = false,
+    val reminderAlarm: Boolean = false,
     val goalId: String? = null,
     val advancedExpanded: Boolean = false,
     val saved: Boolean = false,
@@ -86,8 +92,9 @@ data class HabitDraft(
 class HabitEditorViewModel(
     private val repository: HabitRepository,
     private val goals: GoalRepository,
-    private val reminders: HabitReminderScheduler,
+    private val reminders: ReminderAlarms,
     private val habitId: String?,
+    private val appContext: android.content.Context,
 ) : ViewModel() {
 
     private val _draft = MutableStateFlow(HabitDraft(id = habitId))
@@ -149,7 +156,23 @@ class HabitEditorViewModel(
 
     fun setEstimatedMinutes(value: Int?) = _draft.update { it.copy(estimatedMinutes = value) }
 
-    fun setReminder(minuteOfDay: Int?) = _draft.update { it.copy(reminderMinuteOfDay = minuteOfDay) }
+    /** Ещё одно время напоминания. Повтор того же времени ничего не добавляет. */
+    fun addReminder(minuteOfDay: Int) = _draft.update { current ->
+        current.copy(
+            reminderTimes = normalizeReminderTimes(current.reminderTimes + minuteOfDay)
+                .take(ReminderAlarms.MAX_TIMES),
+        )
+    }
+
+    fun changeReminder(from: Int, to: Int) = _draft.update { current ->
+        current.copy(reminderTimes = normalizeReminderTimes(current.reminderTimes - from + to))
+    }
+
+    fun removeReminder(minuteOfDay: Int) = _draft.update { current ->
+        current.copy(reminderTimes = current.reminderTimes - minuteOfDay)
+    }
+
+    fun setReminderAlarm(value: Boolean) = _draft.update { it.copy(reminderAlarm = value) }
 
     fun setEveningRepeat(value: Boolean) = _draft.update { it.copy(reminderRepeatEvening = value) }
 
@@ -220,7 +243,7 @@ class HabitEditorViewModel(
             // Привычка уже сохранена. Если планировщик споткнётся, экран всё
             // равно должен закрыться: иначе кнопка выглядит сломанной, хотя
             // данные на месте. Напоминание перезаведётся при следующей правке.
-            runCatching { reminders.schedule(habit) }
+            runCatching { withContext(Dispatchers.IO) { reminders.scheduleHabit(habit) } }
             _draft.update { it.copy(saved = true) }
         }
     }
@@ -229,7 +252,8 @@ class HabitEditorViewModel(
         val id = habitId ?: return
         viewModelScope.launch {
             repository.delete(id)
-            reminders.cancel(id)
+            reminders.cancelHabit(id)
+            BolhNotifications.cancel(context = appContext, id = id)
             _draft.update { it.copy(saved = true) }
         }
     }
@@ -250,8 +274,9 @@ class HabitEditorViewModel(
         costMinor = costPerOccurrenceMinor,
         estimatedMinutes = estimatedMinutes,
         skipAllowancePerMonth = skipAllowancePerMonth,
-        reminderMinuteOfDay = reminderMinuteOfDay,
+        reminderTimes = reminderTimes,
         reminderRepeatEvening = reminderRepeatEvening,
+        reminderAlarm = reminderAlarm,
         goalId = goalId,
         startDate = startDate,
     )
@@ -275,8 +300,9 @@ class HabitEditorViewModel(
         costCurrencyCode = costMinor?.let { "EUR" },
         limitPerWeek = limitPerWeek.takeIf { mode == HabitMode.Limit },
         skipAllowancePerMonth = if (mode == HabitMode.Skips) skipAllowancePerMonth else 0,
-        reminderMinuteOfDay = reminderMinuteOfDay,
+        reminderTimes = reminderTimes,
         reminderRepeatEvening = reminderRepeatEvening,
+        reminderAlarm = reminderAlarm,
         goalId = goalId,
         startDate = startDate ?: today,
     )
@@ -291,7 +317,8 @@ class HabitEditorViewModel(
                 HabitEditorViewModel(
                     repository = app.container.habitRepository,
                     goals = app.container.goalRepository,
-                    reminders = app.container.reminderScheduler,
+                    reminders = app.container.reminders,
+                    appContext = app,
                     habitId = handle.get<String>(ARG_HABIT_ID)?.takeIf { it.isNotBlank() && it != "new" },
                 )
             }

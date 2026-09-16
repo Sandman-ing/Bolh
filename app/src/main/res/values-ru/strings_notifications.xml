@@ -6,5 +6,16 @@
     <string name="notif_evening_text">%1$s — и день засчитан</string>
     <string name="notif_action_minimum">Минимум</string>
     <string name="notif_action_done">Готово</string>
+    <string name="notif_channel_alarms">Будильник привычек</string>
+    <string name="notif_channel_alarms_desc">Напоминания со звуком будильника. Звучат, пока их не откроют.</string>
+    <string name="notif_channel_payments">Платежи</string>
+    <string name="notif_channel_payments_desc">Напоминания о регулярных платежах.</string>
+    <string name="notif_bad_text">Сегодня обходимся без этого</string>
+    <string name="notif_minutes_text">Пора: %1$d мин</string>
+    <string name="notif_action_norm">Норма</string>
+    <string name="notif_action_dismiss">Выключить</string>
     <string name="notif_recurring_text">Завтра спишется %1$s</string>
+    <string name="notif_times_text">Сегодня отмечено %1$d из %2$d</string>
+    <string name="notif_recurring_today">Сегодня спишется %1$s</string>
+    <string name="notif_recurring_on">%2$s спишется %1$s</string>
 </resources>

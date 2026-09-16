@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="notif_channel_habits">Erinnerungen an Gewohnheiten</string>
+    <string name="notif_channel_habits_desc">Eine Erinnerung zur gewählten Zeit. Sonst nichts.</string>
+    <string name="notif_default_text">Hake den Tag ab</string>
+    <string name="notif_evening_text">%1$s, und der Tag zählt</string>
+    <string name="notif_action_minimum">Minimum</string>
+    <string name="notif_action_done">Erledigt</string>
+    <string name="notif_channel_alarms">Wecker für Gewohnheiten</string>
+    <string name="notif_channel_alarms_desc">Erinnerungen mit Weckton, der klingelt, bis du sie öffnest.</string>
+    <string name="notif_channel_payments">Zahlungen</string>
+    <string name="notif_channel_payments_desc">Erinnerungen an wiederkehrende Zahlungen.</string>
+    <string name="notif_bad_text">Heute ohne</string>
+    <string name="notif_minutes_text">Zeit dafür: %1$d Min.</string>
+    <string name="notif_action_norm">Voll</string>
+    <string name="notif_action_dismiss">Ausschalten</string>
+    <string name="notif_recurring_text">Morgen wird %1$s abgebucht</string>
+    <string name="notif_times_text">Heute abgehakt: %1$d von %2$d</string>
+    <string name="notif_recurring_today">Heute wird %1$s abgebucht</string>
+    <string name="notif_recurring_on">Am %2$s wird %1$s abgebucht</string>
+</resources>

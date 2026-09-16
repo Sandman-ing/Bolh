@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Bolh</string>
+    <string name="tab_goals">Doelen</string>
+    <string name="tab_habits">Gewoonten</string>
+    <string name="tab_finance">Financiën</string>
+    <string name="tab_stats">Statistiek</string>
+    <string name="action_create">Maken</string>
+    <string name="action_settings">Instellingen</string>
+    <string name="goals_empty_action">Maak je eerste doel</string>
+    <string name="goals_empty_example">Bijvoorbeeld: een eigen huis in mei 2029</string>
+    <string name="habits_empty_action">Maak je eerste gewoonte</string>
+    <string name="habits_empty_example">Bijvoorbeeld: elke dag één pagina lezen</string>
+    <string name="finance_empty_action">Voeg je eerste rekening toe</string>
+    <string name="finance_empty_example">Bijvoorbeeld: bankpas, 1.240 €</string>
+    <string name="stats_empty_title">Nog niets om te tellen</string>
+    <string name="stats_empty_example">Statistieken verschijnen zodra gewoonten en geld wat geschiedenis hebben</string>
+    <string name="common_delete">Verwijderen</string>
+    <string name="common_cancel">Annuleren</string>
+    <string name="confirm_delete">‘%1$s’ verwijderen?</string>
+    <string name="tx_list_title">Transacties</string>
+    <string name="tx_selected">Geselecteerd: %1$d</string>
+    <string name="tx_select_all">Alles selecteren</string>
+    <string name="tx_list_empty">Nog niets vastgelegd</string>
+    <string name="finance_all_transactions">Alle transacties</string>
+    <plurals name="confirm_delete_transactions">
+        <item quantity="one">%1$d item verwijderen?</item>
+        <item quantity="other">%1$d items verwijderen?</item>
+    </plurals>
+    <plurals name="days_of">
+        <item quantity="one">%d dag</item>
+        <item quantity="other">%d dagen</item>
+    </plurals>
+    <plurals name="stages_of">
+        <item quantity="one">%d etappe</item>
+        <item quantity="other">%d etappes</item>
+    </plurals>
+    <string name="date_day_month">d MMMM</string>
+    <string name="date_full">d MMMM yyyy</string>
+    <string name="date_month_year">LLLL yyyy</string>
+    <string name="percent">%1$d%%</string>
+    <plurals name="stages_count">
+        <item quantity="one">%d etappe</item>
+        <item quantity="other">%d etappes</item>
+    </plurals>
+    <string name="date_weekday_day_month">EEEE d MMMM</string>
+</resources>

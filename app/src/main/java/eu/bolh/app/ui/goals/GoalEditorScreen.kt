@@ -1,5 +1,6 @@
 package eu.bolh.app.ui.goals
 
+import eu.bolh.app.ui.common.IconGrid
 import eu.bolh.app.ui.common.BolhTextField
 import androidx.compose.ui.draw.rotate
 import androidx.compose.runtime.setValue
@@ -159,33 +160,12 @@ fun GoalEditorScreen(
             contentPadding = PaddingValues(bottom = Spacing.xxl),
         ) {
             item(key = "icons") {
-                LazyRow(
-                    horizontalArrangement = Arrangement.spacedBy(Spacing.s),
-                    contentPadding = PaddingValues(horizontal = Spacing.screenPadding),
+                IconGrid(
+                    icons = BolhIcons.goal,
+                    selected = draft.icon,
+                    onSelect = viewModel::setIcon,
                     modifier = Modifier.padding(vertical = Spacing.s),
-                ) {
-                    items(BolhIcons.goal) { key ->
-                        val tint by animateColorAsState(
-                            targetValue = if (key == draft.icon) {
-                                MaterialTheme.colorScheme.primary
-                            } else {
-                                status.textTertiary
-                            },
-                            animationSpec = Motion.color,
-                            label = "goal-icon",
-                        )
-                        Icon(
-                            painter = painterResource(BolhIcons.resFor(key)),
-                            contentDescription = null,
-                            tint = tint,
-                            modifier = Modifier
-                                .size(44.dp)
-                                .clip(CircleShape)
-                                .tapIcon { viewModel.setIcon(key) }
-                                .padding(10.dp),
-                        )
-                    }
-                }
+                )
             }
 
             item(key = "name") {

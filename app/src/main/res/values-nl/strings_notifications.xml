@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="notif_channel_habits">Herinneringen voor gewoonten</string>
+    <string name="notif_channel_habits_desc">Een herinnering op het tijdstip dat je kiest. Verder niets.</string>
+    <string name="notif_default_text">Vink de dag af</string>
+    <string name="notif_evening_text">%1$s, en de dag telt mee</string>
+    <string name="notif_action_minimum">Minimum</string>
+    <string name="notif_action_done">Gedaan</string>
+    <string name="notif_channel_alarms">Wekkers voor gewoonten</string>
+    <string name="notif_channel_alarms_desc">Herinneringen met een wekkergeluid dat blijft klinken tot je ze opent.</string>
+    <string name="notif_channel_payments">Betalingen</string>
+    <string name="notif_channel_payments_desc">Herinneringen aan vaste betalingen.</string>
+    <string name="notif_bad_text">Vandaag zonder</string>
+    <string name="notif_minutes_text">Tijd ervoor: %1$d min</string>
+    <string name="notif_action_norm">Volledig</string>
+    <string name="notif_action_dismiss">Uitzetten</string>
+    <string name="notif_recurring_text">Morgen wordt %1$s afgeschreven</string>
+    <string name="notif_times_text">Vandaag afgevinkt: %1$d van %2$d</string>
+    <string name="notif_recurring_today">Vandaag wordt %1$s afgeschreven</string>
+    <string name="notif_recurring_on">Op %2$s wordt %1$s afgeschreven</string>
+</resources>

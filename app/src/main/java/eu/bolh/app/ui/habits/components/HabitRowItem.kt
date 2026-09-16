@@ -1,44 +1,50 @@
 package eu.bolh.app.ui.habits.components
 
-import androidx.compose.runtime.SideEffect
-import androidx.compose.animation.togetherWith
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.shrinkVertically
-import androidx.compose.animation.expandVertically
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.spring
-import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ripple
 import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -54,18 +60,20 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import eu.bolh.app.R
 import eu.bolh.app.domain.model.EntryLevel
 import eu.bolh.app.domain.model.HabitKind
 import eu.bolh.app.domain.model.HabitMode
 import eu.bolh.app.ui.common.BolhIcons
-import eu.bolh.app.ui.common.tappable
+import eu.bolh.app.ui.common.IconTag
+import eu.bolh.app.ui.common.Money
 import eu.bolh.app.ui.common.Motion
 import eu.bolh.app.ui.common.completionPop
 import eu.bolh.app.ui.common.pressScale
 import eu.bolh.app.ui.common.rememberPressSource
-import eu.bolh.app.ui.common.Money
+import eu.bolh.app.ui.common.tappable
 import eu.bolh.app.ui.habits.HabitRowState
 import eu.bolh.app.ui.theme.LocalStatusColors
 import eu.bolh.app.ui.theme.Radius
@@ -73,8 +81,12 @@ import eu.bolh.app.ui.theme.Spacing
 import eu.bolh.app.ui.theme.TapTargetMin
 
 /**
- * Строка привычки (§5.8): значок, название, одна строка контекста, одно действие справа.
- * Без карточки — привычки это пульт, а не витрина.
+ * Карточка привычки (§5.8): значок в круге, название, метки, действие.
+ *
+ * В режиме «минимум и норма» выбор уровня стоит под названием двумя крупными
+ * кнопками во всю ширину. Сбоку от длинного названия две мелкие пилюли
+ * теснили текст и выглядели приклеенными, а что значит каждый уровень,
+ * приходилось искать в справке ниже. Теперь это написано на самой кнопке.
  */
 @Composable
 fun HabitRowItem(
@@ -84,267 +96,285 @@ fun HabitRowItem(
     modifier: Modifier = Modifier,
     onUndoSlip: () -> Unit = {},
 ) {
+    val habit = row.habit
     val status = LocalStatusColors.current
+    val bad = habit.kind == HabitKind.Bad
+    val tone = if (bad) status.problem else MaterialTheme.colorScheme.primary
+    val minimumLabel = habit.minimumLabel?.takeIf { it.isNotBlank() }
+    val normLabel = habit.normLabel?.takeIf { it.isNotBlank() }
+
+    val control = when {
+        bad -> RowControl.Slip
+        // Привычку, которую ждут несколько раз за день, нельзя закрыть
+        // выбором уровня: сначала надо набрать все разы (§5.5).
+        row.timesPerDay > 1 -> RowControl.Counter
+        habit.mode == HabitMode.Minimum && row.selectedLevel == null -> RowControl.Levels
+        else -> RowControl.Circle
+    }
 
     Column(
         modifier = modifier
             .fillMaxWidth()
             .tappable(onClick = onOpen)
-            .padding(horizontal = Spacing.screenPadding, vertical = Spacing.habitRowVertical),
+            .padding(horizontal = CardPadding, vertical = CardPadding),
     ) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Icon(
-            painter = painterResource(BolhIcons.resFor(row.habit.icon)),
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(22.dp),
-        )
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .padding(start = Spacing.m, end = Spacing.m),
-        ) {
-            Text(
-                text = row.habit.name,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onBackground,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            HabitBadge(
+                icon = habit.icon,
+                tone = tone,
+                done = !bad && row.dayComplete,
             )
-            // Время за раз — на самой карточке, а не только в настройках (§5.8).
-            row.habit.estimatedMinutes
-                ?.takeIf { it > 0 && row.habit.kind != HabitKind.Bad }
-                ?.let { DurationTag(minutes = it, modifier = Modifier.padding(top = 4.dp)) }
-            Text(
-                text = contextLine(row),
-                style = MaterialTheme.typography.labelMedium,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-                color = when {
-                    row.isPaused -> status.textTertiary
-                    row.needsRecovery -> status.attention
-                    else -> status.textSecondary
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = Spacing.m, end = Spacing.s),
+            ) {
+                Text(
+                    text = habit.name,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                HabitTags(row = row, modifier = Modifier.padding(top = 6.dp))
+            }
+
+            // Круг отметки, счётчик и срыв сменяют друг друга переходом. У выбора
+            // уровня здесь места нет: его кнопки живут ниже, во всю ширину.
+            AnimatedContent(
+                targetState = control,
+                transitionSpec = {
+                    fadeIn(tween(Motion.CONTENT_MS)) togetherWith fadeOut(tween(Motion.CONTENT_MS / 2))
                 },
-                modifier = Modifier.padding(top = 2.dp),
-            )
-        }
+                label = "habit-control",
+            ) { shown ->
+                when (shown) {
+                    RowControl.Slip -> SlipButton(
+                        mode = habit.mode,
+                        onClick = { onMark(EntryLevel.Slip) },
+                        onUndo = onUndoSlip,
+                    )
 
-        val control = when {
-            row.habit.kind == HabitKind.Bad -> RowControl.Slip
-            // Привычку, которую ждут несколько раз за день, нельзя закрыть
-            // выбором уровня: сначала надо набрать все разы (§5.5).
-            row.timesPerDay > 1 -> RowControl.Counter
-            row.habit.mode == HabitMode.Minimum && row.selectedLevel == null -> RowControl.Levels
-            else -> RowControl.Circle
-        }
-        // Две кнопки уровня и круг отметки сменяют друг друга переходом: после
-        // «минимума» кнопки не исчезают скачком, а уступают место кругу.
-        AnimatedContent(
-            targetState = control,
-            transitionSpec = {
-                fadeIn(tween(Motion.CONTENT_MS)) togetherWith fadeOut(tween(Motion.CONTENT_MS / 2))
-            },
-            label = "habit-control",
-        ) { shown ->
-            when (shown) {
-                RowControl.Slip -> SlipButton(
-                    mode = row.habit.mode,
-                    onClick = { onMark(EntryLevel.Slip) },
-                    onUndo = onUndoSlip,
-                )
+                    RowControl.Counter -> MarkCounter(
+                        done = row.marksOnDay,
+                        total = row.timesPerDay,
+                        onClick = { onMark(EntryLevel.Norm) },
+                    )
 
-                RowControl.Counter -> MarkCounter(
-                    done = row.marksOnDay,
-                    total = row.timesPerDay,
-                    onClick = { onMark(EntryLevel.Norm) },
-                )
+                    RowControl.Levels -> Unit
 
-                RowControl.Levels -> MinimumNormButtons(
-                    onMinimum = { onMark(EntryLevel.Minimum) },
-                    onNorm = { onMark(EntryLevel.Norm) },
-                )
-
-                RowControl.Circle -> MarkCircle(
-                    level = row.selectedLevel,
-                    onClick = { onMark(EntryLevel.Norm) },
-                )
+                    RowControl.Circle -> MarkCircle(
+                        level = row.selectedLevel,
+                        onClick = { onMark(EntryLevel.Norm) },
+                    )
+                }
             }
         }
-    }
 
-    // Правило вредной привычки написано словами: без него «срыв» — просто
-    // кнопка, и непонятно, что она ломает и что считает (§5.4).
-    if (row.habit.kind == HabitKind.Bad) {
-        Text(
-            text = when (row.habit.mode) {
-                HabitMode.Limit -> pluralStringResource(
-                    R.plurals.habits_bad_limit,
-                    row.habit.limitPerWeek ?: 0,
-                    row.habit.limitPerWeek ?: 0,
-                )
+        // Пропуски на этой неделе: подсказка стоит над кнопками, потому что
+        // относится именно к выбору уровня.
+        if (row.needsRecovery && !row.isPaused) {
+            InlineNotice(
+                text = stringResource(R.string.habits_recovery),
+                color = status.attention,
+                icon = R.drawable.ic_bolt,
+                modifier = Modifier.padding(top = Spacing.m),
+            )
+        }
 
-                HabitMode.Counter -> stringResource(R.string.habits_bad_hint_counter)
-                else -> stringResource(R.string.habits_bad_hint_game)
-            },
-            style = MaterialTheme.typography.labelMedium,
-            color = status.textTertiary,
-            modifier = Modifier.padding(top = Spacing.s),
-        )
-        Text(
-            text = stringResource(R.string.habits_bad_action_hint),
-            style = MaterialTheme.typography.labelMedium,
-            color = status.textTertiary,
-        )
-    }
+        // Правило вредной привычки написано словами: без него «срыв» — просто
+        // кнопка, и непонятно, что она ломает и что считает (§5.4).
+        if (bad) {
+            InlineNotice(
+                text = when (habit.mode) {
+                    HabitMode.Limit -> pluralStringResource(
+                        R.plurals.habits_bad_limit,
+                        habit.limitPerWeek ?: 0,
+                        habit.limitPerWeek ?: 0,
+                    )
 
-    // Отмеченный уровень называется словом: круг с галочкой не отличает
-    // минимум от нормы, а разница между ними и есть смысл режима (§5.3).
-    // Уходящая подпись держит прежний уровень: без этого при снятии отметки
-    // «минимум» на миг превращался в «норму».
-    var lastLevel by remember { mutableStateOf(row.selectedLevel) }
-    SideEffect { if (row.selectedLevel != null) lastLevel = row.selectedLevel }
-    val shownLevel = row.selectedLevel ?: lastLevel
-    AnimatedVisibility(
-        visible = row.habit.mode == HabitMode.Minimum && row.selectedLevel != null,
-        enter = fadeIn(tween(Motion.CONTENT_MS)) + expandVertically(Motion.resize),
-        exit = fadeOut(tween(Motion.CONTENT_MS / 2)) + shrinkVertically(Motion.resize),
-        label = "habit-level",
-    ) {
-        Text(
-            text = stringResource(
-                if (shownLevel == EntryLevel.Minimum) {
-                    R.string.habit_done_minimum
-                } else {
-                    R.string.habit_done_norm
+                    HabitMode.Counter -> stringResource(R.string.habits_bad_hint_counter)
+                    else -> stringResource(R.string.habits_bad_hint_game)
                 },
-            ),
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(top = Spacing.s),
-        )
-    }
+                secondary = stringResource(R.string.habits_bad_action_hint),
+                color = status.problem,
+                icon = R.drawable.ic_shield,
+                modifier = Modifier.padding(top = Spacing.m),
+            )
+        }
 
-    // Что здесь минимум, а что норма, человек писал сам — и должен видеть это
-    // под строкой во всю ширину, а не вспоминать при нажатии кнопки (§5.3).
-    if (row.habit.mode == HabitMode.Minimum) {
-        val minimum = row.habit.minimumLabel?.takeIf { it.isNotBlank() }
-        val norm = row.habit.normLabel?.takeIf { it.isNotBlank() }
-        if (minimum != null || norm != null) {
-            LevelLegend(minimum = minimum, norm = norm)
+        AnimatedVisibility(
+            visible = control == RowControl.Levels,
+            enter = fadeIn(tween(Motion.CONTENT_MS)) + expandVertically(Motion.resize),
+            exit = fadeOut(tween(Motion.CONTENT_MS / 2)) + shrinkVertically(Motion.resize),
+            label = "habit-levels",
+        ) {
+            LevelButtons(
+                minimum = minimumLabel,
+                norm = normLabel,
+                onMinimum = { onMark(EntryLevel.Minimum) },
+                onNorm = { onMark(EntryLevel.Norm) },
+                modifier = Modifier.padding(top = Spacing.l),
+            )
+        }
+
+        // Отмеченный уровень называется словом: круг с галочкой не отличает
+        // минимум от нормы, а разница между ними и есть смысл режима (§5.3).
+        // Уходящая плашка держит прежний уровень: без этого при снятии отметки
+        // «минимум» на миг превращался в «норму».
+        var lastLevel by remember { mutableStateOf(row.selectedLevel) }
+        SideEffect { if (row.selectedLevel != null) lastLevel = row.selectedLevel }
+        val shownLevel = row.selectedLevel ?: lastLevel ?: EntryLevel.Norm
+        AnimatedVisibility(
+            visible = habit.mode == HabitMode.Minimum &&
+                row.timesPerDay == 1 &&
+                row.selectedLevel != null,
+            enter = fadeIn(tween(Motion.CONTENT_MS)) + expandVertically(Motion.resize),
+            exit = fadeOut(tween(Motion.CONTENT_MS / 2)) + shrinkVertically(Motion.resize),
+            label = "habit-level",
+        ) {
+            LevelDoneStrip(
+                level = shownLevel,
+                detail = if (shownLevel == EntryLevel.Minimum) minimumLabel else normLabel,
+                // Повторное нажатие того же уровня снимает отметку, и кнопки
+                // выбора возвращаются. Пока плашка уходит, снимать уже нечего.
+                onChange = { row.selectedLevel?.let(onMark) },
+                modifier = Modifier.padding(top = Spacing.l),
+            )
         }
     }
+}
+
+/** Поля карточки: кнопкам уровня и меткам нужен воздух вокруг. */
+private val CardPadding = 18.dp
+
+/**
+ * Значок привычки в круге. Когда день закрыт, круг заливается цветом раздела:
+ * сделанное видно с первого взгляда на список, ещё до чтения названий.
+ */
+@Composable
+private fun HabitBadge(
+    icon: String,
+    tone: Color,
+    done: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    val fill by animateColorAsState(
+        targetValue = if (done) tone else tone.copy(alpha = 0.14f),
+        animationSpec = Motion.color,
+        label = "badge-fill",
+    )
+    val tint by animateColorAsState(
+        targetValue = if (done) MaterialTheme.colorScheme.onPrimary else tone,
+        animationSpec = Motion.color,
+        label = "badge-tint",
+    )
+
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = modifier
+            .completionPop(done, peak = 1.12f)
+            .size(44.dp)
+            .clip(CircleShape)
+            .background(fill),
+    ) {
+        Icon(
+            painter = painterResource(BolhIcons.resFor(icon)),
+            contentDescription = null,
+            tint = tint,
+            modifier = Modifier.size(24.dp),
+        )
     }
 }
 
 /**
- * Подрамка с расшифровкой уровней.
- *
- * Двумя серыми строками подряд это читалось как случайная приписка. В своей
- * рамке — как справка к кнопкам рядом, а значки повторяют вид самих отметок:
- * точка это минимум, галочка — норма (§5.3).
+ * Метки под названием: время за раз, серия или счёт дней, экономия.
+ * У каждой свой значок и цвет, поэтому они читаются, не сливаясь в строку.
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun LevelLegend(
-    minimum: String?,
-    norm: String?,
-    modifier: Modifier = Modifier,
-) {
+private fun HabitTags(row: HabitRowState, modifier: Modifier = Modifier) {
+    val habit = row.habit
     val status = LocalStatusColors.current
     val accent = MaterialTheme.colorScheme.primary
 
-    Column(
-        modifier = modifier
-            .padding(top = Spacing.s)
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(Radius.block))
-            .background(status.surfaceSunken)
-            .padding(horizontal = Spacing.m, vertical = Spacing.s),
-        verticalArrangement = Arrangement.spacedBy(Spacing.xs),
+    FlowRow(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        if (minimum != null) {
-            LevelLine(
-                text = stringResource(R.string.habit_min_line, minimum),
+        when {
+            // Пауза важнее любой цифры: пока она идёт, считать нечего.
+            row.isPaused -> IconTag(
+                text = stringResource(R.string.habits_paused),
+                icon = R.drawable.ic_pause_circle,
                 color = status.textSecondary,
-            ) {
-                // Половинная заливка: день засчитан, но не полностью.
-                Box(
-                    modifier = Modifier
-                        .size(8.dp)
-                        .clip(CircleShape)
-                        .background(accent),
-                )
+            )
+
+            habit.kind == HabitKind.Bad -> {
+                if (habit.mode == HabitMode.Limit) {
+                    val limit = habit.limitPerWeek ?: 0
+                    IconTag(
+                        text = stringResource(R.string.habit_slips_of_limit, row.slipsThisWeek, limit),
+                        icon = R.drawable.ic_calendar_month,
+                        color = when {
+                            row.slipsThisWeek > limit -> status.problem
+                            row.slipsThisWeek == limit -> status.attention
+                            else -> status.success
+                        },
+                    )
+                } else {
+                    IconTag(
+                        text = pluralStringResource(
+                            R.plurals.habit_days_clean,
+                            row.daysWithoutSlip,
+                            row.daysWithoutSlip,
+                        ),
+                        icon = R.drawable.ic_shield,
+                        color = status.success,
+                    )
+                }
+                row.savedMinor?.takeIf { it > 0L }?.let { saved ->
+                    IconTag(
+                        text = stringResource(
+                            R.string.habit_saved,
+                            Money.format(saved, habit.costCurrencyCode ?: "EUR"),
+                        ),
+                        icon = R.drawable.ic_savings,
+                        color = status.success,
+                    )
+                }
+            }
+
+            else -> {
+                // Время за раз — на самой карточке, а не только в настройках (§5.8).
+                habit.estimatedMinutes?.takeIf { it > 0 }?.let { minutes ->
+                    IconTag(
+                        text = durationLabel(minutes),
+                        icon = R.drawable.ic_timer,
+                        color = accent,
+                    )
+                }
+                val streak = row.streak ?: 0
+                if (streak > 0) {
+                    IconTag(
+                        text = pluralStringResource(R.plurals.habit_streak, streak, streak),
+                        icon = R.drawable.ic_local_fire_department,
+                        color = status.attention,
+                    )
+                } else {
+                    IconTag(
+                        text = stringResource(
+                            R.string.habit_done_of_planned,
+                            row.done30,
+                            pluralStringResource(R.plurals.days_of, row.planned30, row.planned30),
+                        ),
+                        icon = R.drawable.ic_event_available,
+                        color = status.textSecondary,
+                    )
+                }
             }
         }
-        if (norm != null) {
-            LevelLine(
-                text = stringResource(R.string.habit_norm_line, norm),
-                color = status.textSecondary,
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_check),
-                    contentDescription = null,
-                    tint = accent,
-                    modifier = Modifier.size(12.dp),
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun LevelLine(
-    text: String,
-    color: Color,
-    mark: @Composable () -> Unit,
-) {
-    // Значок держится первой строки: по центру блока он уезжал вниз, когда
-    // подпись переносилась, и переставал относиться к своей строке.
-    Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
-        Box(
-            modifier = Modifier.size(width = 14.dp, height = 20.dp),
-            contentAlignment = Alignment.Center,
-            content = { mark() },
-        )
-        Text(
-            text = text,
-            style = MaterialTheme.typography.labelMedium,
-            color = color,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-        )
-    }
-}
-
-/**
- * Сколько времени привычка занимает за раз.
- *
- * Число жило только в расширенных настройках, и перед началом его приходилось
- * вспоминать. На карточке оно отвечает на «сколько на это нужно» сразу.
- */
-@Composable
-private fun DurationTag(minutes: Int, modifier: Modifier = Modifier) {
-    val accent = MaterialTheme.colorScheme.primary
-
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
-        modifier = modifier
-            .clip(RoundedCornerShape(Radius.chip))
-            .background(accent.copy(alpha = 0.12f))
-            .padding(horizontal = 8.dp, vertical = 2.dp),
-    ) {
-        Icon(
-            painter = painterResource(R.drawable.ic_timer),
-            contentDescription = null,
-            tint = accent,
-            modifier = Modifier.size(14.dp),
-        )
-        Text(
-            text = durationLabel(minutes),
-            style = MaterialTheme.typography.labelMedium,
-            color = accent,
-            maxLines = 1,
-        )
     }
 }
 
@@ -355,47 +385,255 @@ private fun durationLabel(minutes: Int): String = when {
     else -> stringResource(R.string.habit_duration_hours_minutes, minutes / 60, minutes % 60)
 }
 
+/**
+ * Подсказка внутри карточки: цветная подложка и значок в круге.
+ * Серую строку мелким шрифтом пролистывали, не читая (§9.3).
+ */
 @Composable
-private fun contextLine(row: HabitRowState): String {
-    val habit = row.habit
-    return when {
-        // Пауза важнее любой цифры: пока она идёт, считать нечего.
-        row.isPaused -> stringResource(R.string.habits_paused)
+private fun InlineNotice(
+    text: String,
+    color: Color,
+    icon: Int,
+    modifier: Modifier = Modifier,
+    secondary: String? = null,
+) {
+    val status = LocalStatusColors.current
+    val shape = RoundedCornerShape(Radius.control)
 
-        row.needsRecovery -> stringResource(R.string.habits_recovery)
-
-        habit.kind == HabitKind.Bad && habit.mode == HabitMode.Limit ->
-            stringResource(R.string.habit_slips_of_limit, row.slipsThisWeek, habit.limitPerWeek ?: 0)
-
-        habit.kind == HabitKind.Bad -> {
-            val clean = pluralStringResource(
-                R.plurals.habit_days_clean,
-                row.daysWithoutSlip,
-                row.daysWithoutSlip,
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(shape)
+            .background(color.copy(alpha = 0.10f))
+            .border(width = 1.dp, color = color.copy(alpha = 0.35f), shape = shape)
+            .padding(horizontal = Spacing.m, vertical = 10.dp),
+    ) {
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .size(28.dp)
+                .clip(CircleShape)
+                .background(color.copy(alpha = 0.18f)),
+        ) {
+            Icon(
+                painter = painterResource(icon),
+                contentDescription = null,
+                tint = color,
+                modifier = Modifier.size(16.dp),
             )
-            val saved = row.savedMinor?.takeIf { it > 0L }?.let {
-                stringResource(
-                    R.string.habit_saved,
-                    Money.format(it, habit.costCurrencyCode ?: "EUR"),
+        }
+        Column(
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+            modifier = Modifier
+                .weight(1f)
+                .padding(start = Spacing.m),
+        ) {
+            Text(
+                text = text,
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onBackground,
+            )
+            if (secondary != null) {
+                Text(
+                    text = secondary,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = status.textSecondary,
                 )
             }
-            if (saved == null) clean else "$clean · $saved"
         }
+    }
+}
 
-        row.streak != null && row.streak > 0 ->
-            pluralStringResource(R.plurals.habit_streak, row.streak, row.streak)
+/**
+ * Две кнопки, и обе засчитывают день (§5.3). Плохой день не превращается
+ * в ноль, цепочка держится.
+ *
+ * Кнопки одной высоты и одной формы: минимум — такой же полноправный выбор,
+ * как норма. Норма лишь чуть плотнее залита, как и её отметка в круге.
+ */
+@Composable
+private fun LevelButtons(
+    minimum: String?,
+    norm: String?,
+    onMinimum: () -> Unit,
+    onNorm: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(Spacing.m),
+        modifier = modifier
+            .fillMaxWidth()
+            .height(IntrinsicSize.Min),
+    ) {
+        LevelButton(
+            title = stringResource(R.string.habits_mark_minimum),
+            detail = minimum,
+            full = false,
+            onClick = onMinimum,
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight(),
+        )
+        LevelButton(
+            title = stringResource(R.string.habits_mark_norm),
+            detail = norm,
+            full = true,
+            onClick = onNorm,
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight(),
+        )
+    }
+}
 
-        else -> stringResource(
-            R.string.habit_done_of_planned,
-            row.done30,
-            pluralStringResource(R.plurals.days_of, row.planned30, row.planned30),
+@Composable
+private fun LevelButton(
+    title: String,
+    detail: String?,
+    full: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val accent = MaterialTheme.colorScheme.primary
+    val status = LocalStatusColors.current
+    val shape = RoundedCornerShape(Radius.control)
+    val press = rememberPressSource()
+
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = modifier
+            .pressScale(press)
+            .clip(shape)
+            .background(accent.copy(alpha = if (full) 0.20f else 0.08f))
+            .border(
+                width = 1.5.dp,
+                color = accent.copy(alpha = if (full) 0.85f else 0.50f),
+                shape = shape,
+            )
+            .clickable(interactionSource = press, indication = ripple(), onClick = onClick)
+            .heightIn(min = 60.dp)
+            .padding(horizontal = Spacing.m, vertical = 10.dp),
+    ) {
+        LevelMark(full = full, size = 28.dp)
+        Column(modifier = Modifier.padding(start = 10.dp)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onBackground,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            if (detail != null) {
+                Text(
+                    text = detail,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = status.textSecondary,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Знак уровня. Повторяет круг отметки справа: точка — минимум, залитый круг
+ * с галочкой — норма. Выучив кнопку, человек читает и круг.
+ */
+@Composable
+private fun LevelMark(full: Boolean, size: Dp, modifier: Modifier = Modifier) {
+    val accent = MaterialTheme.colorScheme.primary
+
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = modifier
+            .size(size)
+            .clip(CircleShape)
+            .background(if (full) accent else Color.Transparent)
+            .border(width = 2.dp, color = accent, shape = CircleShape),
+    ) {
+        if (full) {
+            Icon(
+                painter = painterResource(R.drawable.ic_check),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onPrimary,
+                modifier = Modifier.size(size * 0.6f),
+            )
+        } else {
+            Box(
+                modifier = Modifier
+                    .size(size * 0.36f)
+                    .clip(CircleShape)
+                    .background(accent),
+            )
+        }
+    }
+}
+
+/** Засчитанный уровень и его расшифровка; «Изменить» возвращает выбор. */
+@Composable
+private fun LevelDoneStrip(
+    level: EntryLevel,
+    detail: String?,
+    onChange: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val accent = MaterialTheme.colorScheme.primary
+    val status = LocalStatusColors.current
+    val shape = RoundedCornerShape(Radius.control)
+
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(shape)
+            .background(accent.copy(alpha = 0.10f))
+            .border(width = 1.dp, color = accent.copy(alpha = 0.35f), shape = shape)
+            .padding(start = Spacing.m, end = Spacing.xs, top = Spacing.s, bottom = Spacing.s),
+    ) {
+        LevelMark(full = level == EntryLevel.Norm, size = 24.dp)
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .padding(start = 10.dp),
+        ) {
+            Text(
+                text = stringResource(
+                    if (level == EntryLevel.Minimum) {
+                        R.string.habit_done_minimum
+                    } else {
+                        R.string.habit_done_norm
+                    },
+                ),
+                style = MaterialTheme.typography.labelLarge,
+                color = accent,
+            )
+            if (detail != null) {
+                Text(
+                    text = detail,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = status.textSecondary,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
+        Text(
+            text = stringResource(R.string.habit_level_change),
+            style = MaterialTheme.typography.labelLarge,
+            color = accent,
+            modifier = Modifier
+                .clip(RoundedCornerShape(Radius.chip))
+                .tappable(onClick = onChange)
+                .padding(horizontal = Spacing.m, vertical = Spacing.s),
         )
     }
 }
 
 /**
  * Круг, а не квадрат: круг читается как действие, квадрат — как ячейка таблицы.
- * Отметка минимума заливается наполовину — видно, что день засчитан, но не полностью.
+ * Отметка минимума — точка внутри: день засчитан, но не полностью.
  */
 @Composable
 private fun MarkCircle(
@@ -434,7 +672,7 @@ private fun MarkCircle(
         label = "mark-fill",
     )
     val ring by animateColorAsState(
-        targetValue = if (level != null) accent else status.divider,
+        targetValue = if (level != null) accent else status.stroke,
         animationSpec = Motion.color,
         label = "mark-ring",
     )
@@ -449,7 +687,7 @@ private fun MarkCircle(
     ) {
         Box(
             modifier = Modifier
-                .size(34.dp)
+                .size(38.dp)
                 .graphicsLayer {
                     scaleX = pop.value
                     scaleY = pop.value
@@ -464,7 +702,7 @@ private fun MarkCircle(
                     painter = painterResource(R.drawable.ic_check),
                     contentDescription = stringResource(R.string.habits_mark_done),
                     tint = MaterialTheme.colorScheme.onPrimary,
-                    modifier = Modifier.size(18.dp),
+                    modifier = Modifier.size(22.dp),
                 )
 
                 EntryLevel.Minimum -> Box(
@@ -480,36 +718,6 @@ private fun MarkCircle(
     }
 }
 
-/**
- * Две кнопки, и обе засчитывают день (§5.3). Плохой день не превращается в ноль,
- * цепочка держится.
- */
-@Composable
-private fun MinimumNormButtons(
-    onMinimum: () -> Unit,
-    onNorm: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val accent = MaterialTheme.colorScheme.primary
-
-    // Обе кнопки нажимаются, поэтому обе выглядят одинаково. Раньше минимум
-    // был бледным, и казалось, что кликается только норма.
-    Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
-        Pill(
-            text = stringResource(R.string.habits_mark_minimum),
-            textColor = accent,
-            borderColor = accent,
-            onClick = onMinimum,
-        )
-        Pill(
-            text = stringResource(R.string.habits_mark_norm),
-            textColor = accent,
-            borderColor = accent,
-            onClick = onNorm,
-        )
-    }
-}
-
 @Composable
 private fun SlipButton(
     mode: HabitMode,
@@ -522,8 +730,7 @@ private fun SlipButton(
         text = stringResource(
             if (mode == HabitMode.Limit) R.string.habits_slip_add else R.string.habits_slip,
         ),
-        textColor = status.problem,
-        borderColor = status.problem,
+        color = status.problem,
         onClick = onClick,
         modifier = modifier,
         // Нажали не глядя — долгое нажатие возвращает как было.
@@ -536,21 +743,21 @@ private fun SlipButton(
 @Composable
 private fun Pill(
     text: String,
-    textColor: Color,
-    borderColor: Color,
+    color: Color,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     onLongClick: (() -> Unit)? = null,
     longClickLabel: String? = null,
 ) {
     val press = rememberPressSource()
-    val border by animateColorAsState(borderColor, Motion.color, label = "pill-border")
+    val shape = RoundedCornerShape(percent = 50)
 
     Box(
         modifier = modifier
             .pressScale(press)
-            .clip(RoundedCornerShape(percent = 50))
-            .border(1.5.dp, border, RoundedCornerShape(percent = 50))
+            .clip(shape)
+            .background(color.copy(alpha = 0.10f))
+            .border(1.5.dp, color, shape)
             .then(
                 if (onLongClick == null) {
                     Modifier.clickable(
@@ -568,10 +775,11 @@ private fun Pill(
                     )
                 },
             )
-            .padding(horizontal = Spacing.m, vertical = Spacing.s),
+            .heightIn(min = 40.dp)
+            .padding(horizontal = Spacing.l, vertical = Spacing.s),
         contentAlignment = Alignment.Center,
     ) {
-        Text(text = text, style = MaterialTheme.typography.labelLarge, color = textColor)
+        Text(text = text, style = MaterialTheme.typography.labelLarge, color = color)
     }
 }
 
@@ -600,7 +808,7 @@ private fun MarkCounter(
         label = "counter-share",
     )
     val ring by animateColorAsState(
-        targetValue = if (done > 0) accent else status.divider,
+        targetValue = if (done > 0) accent else status.stroke,
         animationSpec = Motion.color,
         label = "counter-ring",
     )
@@ -623,7 +831,7 @@ private fun MarkCounter(
             .semantics { contentDescription = spoken },
         contentAlignment = Alignment.Center,
     ) {
-        Canvas(modifier = Modifier.size(38.dp)) {
+        Canvas(modifier = Modifier.size(40.dp)) {
             val stroke = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round)
             val inset = stroke.width / 2f
             drawArc(
@@ -650,7 +858,7 @@ private fun MarkCounter(
         Box(
             modifier = Modifier
                 .completionPop(complete)
-                .size(26.dp)
+                .size(28.dp)
                 .clip(CircleShape)
                 .background(fill),
             contentAlignment = Alignment.Center,

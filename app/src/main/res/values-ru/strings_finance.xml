@@ -45,7 +45,13 @@
 
     <string name="account_new_title">Новый счёт</string>
     <string name="account_currency">Валюта счёта</string>
-    <string name="account_currency_note">Суммы на этом счёте считаются в его собственной валюте и никогда не пересчитываются. Только общий итог по всем счетам показывается примерно, по последнему известному курсу.</string>
+    <string name="account_currency_note">Суммы счёта хранятся в его валюте. Если позже сменить валюту, Bolh предложит пересчитать их по курсу.</string>
+    <string name="account_currency_change_title">Перевести счёт в %1$s?</string>
+    <string name="account_currency_change_text">Сейчас на счёте %1$s. По текущему курсу это примерно %2$s. Операции счёта тоже будут пересчитаны.</string>
+    <string name="account_currency_no_rate">Курса пока нет. Для пересчёта нужен интернет.</string>
+    <string name="account_currency_convert">Пересчитать</string>
+    <string name="account_currency_keep">Оставить числа</string>
+    <string name="account_currency_failed">Не удалось получить курс. Проверьте интернет и попробуйте ещё раз.</string>
     <string name="finance_currency_scope">Валюта</string>
     <string name="finance_approx_total">Примерно всего</string>
     <string name="finance_approx_note">По курсу на %1$s. Без интернета остаётся последний известный курс.</string>
@@ -87,6 +93,6 @@
     <string name="account_edit">Изменить</string>
     <string name="account_expenses">Расходы</string>
     <string name="account_income">Доходы</string>
-    <string name="account_balance_note">Остаток правится сдвигом начальной суммы. Записанные операции остаются на месте.</string>
     <string name="finance_view">Вид</string>
+    <string name="account_currency_loading">Получаю курс…</string>
 </resources>

@@ -50,7 +50,7 @@ import eu.bolh.app.data.db.entity.TransactionEntity
         HabitEntryEntity::class,
         HabitPauseEntity::class,
     ],
-    version = 4,
+    version = 5,
     exportSchema = true,
 )
 @TypeConverters(Converters::class)
@@ -126,6 +126,21 @@ abstract class BolhDatabase : RoomDatabase() {
             }
         }
 
+        /**
+         * Несколько напоминаний в день и напоминание-будильник (§5.6).
+         * У прежних привычек список дополнительных времён пуст, будильник выключен.
+         */
+        private val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(connection: SQLiteConnection) {
+                connection.execSQL(
+                    "ALTER TABLE habits ADD COLUMN extraReminders TEXT NOT NULL DEFAULT ''",
+                )
+                connection.execSQL(
+                    "ALTER TABLE habits ADD COLUMN reminderAlarm INTEGER NOT NULL DEFAULT 0",
+                )
+            }
+        }
+
         @Volatile
         private var instance: BolhDatabase? = null
 
@@ -135,7 +150,7 @@ abstract class BolhDatabase : RoomDatabase() {
 
         private fun build(context: Context): BolhDatabase =
             Room.databaseBuilder(context.applicationContext, BolhDatabase::class.java, NAME)
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
                 .build()
     }
 }

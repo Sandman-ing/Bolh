@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_backup">Sauvegarde</string>
+    <string name="settings_backup_howto">Toutes les données sont stockées uniquement sur ce téléphone. Une sauvegarde les enregistre dans un seul fichier, avec les réglages.\n\nPour transférer vos données sur un nouveau téléphone :\n1. Touchez « Enregistrer une sauvegarde » et enregistrez le fichier, par exemple sur Google Drive.\n2. Sur le nouveau téléphone, installez Bolh et ouvrez les réglages.\n3. Touchez « Restaurer une sauvegarde » et choisissez ce fichier.\n\nLa restauration remplace les données du téléphone par celles du fichier.</string>
+    <string name="settings_backup_save">Enregistrer une sauvegarde</string>
+    <string name="settings_backup_restore">Restaurer une sauvegarde</string>
+    <string name="settings_restore_title">Restaurer la sauvegarde ?</string>
+    <string name="settings_restore_text">Les données de ce téléphone seront remplacées par celles du fichier.</string>
+    <string name="settings_restore_confirm">Restaurer</string>
+    <string name="settings_backup_saved">Sauvegarde enregistrée. Éléments : %1$d</string>
+    <string name="settings_backup_restored">Données restaurées. Éléments : %1$d</string>
+    <string name="settings_backup_not_bolh">Ce fichier n’est pas une sauvegarde Bolh.</string>
+    <string name="settings_export_saved">Fichier enregistré. Éléments : %1$d</string>
+    <string name="settings_reports">Rapports</string>
+    <string name="settings_export_csv">Opérations en CSV</string>
+    <string name="settings_export_pdf">Rapport en PDF</string>
+    <string name="settings_error">Échec : %1$s</string>
+    <string name="settings_error_no_file">impossible d’ouvrir le fichier</string>
+    <string name="settings_version">Version %1$s</string>
+    <string name="settings_language">Langue</string>
+    <string name="settings_language_system">Comme le téléphone</string>
+    <string name="settings_currency">Devise</string>
+    <string name="settings_currency_search">Rechercher</string>
+    <string name="settings_appearance">Apparence</string>
+    <string name="settings_reminders">Rappels</string>
+    <string name="settings_reminders_open">Notifications</string>
+    <string name="settings_reminders_exact">Heure exacte des rappels</string>
+    <string name="settings_reminders_battery">Économie de batterie</string>
+    <string name="settings_off">désactivées</string>
+    <string name="settings_not_allowed">non autorisé</string>
+    <string name="settings_theme_dark">Sombre</string>
+    <string name="settings_theme_system">Comme le téléphone</string>
+    <string name="settings_theme_light">Clair</string>
+</resources>

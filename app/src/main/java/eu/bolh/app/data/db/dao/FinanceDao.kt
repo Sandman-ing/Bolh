@@ -151,6 +151,19 @@ interface FinanceDao {
 
     // --- Курсы валют ------------------------------------------------------
 
+    /** Операции счёта, включая переводы на него: они нужны при смене валюты. */
+    @Query(
+        "SELECT * FROM transactions WHERE deletedAt IS NULL " +
+            "AND (accountId = :accountId OR toAccountId = :accountId)",
+    )
+    suspend fun transactionsOfAccount(accountId: String): List<TransactionEntity>
+
+    @Query("SELECT * FROM recurring_payments WHERE deletedAt IS NULL AND accountId = :accountId")
+    suspend fun recurringOfAccount(accountId: String): List<RecurringPaymentEntity>
+
+    @Query("SELECT * FROM currency_rates WHERE date = (SELECT MAX(date) FROM currency_rates)")
+    suspend fun latestRates(): List<CurrencyRateEntity>
+
     @Upsert
     suspend fun upsertRates(rates: List<CurrencyRateEntity>)
 

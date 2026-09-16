@@ -11,6 +11,7 @@ import eu.bolh.app.data.repository.FinanceRepository
 import eu.bolh.app.data.repository.GoalRepository
 import eu.bolh.app.data.repository.HabitRepository
 import eu.bolh.app.domain.analytics.CategoryFacts
+import eu.bolh.app.domain.analytics.CurrencyMath
 import eu.bolh.app.domain.analytics.FinanceAnalytics
 import eu.bolh.app.domain.analytics.GoalAnalytics
 import eu.bolh.app.domain.analytics.GoalFacts
@@ -26,8 +27,10 @@ import eu.bolh.app.domain.model.Goal
 import eu.bolh.app.domain.model.Habit
 import eu.bolh.app.domain.model.HabitKind
 import eu.bolh.app.domain.model.Mark
+import eu.bolh.app.domain.model.ScheduleType
 import eu.bolh.app.domain.model.Stage
 import eu.bolh.app.domain.model.Transaction
+import eu.bolh.app.domain.model.TransactionType
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 import java.time.temporal.WeekFields
@@ -43,8 +46,11 @@ import kotlinx.coroutines.launch
 /** Периоды статистики (§7). По умолчанию — месяц. */
 enum class StatPeriod { Week, Month, Year }
 
-/** Столбик графика. Прошлый период рисуется тусклее, ближе к сегодня — ярче. */
-data class StatBar(val label: String, val value: Double?, val isPrevious: Boolean)
+/**
+ * Столбик графика. Прошлый период рисуется тусклее, ближе к сегодня — ярче.
+ * [start] — первый день отрезка: подпись под столбиком строит экран.
+ */
+data class StatBar(val start: LocalDate, val value: Double?, val isPrevious: Boolean)
 
 data class CategoryStat(
     val category: Category?,
@@ -65,20 +71,40 @@ data class StatHabitRow(
     val minimumDays: Int,
     /** Отметки по дням — из них рисуется календарь привычки. */
     val days: Map<LocalDate, EntryLevel> = emptyMap(),
-)
+    val icon: String = "",
+) {
+    /** Доля выполненного за период, от нуля до единицы. */
+    val share: Float
+        get() = if (plannedDays <= 0) 0f else (doneDays.toFloat() / plannedDays).coerceIn(0f, 1f)
+}
 
 /** Строка цели: прогресс и темп — два разных числа, и они не складываются (§4.2). */
 data class StatGoalRow(
     val name: String,
     val progress: Double?,
     val tempo: Double?,
+    val id: String = "",
+    val icon: String = "",
+    val stagesTotal: Int = 0,
+    val stagesClosed: Int = 0,
 )
+
+/** Самая длинная идущая серия среди привычек. */
+data class StreakLeader(val name: String, val icon: String, val days: Int)
 
 data class StatsUiState(
     val period: StatPeriod = StatPeriod.Month,
     val habitCompletion: Double? = null,
+    /** То же за прошлый период: с чем сравнивать. */
+    val habitCompletionPrevious: Double? = null,
     val spendMinor: Long = 0L,
     val spendPreviousMinor: Long = 0L,
+    val incomeMinor: Long = 0L,
+    /** Валюты, операции в которых не попали в итог: для них нет курса. */
+    val missingRates: List<String> = emptyList(),
+    val streakLeader: StreakLeader? = null,
+    /** Доля выполненного по дням недели, с понедельника; null — в этот день ничего не ждали. */
+    val weekdayShares: List<Double?> = emptyList(),
     val goalsInTempo: Int = 0,
     val goalsCounted: Int = 0,
     val habitRows: List<StatHabitRow> = emptyList(),
@@ -136,9 +162,14 @@ class StatsViewModel(
         finance.observeTransactions(),
         finance.observeCategories(),
     ) { habitPair, goalPair, transactions, categories ->
+        val timesById = habitPair.first.associate { it.id to it.timesPerDay }
         Data(
             habits = habitPair.first,
-            marks = habitPair.second,
+            // У привычки «несколько раз в день» день засчитан, только когда
+            // набраны все отметки. Сырые отметки завышали бы выполнение (§5.5).
+            marks = habitPair.second.mapValues { (habitId, marks) ->
+                HabitAnalytics.completeDays(marks, timesById[habitId] ?: 1)
+            },
             goals = goalPair.first,
             stages = goalPair.second,
             transactions = transactions,
@@ -155,7 +186,8 @@ class StatsViewModel(
         period,
         hidden,
         finance.currency,
-    ) { data, currentPeriod, hiddenBlocks, currency ->
+        finance.observeRates(),
+    ) { data, currentPeriod, hiddenBlocks, currency, rates ->
         val today = habits.today()
         val current = boundsFor(currentPeriod, today)
         val previous = previousBounds(currentPeriod, current)
@@ -163,9 +195,33 @@ class StatsViewModel(
         val goodHabits = data.habits.filter { it.kind == HabitKind.Good }
         val completion = averageTempo(goodHabits, data.marks, current)
 
+        // Суммы разных валют складывать нельзя: всё переводится в основную
+        // валюту по последнему известному курсу. Операции без курса в итог
+        // не идут, и экран об этом говорит.
+        val perEur = rates?.perEur.orEmpty()
+        val missing = linkedSetOf<String>()
+        val inBase = data.transactions.mapNotNull { transaction ->
+            if (transaction.currencyCode == currency || transaction.currencyCode.isBlank()) {
+                transaction
+            } else {
+                val converted = CurrencyMath.convert(
+                    transaction.amountMinor,
+                    transaction.currencyCode,
+                    currency,
+                    perEur,
+                )
+                if (converted == null) {
+                    if (transaction.type != TransactionType.Transfer) missing += transaction.currencyCode
+                    null
+                } else {
+                    transaction.copy(amountMinor = converted, currencyCode = currency)
+                }
+            }
+        }
+
         val categoriesById = data.categories.associateBy { it.id }
-        val spendNow = FinanceAnalytics.spendByCategory(data.transactions, current.from, current.to)
-        val spendBefore = FinanceAnalytics.spendByCategory(data.transactions, previous.from, previous.to)
+        val spendNow = FinanceAnalytics.spendByCategory(inBase, current.from, current.to)
+        val spendBefore = FinanceAnalytics.spendByCategory(inBase, previous.from, previous.to)
 
         val goalTempos = data.goals.associate { goal ->
             val linked = data.habits.filter { it.goalId == goal.id }
@@ -184,8 +240,28 @@ class StatsViewModel(
         StatsUiState(
             period = currentPeriod,
             habitCompletion = completion,
+            habitCompletionPrevious = averageTempo(goodHabits, data.marks, previous),
             spendMinor = spendNow.values.sum(),
             spendPreviousMinor = spendBefore.values.sum(),
+            incomeMinor = FinanceAnalytics
+                .byCategory(inBase, current.from, current.to, TransactionType.Income)
+                .values
+                .sum(),
+            missingRates = missing.toList(),
+            streakLeader = goodHabits
+                .mapNotNull { habit ->
+                    val days = HabitAnalytics.streak(
+                        mode = habit.mode,
+                        marks = data.marks[habit.id].orEmpty(),
+                        schedule = habit.schedule,
+                        today = today,
+                        startDate = habit.startDate,
+                        skipAllowancePerMonth = habit.skipAllowancePerMonth,
+                    ) ?: return@mapNotNull null
+                    if (days > 1) StreakLeader(habit.name, habit.icon, days) else null
+                }
+                .maxByOrNull { it.days },
+            weekdayShares = weekdayShares(goodHabits, data.marks, current),
             // «N из M целей в темпе»: в знаменателе все цели, а не только те,
             // у которых есть привычки. Иначе «0 из 0» выглядит как поломка.
             goalsInTempo = goalTempos.values.count { it != null && it >= IN_TEMPO },
@@ -195,6 +271,7 @@ class StatsViewModel(
                 StatHabitRow(
                     id = habit.id,
                     name = habit.name,
+                    icon = habit.icon,
                     doneDays = HabitAnalytics.doneDays(
                         data.marks[habit.id].orEmpty(),
                         current,
@@ -217,6 +294,10 @@ class StatsViewModel(
                     name = goal.name,
                     progress = GoalAnalytics.progress(stages.size, stages.count { it.isDone }),
                     tempo = goalTempos[goal.id],
+                    id = goal.id,
+                    icon = goal.icon,
+                    stagesTotal = stages.size,
+                    stagesClosed = stages.count { it.isDone },
                 )
             },
             bars = barsFor(currentPeriod, today, goodHabits, data.marks),
@@ -229,7 +310,7 @@ class StatsViewModel(
                         delta = FinanceAnalytics.delta(amount, spendBefore[categoryId] ?: 0L),
                         isAnomalous = FinanceAnalytics.isAnomalous(
                             currentMinor = amount,
-                            historyMonthly = monthlyHistory(categoryId, data.transactions, today),
+                            historyMonthly = monthlyHistory(categoryId, inBase, today),
                         ),
                     )
                 },
@@ -258,7 +339,7 @@ class StatsViewModel(
                             categoryId = categoryId,
                             spentNow = spendNow[categoryId] ?: 0L,
                             spentPrevious = spendBefore[categoryId] ?: 0L,
-                            historyMonthly = monthlyHistory(categoryId, data.transactions, today),
+                            historyMonthly = monthlyHistory(categoryId, inBase, today),
                             linkedHabitId = data.habits
                                 .firstOrNull { it.categoryId == categoryId && it.kind == HabitKind.Bad }
                                 ?.id,
@@ -357,14 +438,42 @@ class StatsViewModel(
         }
         return buckets.map { (window, isPrevious) ->
             StatBar(
-                label = when (period) {
-                    StatPeriod.Week -> window.from.dayOfMonth.toString()
-                    StatPeriod.Month -> window.from.dayOfMonth.toString()
-                    StatPeriod.Year -> window.from.monthValue.toString()
-                },
+                start = window.from,
                 value = averageTempo(habitList, marks, window),
                 isPrevious = isPrevious,
             )
+        }
+    }
+
+    /**
+     * Доля выполненного по дням недели: в какие дни привычки держатся, а в
+     * какие проседают. «N раз в неделю» сюда не входит: у неё нет своих дней.
+     */
+    private fun weekdayShares(
+        habitList: List<Habit>,
+        marks: Map<String, List<Mark>>,
+        window: DayWindow,
+    ): List<Double?> {
+        val planned = IntArray(7)
+        val done = IntArray(7)
+        val fixed = habitList.filter { it.schedule.type != ScheduleType.TimesPerWeek }
+        val doneDates = fixed.associate { habit ->
+            habit.id to marks[habit.id].orEmpty()
+                .filter { it.level != EntryLevel.Slip }
+                .map { it.date }
+                .toSet()
+        }
+        window.dates().forEach { date ->
+            val index = date.dayOfWeek.value - 1
+            fixed.forEach { habit ->
+                if (!date.isBefore(habit.startDate) && habit.schedule.plannedOn(date)) {
+                    planned[index]++
+                    if (date in doneDates[habit.id].orEmpty()) done[index]++
+                }
+            }
+        }
+        return (0 until 7).map { index ->
+            if (planned[index] == 0) null else done[index].toDouble() / planned[index]
         }
     }
 

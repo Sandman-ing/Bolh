@@ -1,5 +1,14 @@
 package eu.bolh.app.ui.finance
 
+import eu.bolh.app.ui.common.NoticeBanner
+import eu.bolh.app.ui.common.Motion
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.material3.AlertDialog
 import eu.bolh.app.ui.common.tapIcon
 import eu.bolh.app.ui.common.animatedMinor
 import androidx.compose.foundation.layout.imePadding
@@ -85,6 +94,8 @@ fun AccountDetailScreen(
     viewModel: AccountDetailViewModel = viewModel(factory = AccountDetailViewModel.Factory),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val rates by viewModel.rates.collectAsStateWithLifecycle()
+    val ratesLoading by viewModel.ratesLoading.collectAsStateWithLifecycle()
     val status = LocalStatusColors.current
     val locale = rememberLocale()
     val account = state.account
@@ -92,17 +103,76 @@ fun AccountDetailScreen(
     var editing by remember { mutableStateOf(false) }
     var name by remember { mutableStateOf("") }
     var balance by remember { mutableStateOf("") }
-    var currency by remember { mutableStateOf(state.baseCurrency) }
     var currencyPicker by remember { mutableStateOf(false) }
+    var pendingCurrency by remember { mutableStateOf<String?>(null) }
+    var currencyFailed by remember { mutableStateOf(false) }
+    val applyCurrency = { code: String, convert: Boolean ->
+        pendingCurrency = null
+        viewModel.changeCurrency(code, convert) { done ->
+            currencyFailed = !done
+            if (done) editing = false
+        }
+    }
 
     if (currencyPicker) {
         CurrencySheet(
-            current = currency,
+            current = state.baseCurrency,
             locale = locale,
             onDismiss = { currencyPicker = false },
-            onSelect = {
-                currency = it
+            onSelect = { code ->
                 currencyPicker = false
+                val empty = state.balanceMinor == 0L && state.expenses.isEmpty() && state.income.isEmpty()
+                when {
+                    code == state.baseCurrency -> Unit
+                    // Пустой счёт пересчитывать нечего: спрашивать незачем.
+                    empty -> applyCurrency(code, false)
+                    else -> pendingCurrency = code
+                }
+            },
+        )
+    }
+
+    // Смена валюты счёта с деньгами: пересчитать по курсу или оставить числа.
+    // Оба случая настоящие: счёт перевели в другую валюту или просто
+    // завели не в той (§6.3).
+    pendingCurrency?.let { code ->
+        val preview = viewModel.convertedBalance(code, rates)
+        // Курса нет — пробуем получить его прямо сейчас, пока открыт вопрос.
+        LaunchedEffect(code, preview == null) {
+            if (preview == null) viewModel.loadRates()
+        }
+        AlertDialog(
+            onDismissRequest = { pendingCurrency = null },
+            containerColor = status.surfaceRaised,
+            title = { Text(stringResource(R.string.account_currency_change_title, code)) },
+            text = {
+                Text(
+                    when {
+                        preview != null -> stringResource(
+                            R.string.account_currency_change_text,
+                            Money.format(state.balanceMinor, state.baseCurrency, locale),
+                            Money.format(preview, code, locale),
+                        )
+
+                        ratesLoading -> stringResource(R.string.account_currency_loading)
+                        else -> stringResource(R.string.account_currency_no_rate)
+                    },
+                )
+            },
+            confirmButton = {
+                Row {
+                    TextButton(onClick = { applyCurrency(code, false) }) {
+                        Text(stringResource(R.string.account_currency_keep), color = status.textSecondary)
+                    }
+                    TextButton(onClick = { applyCurrency(code, true) }) {
+                        Text(stringResource(R.string.account_currency_convert))
+                    }
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { pendingCurrency = null }) {
+                    Text(stringResource(R.string.common_cancel), color = status.textSecondary)
+                }
             },
         )
     }
@@ -125,7 +195,6 @@ fun AccountDetailScreen(
                 Money.fractionDigitsOf(state.baseCurrency),
                 locale,
             )
-            currency = state.baseCurrency
         }
     }
 
@@ -330,18 +399,25 @@ fun AccountDetailScreen(
                                 .padding(top = Spacing.s),
                         )
                         PillButton(
-                            text = "$currency · " + CurrencyPrefs.nameOf(currency, locale),
+                            text = state.baseCurrency + " · " + CurrencyPrefs.nameOf(state.baseCurrency, locale),
                             onClick = { currencyPicker = true },
                             icon = R.drawable.ic_chevron_down,
                             iconAtEnd = true,
                             modifier = Modifier.padding(top = Spacing.s),
                         )
-                        // Остаток правится начальной суммой, а не подчисткой истории:
-                        // операции остаются на месте, меняется точка отсчёта.
-                        Hint(
-                            text = stringResource(R.string.account_balance_note),
-                            modifier = Modifier.padding(top = Spacing.xs),
-                        )
+                        AnimatedVisibility(
+                            visible = currencyFailed,
+                            enter = fadeIn(tween(Motion.CONTENT_MS)) + expandVertically(Motion.resize),
+                            exit = fadeOut(tween(Motion.CONTENT_MS / 2)) + shrinkVertically(Motion.resize),
+                            label = "currency-failed",
+                        ) {
+                            NoticeBanner(
+                                text = stringResource(R.string.account_currency_failed),
+                                color = status.problem,
+                                icon = R.drawable.ic_warning,
+                                modifier = Modifier.padding(top = Spacing.s),
+                            )
+                        }
                         Row(
                             horizontalArrangement = Arrangement.spacedBy(Spacing.s),
                             modifier = Modifier.padding(top = Spacing.m),
@@ -349,7 +425,7 @@ fun AccountDetailScreen(
                             PillButton(
                                 text = stringResource(R.string.account_save),
                                 onClick = {
-                                    viewModel.save(name, balance, currency)
+                                    viewModel.save(name, balance)
                                     editing = false
                                 },
                                 modifier = Modifier.weight(1f),
@@ -516,7 +592,7 @@ private fun androidx.compose.foundation.lazy.LazyListScope.section(
                 )
             }
             Text(
-                text = Money.format(transaction.amountMinor, currency, locale),
+                text = Money.format(transaction.amountMinor, transaction.currencyCode.ifBlank { currency }, locale),
                 style = MoneyRow,
                 color = accent,
             )

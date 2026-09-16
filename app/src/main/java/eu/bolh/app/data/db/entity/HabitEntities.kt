@@ -1,5 +1,6 @@
 package eu.bolh.app.data.db.entity
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
@@ -48,9 +49,20 @@ data class HabitEntity(
     val costCurrencyCode: String? = null,
     val limitPerWeek: Int? = null,
     val skipAllowancePerMonth: Int = 0,
-    /** Минуты от полуночи. */
+    /** Первое напоминание дня, минуты от полуночи. Остальные лежат в extraReminders. */
     val reminderMinuteOfDay: Int? = null,
     val reminderRepeatEvening: Boolean = false,
+    /**
+     * Остальные напоминания дня, минуты от полуночи через запятую.
+     *
+     * Воду пьют трижды в день, и напоминать о ней нужно трижды (§5.6). Первое
+     * время осталось в прежней колонке: записи прошлых версий читаются как есть.
+     */
+    @ColumnInfo(defaultValue = "''")
+    val extraReminders: String = "",
+    /** Напоминание звучит как будильник: со звуком, пока его не откроют. */
+    @ColumnInfo(defaultValue = "0")
+    val reminderAlarm: Boolean = false,
     val categoryId: String? = null,
     val goalId: String? = null,
     val startDate: LocalDate,

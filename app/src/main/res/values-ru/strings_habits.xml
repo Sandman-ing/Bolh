@@ -7,13 +7,13 @@
     <string name="habits_week_previous">Прошлая неделя</string>
     <string name="habits_today">Сегодня</string>
     <string name="habits_week_next">Следующая неделя</string>
-    <string name="habits_mark_minimum">мин</string>
-    <string name="habits_mark_norm">норма</string>
+    <string name="habits_mark_minimum">Минимум</string>
+    <string name="habits_mark_norm">Норма</string>
     <string name="habits_mark_done">Отметить</string>
     <string name="habits_slip">срыв</string>
     <string name="habits_slip_add">+1</string>
     <string name="habits_slip_undo">Отменить последний срыв</string>
-    <string name="habits_recovery">на этой неделе довольно минимума</string>
+    <string name="habits_recovery">На этой неделе хватит минимума</string>
     <string name="habits_paused">на паузе</string>
 
     <string name="habit_done_of_planned">%1$d из %2$s</string>
@@ -64,13 +64,18 @@
     <string name="habit_duration_minutes">%d мин</string>
     <string name="habit_duration_hours">%d ч</string>
     <string name="habit_duration_hours_minutes">%1$d ч %2$d мин</string>
-    <string name="habit_reminder">Напоминание</string>
+    <string name="habit_reminders">Напоминания</string>
+    <string name="habit_reminders_none">Напоминаний нет</string>
+    <string name="habit_reminder_add">Добавить время</string>
+    <string name="habit_reminder_alarm">Звонить как будильник</string>
+    <string name="habit_reminder_exact">Разрешите точное время, иначе телефон может задержать напоминание.</string>
+    <string name="habit_reminder_exact_action">Разрешить</string>
+    <string name="habit_reminder_blocked">Уведомления Bolh выключены.</string>
+    <string name="habit_reminder_blocked_action">Включить</string>
+    <string name="habit_reminder_remove">Убрать %1$s</string>
     <string name="habit_reminder_evening">Вечерний повтор с предложением минимума</string>
-    <string name="habit_reminder_off">Выключить</string>
     <string name="habit_start_date">Началась</string>
     <string name="habit_start_date_note">О днях раньше приложение не спрашивает: привычки тогда ещё не было.</string>
-    <string name="habit_min_line">минимум: %1$s</string>
-    <string name="habit_norm_line">норма: %1$s</string>
     <string name="habit_done_minimum">Сделано: минимум</string>
     <string name="habit_done_norm">Сделано: норма</string>
     <string name="habit_save">Сохранить</string>
@@ -99,4 +104,5 @@
         <item quantity="many">До %d срывов в неделю; сверх того неделя считается сорванной.</item>
         <item quantity="other">До %d срывов в неделю; сверх того неделя считается сорванной.</item>
     </plurals>
+    <string name="habit_level_change">Изменить</string>
 </resources>

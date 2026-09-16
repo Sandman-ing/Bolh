@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_backup">Backup</string>
+    <string name="settings_backup_howto">Alle Daten liegen nur auf diesem Telefon. Ein Backup speichert sie zusammen mit den Einstellungen in einer Datei.\n\nSo ziehst du deine Daten auf ein neues Telefon um:\n1. Tippe auf „Backup speichern“ und speichere die Datei, zum Beispiel in Google Drive.\n2. Installiere Bolh auf dem neuen Telefon und öffne die Einstellungen.\n3. Tippe auf „Aus Backup wiederherstellen“ und wähle diese Datei.\n\nBeim Wiederherstellen werden die Daten auf dem Telefon durch die Daten aus der Datei ersetzt.</string>
+    <string name="settings_backup_save">Backup speichern</string>
+    <string name="settings_backup_restore">Aus Backup wiederherstellen</string>
+    <string name="settings_restore_title">Aus Backup wiederherstellen?</string>
+    <string name="settings_restore_text">Die Daten auf diesem Telefon werden durch die Daten aus der Datei ersetzt.</string>
+    <string name="settings_restore_confirm">Wiederherstellen</string>
+    <string name="settings_backup_saved">Backup gespeichert. Einträge: %1$d</string>
+    <string name="settings_backup_restored">Daten wiederhergestellt. Einträge: %1$d</string>
+    <string name="settings_backup_not_bolh">Diese Datei ist kein Bolh-Backup.</string>
+    <string name="settings_export_saved">Datei gespeichert. Einträge: %1$d</string>
+    <string name="settings_reports">Berichte</string>
+    <string name="settings_export_csv">Buchungen als CSV</string>
+    <string name="settings_export_pdf">Bericht als PDF</string>
+    <string name="settings_error">Hat nicht geklappt: %1$s</string>
+    <string name="settings_error_no_file">Datei ließ sich nicht öffnen</string>
+    <string name="settings_version">Version %1$s</string>
+    <string name="settings_language">Sprache</string>
+    <string name="settings_language_system">Wie auf dem Telefon</string>
+    <string name="settings_currency">Währung</string>
+    <string name="settings_currency_search">Suchen</string>
+    <string name="settings_appearance">Darstellung</string>
+    <string name="settings_reminders">Erinnerungen</string>
+    <string name="settings_reminders_open">Benachrichtigungen</string>
+    <string name="settings_reminders_exact">Genaue Erinnerungszeit</string>
+    <string name="settings_reminders_battery">Energiesparen</string>
+    <string name="settings_off">aus</string>
+    <string name="settings_not_allowed">nicht erlaubt</string>
+    <string name="settings_theme_dark">Dunkel</string>
+    <string name="settings_theme_system">Wie auf dem Telefon</string>
+    <string name="settings_theme_light">Hell</string>
+</resources>

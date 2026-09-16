@@ -1,31 +1,50 @@
 package eu.bolh.app.data.backup
 
 import android.content.ContentValues
+import android.content.Context
 import android.database.Cursor
+import android.database.sqlite.SQLiteDatabase
 import android.util.JsonReader
 import android.util.JsonToken
 import android.util.JsonWriter
 import androidx.sqlite.db.SupportSQLiteDatabase
 import eu.bolh.app.data.db.BolhDatabase
+import eu.bolh.app.data.prefs.CurrencyPrefs
+import eu.bolh.app.data.prefs.LanguagePrefs
+import eu.bolh.app.data.prefs.ThemePrefs
 import java.io.InputStream
 import java.io.InputStreamReader
 import java.io.OutputStream
 import java.io.OutputStreamWriter
 import java.time.Instant
+import java.util.Currency
+import java.util.Locale
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
+/** Файл не похож на копию Bolh: не тот формат или повреждён. */
+class NotBolhBackupException : Exception("not a Bolh backup")
+
 /**
- * Экспорт и восстановление (§8.1).
+ * Итог восстановления.
  *
- * Данные лежат только на устройстве, значит потеря телефона равна потере всего —
- * поэтому резервная копия входит в первую версию, а не откладывается.
- *
- * Снимок снимается прямо с таблиц, а не с моделей: так копия остаётся полной
- * при любом изменении схемы и не требует переписывать сериализацию под каждое
- * новое поле.
+ * [language] — язык, сохранённый в копии: если он отличается от текущего,
+ * экран нужно пересоздать, чтобы надписи сменились сразу.
  */
-class BackupService(private val database: BolhDatabase) {
+data class RestoreResult(val rows: Int, val language: String?)
+
+/**
+ * Резервная копия и перенос на новый телефон (§8.1).
+ *
+ * Данные лежат только на устройстве, значит потеря телефона равна потере всего.
+ * Копия — один файл со всеми таблицами и настройками. Снимок снимается прямо
+ * с таблиц, а не с моделей: так копия остаётся полной при любом изменении
+ * схемы, и новое поле не требует переписывать сериализацию.
+ */
+class BackupService(
+    private val database: BolhDatabase,
+    private val context: Context,
+) {
 
     suspend fun exportJson(output: OutputStream): Int = withContext(Dispatchers.IO) {
         var rows = 0
@@ -35,7 +54,13 @@ class BackupService(private val database: BolhDatabase) {
             writer.beginObject()
             writer.name(FIELD_FORMAT).value(FORMAT)
             writer.name(FIELD_VERSION).value(VERSION.toLong())
+            writer.name(FIELD_SCHEMA).value(db.version.toLong())
             writer.name(FIELD_EXPORTED_AT).value(Instant.now().toString())
+            writer.name(FIELD_PREFS).beginObject()
+            writer.name(PREF_CURRENCY).value(CurrencyPrefs.get(context))
+            writer.name(PREF_LANGUAGE).value(LanguagePrefs.get(context))
+            writer.name(PREF_THEME).value(ThemePrefs.get(context))
+            writer.endObject()
             writer.name(FIELD_TABLES).beginObject()
             TABLES.forEach { table ->
                 writer.name(table).beginArray()
@@ -50,7 +75,7 @@ class BackupService(private val database: BolhDatabase) {
     }
 
     /**
-     * CSV — для таблиц и чужих программ, поэтому в нём читаемые значения,
+     * Операции таблицей для чужих программ, поэтому в ней читаемые значения,
      * а не внутренние идентификаторы.
      */
     suspend fun exportTransactionsCsv(output: OutputStream): Int = withContext(Dispatchers.IO) {
@@ -72,13 +97,20 @@ class BackupService(private val database: BolhDatabase) {
                 """.trimIndent(),
             ).use { cursor ->
                 while (cursor.moveToNext()) {
-                    val amount = cursor.getLong(2) / 100.0
+                    val code = cursor.getString(3)
+                    // Знаков после запятой у валюты свои: у иены их нет, и деление
+                    // на сто уменьшало бы такие суммы в сто раз.
+                    val digits = runCatching { Currency.getInstance(code).defaultFractionDigits }
+                        .getOrNull()
+                        ?.coerceAtLeast(0)
+                        ?: 2
+                    val amount = java.math.BigDecimal.valueOf(cursor.getLong(2), digits)
                     writer.write(
                         listOf(
                             cursor.getString(0),
                             cursor.getString(1),
-                            String.format(java.util.Locale.ROOT, "%.2f", amount),
-                            cursor.getString(3),
+                            amount.toPlainString(),
+                            code,
                             cursor.getString(4),
                             cursor.getString(5),
                             cursor.getString(6),
@@ -94,42 +126,146 @@ class BackupService(private val database: BolhDatabase) {
     }
 
     /**
-     * Импорт из своего же формата. Строки перезаписываются по идентификатору:
-     * восстановление поверх пустой базы даёт точную копию, поверх непустой —
-     * объединение без дублей.
+     * Восстановление из копии.
+     *
+     * Данные телефона заменяются целиком. Копия — это снимок, и смешивать его
+     * с записями нового телефона нельзя: готовые категории появляются там при
+     * первом заходе в финансы, и после слияния каждая была бы в двух экземплярах.
+     *
+     * Файл сначала читается и проверяется целиком. Таблицы трогаются, только
+     * если это действительно копия Bolh, и всё делается одной транзакцией:
+     * сбой посередине оставляет данные такими, какими они были.
      */
-    suspend fun importJson(input: InputStream): Int = withContext(Dispatchers.IO) {
+    suspend fun importJson(input: InputStream): RestoreResult = withContext(Dispatchers.IO) {
+        val snapshot = readSnapshot(input)
         val db = database.openHelper.writableDatabase
         var restored = 0
-        JsonReader(InputStreamReader(input, Charsets.UTF_8)).use { reader ->
-            reader.beginObject()
-            while (reader.hasNext()) {
-                when (reader.nextName()) {
-                    FIELD_TABLES -> {
-                        db.beginTransaction()
-                        try {
+
+        db.beginTransaction()
+        try {
+            TABLES.asReversed().forEach { db.delete(it, null, null) }
+            TABLES.forEach { table ->
+                val known = columnsOf(db, table)
+                snapshot.tables[table].orEmpty().forEach { row ->
+                    val values = ContentValues()
+                    row.forEach { (column, value) ->
+                        // Колонки, которых в этой версии нет, пропускаются:
+                        // копия с более нового телефона не должна ронять импорт.
+                        if (column in known) putValue(values, column, value)
+                    }
+                    fillDefaults(table, values)
+                    if (values.size() > 0) {
+                        db.insert(table, SQLiteDatabase.CONFLICT_REPLACE, values)
+                        restored++
+                    }
+                }
+            }
+            db.setTransactionSuccessful()
+        } finally {
+            db.endTransaction()
+        }
+
+        snapshot.currency?.let { CurrencyPrefs.set(context, it) }
+        snapshot.theme?.let { ThemePrefs.set(context, it) }
+        snapshot.language?.let { LanguagePrefs.set(context, it) }
+        // Экраны слушают таблицы через Room; запись шла мимо него, поэтому
+        // ему нужно явно сказать, что всё поменялось.
+        database.invalidationTracker.refreshAsync()
+        RestoreResult(rows = restored, language = snapshot.language)
+    }
+
+    private class Snapshot(
+        val tables: Map<String, List<Map<String, Any?>>>,
+        val currency: String?,
+        val language: String?,
+        val theme: String?,
+    )
+
+    private fun readSnapshot(input: InputStream): Snapshot {
+        var format: String? = null
+        val tables = HashMap<String, List<Map<String, Any?>>>()
+        val prefs = HashMap<String, String>()
+        var sawTables = false
+
+        try {
+            JsonReader(InputStreamReader(input, Charsets.UTF_8)).use { reader ->
+                reader.beginObject()
+                while (reader.hasNext()) {
+                    when (reader.nextName()) {
+                        FIELD_FORMAT -> format = if (reader.peek() == JsonToken.STRING) {
+                            reader.nextString()
+                        } else {
+                            reader.skipValue().let { null }
+                        }
+
+                        FIELD_PREFS -> {
                             reader.beginObject()
                             while (reader.hasNext()) {
-                                val table = reader.nextName()
-                                if (table in TABLES) {
-                                    restored += readTable(db, table, reader)
+                                val key = reader.nextName()
+                                if (reader.peek() == JsonToken.STRING) {
+                                    prefs[key] = reader.nextString()
                                 } else {
                                     reader.skipValue()
                                 }
                             }
                             reader.endObject()
-                            db.setTransactionSuccessful()
-                        } finally {
-                            db.endTransaction()
                         }
+
+                        FIELD_TABLES -> {
+                            sawTables = true
+                            reader.beginObject()
+                            while (reader.hasNext()) {
+                                val table = reader.nextName()
+                                if (table in TABLES) tables[table] = readRows(reader) else reader.skipValue()
+                            }
+                            reader.endObject()
+                        }
+
+                        else -> reader.skipValue()
+                    }
+                }
+                reader.endObject()
+            }
+        } catch (broken: Exception) {
+            throw NotBolhBackupException()
+        }
+
+        if (format != FORMAT || !sawTables) throw NotBolhBackupException()
+        return Snapshot(
+            tables = tables,
+            currency = prefs[PREF_CURRENCY]?.takeIf { it.length == 3 },
+            language = prefs[PREF_LANGUAGE]?.takeIf { code ->
+                code == LanguagePrefs.SYSTEM || LanguagePrefs.languages.any { it.first == code }
+            },
+            theme = prefs[PREF_THEME]?.takeIf { it.isNotBlank() },
+        )
+    }
+
+    private fun readRows(reader: JsonReader): List<Map<String, Any?>> {
+        val rows = ArrayList<Map<String, Any?>>()
+        reader.beginArray()
+        while (reader.hasNext()) {
+            val row = LinkedHashMap<String, Any?>()
+            reader.beginObject()
+            while (reader.hasNext()) {
+                val column = reader.nextName()
+                row[column] = when (reader.peek()) {
+                    JsonToken.NULL -> reader.nextNull().let { null }
+                    JsonToken.BOOLEAN -> if (reader.nextBoolean()) 1L else 0L
+                    JsonToken.NUMBER -> {
+                        val raw = reader.nextString()
+                        raw.toLongOrNull() ?: raw.toDouble()
                     }
 
-                    else -> reader.skipValue()
+                    JsonToken.STRING -> reader.nextString()
+                    else -> reader.skipValue().let { null }
                 }
             }
             reader.endObject()
+            rows += row
         }
-        restored
+        reader.endArray()
+        return rows
     }
 
     private fun writeTable(db: SupportSQLiteDatabase, table: String, writer: JsonWriter): Int {
@@ -153,39 +289,33 @@ class BackupService(private val database: BolhDatabase) {
         return rows
     }
 
-    private fun readTable(db: SupportSQLiteDatabase, table: String, reader: JsonReader): Int {
-        var rows = 0
-        reader.beginArray()
-        while (reader.hasNext()) {
-            val values = ContentValues()
-            reader.beginObject()
-            while (reader.hasNext()) {
-                val column = reader.nextName()
-                when (reader.peek()) {
-                    JsonToken.NULL -> {
-                        reader.nextNull()
-                        values.putNull(column)
-                    }
-
-                    JsonToken.BOOLEAN -> values.put(column, if (reader.nextBoolean()) 1 else 0)
-
-                    JsonToken.NUMBER -> {
-                        val raw = reader.nextString()
-                        val asLong = raw.toLongOrNull()
-                        if (asLong != null) values.put(column, asLong) else values.put(column, raw.toDouble())
-                    }
-
-                    else -> values.put(column, reader.nextString())
-                }
-            }
-            reader.endObject()
-            if (values.size() > 0) {
-                db.insert(table, android.database.sqlite.SQLiteDatabase.CONFLICT_REPLACE, values)
-                rows++
-            }
+    private fun columnsOf(db: SupportSQLiteDatabase, table: String): Set<String> {
+        val columns = HashSet<String>()
+        db.query("PRAGMA table_info(`$table`)").use { cursor ->
+            val name = cursor.getColumnIndex("name")
+            while (cursor.moveToNext()) columns += cursor.getString(name)
         }
-        reader.endArray()
-        return rows
+        return columns
+    }
+
+    private fun putValue(values: ContentValues, column: String, value: Any?) {
+        when (value) {
+            null -> values.putNull(column)
+            is Long -> values.put(column, value)
+            is Double -> values.put(column, value)
+            else -> values.put(column, value.toString())
+        }
+    }
+
+    /**
+     * Поля, которых не было в старых копиях. Без значения по умолчанию
+     * вставка в новую базу упала бы на ограничении NOT NULL.
+     */
+    private fun fillDefaults(table: String, values: ContentValues) {
+        if (table != "habits") return
+        if (!values.containsKey("timesPerDay")) values.put("timesPerDay", 1L)
+        if (!values.containsKey("extraReminders")) values.put("extraReminders", "")
+        if (!values.containsKey("reminderAlarm")) values.put("reminderAlarm", 0L)
     }
 
     private fun escapeCsv(value: String): String =
@@ -197,18 +327,25 @@ class BackupService(private val database: BolhDatabase) {
 
     companion object {
         const val FORMAT = "bolh-backup"
-        const val VERSION = 1
+        const val VERSION = 2
 
         private const val FIELD_FORMAT = "format"
         private const val FIELD_VERSION = "version"
+        private const val FIELD_SCHEMA = "schema"
         private const val FIELD_EXPORTED_AT = "exportedAt"
+        private const val FIELD_PREFS = "prefs"
         private const val FIELD_TABLES = "tables"
+
+        private const val PREF_CURRENCY = "currency"
+        private const val PREF_LANGUAGE = "language"
+        private const val PREF_THEME = "theme"
 
         /** Порядок важен: сначала то, на что ссылаются, потом ссылающееся. */
         private val TABLES = listOf(
             "accounts",
             "categories",
             "goals",
+            "goal_cost_items",
             "stages",
             "tasks",
             "deadline_records",
@@ -221,5 +358,9 @@ class BackupService(private val database: BolhDatabase) {
             "recurring_payments",
             "currency_rates",
         )
+
+        /** Имя файла копии: дата видна сразу, в списке файлов их легко различить. */
+        fun fileName(date: java.time.LocalDate): String =
+            String.format(Locale.ROOT, "bolh-backup-%s.json", date)
     }
 }

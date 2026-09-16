@@ -78,6 +78,8 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.text.style.TextOverflow
 import eu.bolh.app.ui.common.BolhCard
 import eu.bolh.app.ui.common.MetricChip
@@ -259,11 +261,11 @@ fun GoalDetailScreen(
             }
 
             state.progress?.let { progress ->
-                // Полоса доезжает до новой доли: закрытый этап виден как шаг.
-                ProgressLine(
-                    fraction = progress.toFloat().coerceIn(0f, 1f),
-                    color = MaterialTheme.colorScheme.primary,
-                    track = status.surfaceSunken,
+                // Путь по этапам: закрытый этап заливается, текущий мерцает.
+                StageTrack(
+                    total = state.stages.size,
+                    done = state.stages.count { it.stage.isDone },
+                    color = if (state.isOverdue) status.problem else MaterialTheme.colorScheme.primary,
                     modifier = Modifier.padding(vertical = Spacing.m),
                 )
                 Text(
@@ -1247,16 +1249,17 @@ private fun ProgressLine(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(6.dp)
-            .clip(RoundedCornerShape(3.dp))
+            .height(8.dp)
+            .clip(RoundedCornerShape(4.dp))
             .background(track),
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth(filled)
-                .height(6.dp)
-                .clip(RoundedCornerShape(3.dp))
-                .background(color),
+                .height(8.dp)
+                .clip(RoundedCornerShape(4.dp))
+                // Светлый край у заливки: ровная полоса читалась как заглушка.
+                .background(Brush.horizontalGradient(listOf(color, lerp(color, Color.White, 0.38f)))),
         )
     }
 }

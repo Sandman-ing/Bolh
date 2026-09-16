@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="stats_period_week">Semaine</string>
+    <string name="stats_period_month">Mois</string>
+    <string name="stats_period_year">Année</string>
+    <string name="stats_metric_habits">Habitudes</string>
+    <string name="stats_metric_spend">Dépenses</string>
+    <string name="stats_metric_goals">Objectifs au rythme</string>
+    <string name="stats_goals_value">%1$d sur %2$d</string>
+    <string name="stats_no_value">—</string>
+    <string name="stats_insights">Ce qu’il faut en retenir</string>
+    <string name="stats_blocks">Blocs à afficher</string>
+    <string name="stats_calendar_hint">Touchez une habitude pour ouvrir son mois</string>
+    <string name="insight_category_up_habit_slipping">Les dépenses « %1$s » ont augmenté de %2$d %%. L’habitude a tenu %3$s sur %4$d.</string>
+    <string name="insight_goal_stalled">L’objectif « %1$s » est à l’arrêt : le rythme a baissé de %2$d %%, les habitudes associées sont à %3$d %%.</string>
+    <string name="insight_jar_slowed">L’épargne ralentit : la prévision pour « %1$s » a reculé de %2$s.</string>
+    <string name="insight_depth_low">« %1$s » : %2$s sur %3$d, dont %4$d au minimum.</string>
+    <string name="insight_habit_clustered">« %1$s » n’a lieu que le %2$s, alors que le plan prévoit %3$s par semaine.</string>
+    <string name="insight_category_anomaly">Les dépenses « %1$s » dépassent de %2$d %% leur niveau habituel.</string>
+    <plurals name="days_count">
+        <item quantity="one">%d jour</item>
+        <item quantity="many">%d jours</item>
+        <item quantity="other">%d jours</item>
+    </plurals>
+    <plurals name="times_count">
+        <item quantity="one">%d fois</item>
+        <item quantity="many">%d fois</item>
+        <item quantity="other">%d fois</item>
+    </plurals>
+    <string name="stats_block_habits">Habitudes</string>
+    <string name="stats_block_goals">Objectifs</string>
+    <string name="stats_block_finance">Argent</string>
+    <string name="stats_no_habits">Pas encore d’habitudes</string>
+    <string name="stats_no_goals">Pas encore d’objectifs</string>
+    <string name="stats_no_spend">Aucune dépense sur cette période</string>
+    <string name="stats_goals_in_tempo">%1$d sur %2$d au rythme</string>
+    <string name="stats_delta_compare">%1$s %2$s</string>
+    <string name="stats_best_streak">%1$s · %2$s</string>
+    <string name="stats_done_week">Fait cette semaine</string>
+    <string name="stats_done_month">Fait ce mois-ci</string>
+    <string name="stats_done_year">Fait cette année</string>
+    <string name="stats_compare_week">vs semaine dernière</string>
+    <string name="stats_compare_month">vs mois dernier</string>
+    <string name="stats_compare_year">vs année dernière</string>
+    <string name="stats_chart_days">Par jour</string>
+    <string name="stats_chart_weeks">Par semaine</string>
+    <string name="stats_chart_months">Par mois</string>
+    <string name="stats_legend_previous">avant</string>
+    <string name="stats_legend_current">maintenant</string>
+    <string name="stats_bar_week">Semaine du %1$s</string>
+    <string name="stats_weekdays">Par jour de la semaine</string>
+    <string name="stats_best_weekday">meilleur jour : %1$s</string>
+    <string name="stats_habit_row">%1$d sur %2$s · %3$d au minimum</string>
+    <string name="stats_calendar_norm">complet</string>
+    <string name="stats_calendar_minimum">minimum</string>
+    <string name="stats_calendar_slip">écart</string>
+    <string name="stats_balance_left">Reste : %1$s</string>
+    <string name="stats_balance_over">%1$s dépensés de plus que gagnés</string>
+    <string name="stats_spend_structure">Où va l’argent</string>
+    <string name="stats_missing_rates">Les opérations en %1$s ne sont pas comptées : pas encore de taux de change. Il se charge dès que le téléphone est en ligne.</string>
+</resources>

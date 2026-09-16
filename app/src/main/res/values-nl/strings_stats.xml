@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="stats_period_week">Week</string>
+    <string name="stats_period_month">Maand</string>
+    <string name="stats_period_year">Jaar</string>
+    <string name="stats_metric_habits">Gewoonten</string>
+    <string name="stats_metric_spend">Uitgaven</string>
+    <string name="stats_metric_goals">Doelen op tempo</string>
+    <string name="stats_goals_value">%1$d van %2$d</string>
+    <string name="stats_no_value">—</string>
+    <string name="stats_insights">Wat het betekent</string>
+    <string name="stats_blocks">Welke blokken tonen</string>
+    <string name="stats_calendar_hint">Tik op een gewoonte om de maand te openen</string>
+    <string name="insight_category_up_habit_slipping">Uitgaven aan ‘%1$s’ stegen met %2$d%%. De gewoonte hield %3$s van de %4$d stand.</string>
+    <string name="insight_goal_stalled">Doel ‘%1$s’ staat stil: het tempo daalde met %2$d%%, de gekoppelde gewoonten lopen op %3$d%%.</string>
+    <string name="insight_jar_slowed">Het sparen gaat trager: de prognose voor ‘%1$s’ schoof %2$s op.</string>
+    <string name="insight_depth_low">‘%1$s’: %2$s van de %3$d, maar %4$d daarvan op het minimum.</string>
+    <string name="insight_habit_clustered">‘%1$s’ lukt alleen op %2$s, terwijl het plan %3$s per week is.</string>
+    <string name="insight_category_anomaly">Uitgaven aan ‘%1$s’ liggen %2$d%% boven het gebruikelijke niveau.</string>
+    <plurals name="days_count">
+        <item quantity="one">%d dag</item>
+        <item quantity="other">%d dagen</item>
+    </plurals>
+    <plurals name="times_count">
+        <item quantity="one">%d keer</item>
+        <item quantity="other">%d keer</item>
+    </plurals>
+    <string name="stats_block_habits">Gewoonten</string>
+    <string name="stats_block_goals">Doelen</string>
+    <string name="stats_block_finance">Geld</string>
+    <string name="stats_no_habits">Nog geen gewoonten</string>
+    <string name="stats_no_goals">Nog geen doelen</string>
+    <string name="stats_no_spend">Geen uitgaven in deze periode</string>
+    <string name="stats_goals_in_tempo">%1$d van %2$d op tempo</string>
+    <string name="stats_delta_compare">%1$s %2$s</string>
+    <string name="stats_best_streak">%1$s · %2$s</string>
+    <string name="stats_done_week">Gedaan deze week</string>
+    <string name="stats_done_month">Gedaan deze maand</string>
+    <string name="stats_done_year">Gedaan dit jaar</string>
+    <string name="stats_compare_week">t.o.v. vorige week</string>
+    <string name="stats_compare_month">t.o.v. vorige maand</string>
+    <string name="stats_compare_year">t.o.v. vorig jaar</string>
+    <string name="stats_chart_days">Per dag</string>
+    <string name="stats_chart_weeks">Per week</string>
+    <string name="stats_chart_months">Per maand</string>
+    <string name="stats_legend_previous">eerder</string>
+    <string name="stats_legend_current">nu</string>
+    <string name="stats_bar_week">Week van %1$s</string>
+    <string name="stats_weekdays">Per weekdag</string>
+    <string name="stats_best_weekday">beste dag: %1$s</string>
+    <string name="stats_habit_row">%1$d van %2$s · %3$d op minimum</string>
+    <string name="stats_calendar_norm">volledig</string>
+    <string name="stats_calendar_minimum">minimum</string>
+    <string name="stats_calendar_slip">terugval</string>
+    <string name="stats_balance_left">Er blijft %1$s over</string>
+    <string name="stats_balance_over">%1$s meer uitgegeven dan verdiend</string>
+    <string name="stats_spend_structure">Waar het geld heen gaat</string>
+    <string name="stats_missing_rates">Transacties in %1$s tellen niet mee: nog geen wisselkoers. Die wordt geladen zodra de telefoon online is.</string>
+</resources>

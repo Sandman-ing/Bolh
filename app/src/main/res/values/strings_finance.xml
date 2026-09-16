@@ -45,7 +45,13 @@
 
     <string name="account_new_title">New account</string>
     <string name="account_currency">Account currency</string>
-    <string name="account_currency_note">Amounts on this account are counted in its own currency and are never converted. Only the combined total across accounts is shown roughly, at the latest exchange rate.</string>
+    <string name="account_currency_note">The account keeps its amounts in its currency. If you change the currency later, Bolh offers to convert them at the current rate.</string>
+    <string name="account_currency_change_title">Switch the account to %1$s?</string>
+    <string name="account_currency_change_text">The account holds %1$s now. At the current rate that is about %2$s. The account\'s transactions will be converted too.</string>
+    <string name="account_currency_no_rate">No exchange rate yet. Converting needs the internet.</string>
+    <string name="account_currency_convert">Convert</string>
+    <string name="account_currency_keep">Keep the numbers</string>
+    <string name="account_currency_failed">Could not get the exchange rate. Check the internet and try again.</string>
     <string name="finance_currency_scope">Currency</string>
     <string name="finance_approx_total">Roughly in total</string>
     <string name="finance_approx_note">At the rate of %1$s. Offline, the last known rate stays.</string>
@@ -87,6 +93,6 @@
     <string name="account_edit">Edit</string>
     <string name="account_expenses">Expenses</string>
     <string name="account_income">Income</string>
-    <string name="account_balance_note">The balance is corrected by shifting the starting amount. Recorded transactions stay untouched.</string>
     <string name="finance_view">View</string>
+    <string name="account_currency_loading">Getting the exchange rate…</string>
 </resources>

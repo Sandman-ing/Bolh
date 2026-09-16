@@ -15,6 +15,21 @@ fun Int?.toDayOfWeekSet(): Set<DayOfWeek> {
     return DayOfWeek.entries.filterTo(LinkedHashSet()) { mask and (1 shl (it.value - 1)) != 0 }
 }
 
+/**
+ * Все времена напоминаний привычки.
+ *
+ * Первое хранится в своей колонке, остальные — строкой через запятую. Мусор
+ * в строке не роняет экран: непонятное число просто пропускается.
+ */
+fun reminderTimesOf(first: Int?, extra: String): List<Int> =
+    normalizeReminderTimes(listOfNotNull(first) + extra.split(',').mapNotNull { it.trim().toIntOrNull() })
+
+/** Времена в пределах суток, без повторов и по порядку. */
+fun normalizeReminderTimes(times: List<Int>): List<Int> =
+    times.filter { it in 0 until MINUTES_IN_DAY }.distinct().sorted()
+
+private const val MINUTES_IN_DAY = 24 * 60
+
 fun HabitEntity.toDomain(): Habit = Habit(
     id = id,
     name = name,
@@ -35,41 +50,47 @@ fun HabitEntity.toDomain(): Habit = Habit(
     limitPerWeek = limitPerWeek,
     skipAllowancePerMonth = skipAllowancePerMonth,
     timesPerDay = timesPerDay,
-    reminderMinuteOfDay = reminderMinuteOfDay,
+    reminderTimes = reminderTimesOf(reminderMinuteOfDay, extraReminders),
     reminderRepeatEvening = reminderRepeatEvening,
+    reminderAlarm = reminderAlarm,
     categoryId = categoryId,
     goalId = goalId,
     startDate = startDate,
     sortOrder = sortOrder,
 )
 
-fun Habit.toEntity(createdAt: Long, updatedAt: Long, deletedAt: Long? = null): HabitEntity = HabitEntity(
-    id = id,
-    name = name,
-    icon = icon,
-    kind = kind,
-    mode = mode,
-    scheduleType = schedule.type,
-    scheduleDays = schedule.days.takeIf { it.isNotEmpty() }?.toMask(),
-    timesPerWeek = schedule.timesPerWeek,
-    minimumLabel = minimumLabel,
-    normLabel = normLabel,
-    unit = unit,
-    estimatedMinutes = estimatedMinutes,
-    costPerOccurrenceMinor = costPerOccurrenceMinor,
-    costCurrencyCode = costCurrencyCode,
-    limitPerWeek = limitPerWeek,
-    skipAllowancePerMonth = skipAllowancePerMonth,
-    timesPerDay = timesPerDay,
-    reminderMinuteOfDay = reminderMinuteOfDay,
-    reminderRepeatEvening = reminderRepeatEvening,
-    categoryId = categoryId,
-    goalId = goalId,
-    startDate = startDate,
-    sortOrder = sortOrder,
-    createdAt = createdAt,
-    updatedAt = updatedAt,
-    deletedAt = deletedAt,
-)
+fun Habit.toEntity(createdAt: Long, updatedAt: Long, deletedAt: Long? = null): HabitEntity {
+    val times = normalizeReminderTimes(reminderTimes)
+    return HabitEntity(
+        id = id,
+        name = name,
+        icon = icon,
+        kind = kind,
+        mode = mode,
+        scheduleType = schedule.type,
+        scheduleDays = schedule.days.takeIf { it.isNotEmpty() }?.toMask(),
+        timesPerWeek = schedule.timesPerWeek,
+        minimumLabel = minimumLabel,
+        normLabel = normLabel,
+        unit = unit,
+        estimatedMinutes = estimatedMinutes,
+        costPerOccurrenceMinor = costPerOccurrenceMinor,
+        costCurrencyCode = costCurrencyCode,
+        limitPerWeek = limitPerWeek,
+        skipAllowancePerMonth = skipAllowancePerMonth,
+        timesPerDay = timesPerDay,
+        reminderMinuteOfDay = times.firstOrNull(),
+        reminderRepeatEvening = reminderRepeatEvening,
+        extraReminders = times.drop(1).joinToString(","),
+        reminderAlarm = reminderAlarm,
+        categoryId = categoryId,
+        goalId = goalId,
+        startDate = startDate,
+        sortOrder = sortOrder,
+        createdAt = createdAt,
+        updatedAt = updatedAt,
+        deletedAt = deletedAt,
+    )
+}
 
 fun HabitPauseEntity.toDomain(): Pause = Pause(from = fromDate, to = toDate)

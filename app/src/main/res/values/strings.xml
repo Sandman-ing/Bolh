@@ -46,4 +46,10 @@
     <string name="date_day_month">MMMM d</string>
     <string name="date_full">MMMM d, yyyy</string>
     <string name="date_month_year">LLLL yyyy</string>
+    <string name="percent">%1$d%%</string>
+    <plurals name="stages_count">
+        <item quantity="one">%d stage</item>
+        <item quantity="other">%d stages</item>
+    </plurals>
+    <string name="date_weekday_day_month">EEEE, MMMM d</string>
 </resources>

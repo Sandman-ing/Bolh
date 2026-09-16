@@ -9,6 +9,8 @@ import eu.bolh.app.R
 import eu.bolh.app.data.repository.FinanceRepository
 import eu.bolh.app.data.repository.GoalRepository
 import eu.bolh.app.data.repository.HabitRepository
+import eu.bolh.app.data.prefs.LanguagePrefs
+import eu.bolh.app.domain.analytics.CurrencyMath
 import eu.bolh.app.domain.analytics.FinanceAnalytics
 import eu.bolh.app.domain.analytics.GoalAnalytics
 import eu.bolh.app.domain.analytics.HabitAnalytics
@@ -37,7 +39,10 @@ class PdfReport(
 ) {
 
     suspend fun write(output: OutputStream): Int = withContext(Dispatchers.IO) {
-        val lines = buildLines()
+        // Контекст приложения знает только язык системы, а отчёт должен быть
+        // на том языке, что выбран в Bolh.
+        val text = LanguagePrefs.localized(context)
+        val lines = buildLines(text)
         val document = PdfDocument()
         val title = Paint().apply {
             color = INK
@@ -61,7 +66,7 @@ class PdfReport(
         var canvas: Canvas = page.canvas
         var y = MARGIN + 24f
 
-        canvas.drawText(context.getString(R.string.app_name), MARGIN, y, title)
+        canvas.drawText(text.getString(R.string.app_name), MARGIN, y, title)
         y += 10f
         canvas.drawText(
             java.time.LocalDate.now().format(DateTimeFormatter.ISO_DATE),
@@ -104,7 +109,7 @@ class PdfReport(
         lines.size
     }
 
-    private suspend fun buildLines(): List<Line> {
+    private suspend fun buildLines(text: Context): List<Line> {
         val today = habits.today()
         val window = DayWindow.lastDays(today, 30)
         val month = YearMonth.from(today)
@@ -115,17 +120,19 @@ class PdfReport(
         val stages = goals.observeStages().first()
         val accounts = finance.observeAccounts().first()
         val transactions = finance.observeTransactions().first()
+        val perEur = finance.observeRates().first()?.perEur.orEmpty()
+        val base = finance.baseCurrency
         val categories = finance.observeCategories().first().associateBy { it.id }
 
         return buildList {
-            add(Line.Header(context.getString(R.string.stats_block_habits)))
+            add(Line.Header(text.getString(R.string.stats_block_habits)))
             val good = habitList.filter { it.kind == HabitKind.Good }
             if (good.isEmpty()) {
-                add(Line.Muted(context.getString(R.string.stats_no_habits)))
+                add(Line.Muted(text.getString(R.string.stats_no_habits)))
             } else {
                 good.forEach { habit ->
                     val done = HabitAnalytics.doneDays(
-                        marks[habit.id].orEmpty(),
+                        HabitAnalytics.completeDays(marks[habit.id].orEmpty(), habit.timesPerDay),
                         window,
                         habit.startDate,
                     )
@@ -138,9 +145,9 @@ class PdfReport(
                 }
             }
 
-            add(Line.Header(context.getString(R.string.stats_block_goals)))
+            add(Line.Header(text.getString(R.string.stats_block_goals)))
             if (goalList.isEmpty()) {
-                add(Line.Muted(context.getString(R.string.stats_no_goals)))
+                add(Line.Muted(text.getString(R.string.stats_no_goals)))
             } else {
                 goalList.forEach { goal ->
                     val goalStages = stages[goal.id].orEmpty()
@@ -153,29 +160,39 @@ class PdfReport(
                 }
             }
 
-            add(Line.Header(context.getString(R.string.stats_block_finance)))
+            add(Line.Header(text.getString(R.string.stats_block_finance)))
             if (accounts.isEmpty()) {
-                add(Line.Muted(context.getString(R.string.finance_empty_action)))
+                add(Line.Muted(text.getString(R.string.finance_empty_action)))
             } else {
                 accounts.forEach { account ->
                     val balance = FinanceAnalytics.balanceOf(account, transactions)
                     add(Line.Body("${account.name}: ${money(balance, account.currencyCode)}"))
                 }
+                // Траты разных валют сводятся к основной по последнему курсу;
+                // без курса операция в сумму не попадает.
+                val inBase = transactions.mapNotNull { transaction ->
+                    if (transaction.currencyCode == base) {
+                        transaction
+                    } else {
+                        CurrencyMath.convert(transaction.amountMinor, transaction.currencyCode, base, perEur)
+                            ?.let { transaction.copy(amountMinor = it, currencyCode = base) }
+                    }
+                }
                 val spend = FinanceAnalytics.spendByCategory(
-                    transactions,
+                    inBase,
                     month.atDay(1),
                     month.atEndOfMonth(),
                 )
                 if (spend.isEmpty()) {
-                    add(Line.Muted(context.getString(R.string.stats_no_spend)))
+                    add(Line.Muted(text.getString(R.string.stats_no_spend)))
                 } else {
                     spend.entries.sortedByDescending { it.value }.forEach { (id, amount) ->
                         val category = id?.let { categories[it] }
                         val name = category?.nameKey
-                            ?.let { key -> SystemCategories.nameResFor(key)?.let(context::getString) }
+                            ?.let { key -> SystemCategories.nameResFor(key)?.let(text::getString) }
                             ?: category?.name
-                            ?: context.getString(R.string.finance_uncategorised)
-                        add(Line.Body("$name: ${money(amount, finance.baseCurrency)}"))
+                            ?: text.getString(R.string.finance_uncategorised)
+                        add(Line.Body("$name: ${money(amount, base)}"))
                     }
                 }
             }

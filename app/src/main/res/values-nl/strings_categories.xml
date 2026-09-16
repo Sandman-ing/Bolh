@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cat_groceries">Boodschappen</string>
+    <string name="cat_cafe">Uit eten</string>
+    <string name="cat_home">Wonen</string>
+    <string name="cat_transport">Vervoer</string>
+    <string name="cat_health">Gezondheid</string>
+    <string name="cat_clothes">Kleding</string>
+    <string name="cat_fun">Vrije tijd</string>
+    <string name="cat_bills">Rekeningen</string>
+    <string name="cat_travel">Reizen</string>
+    <string name="cat_pets">Huisdieren</string>
+    <string name="cat_education">Onderwijs</string>
+    <string name="cat_other">Overig</string>
+    <string name="cat_salary">Salaris</string>
+    <string name="cat_gift">Cadeau</string>
+    <string name="cat_refund">Terugbetaling</string>
+    <string name="cat_other_income">Overige inkomsten</string>
+</resources>

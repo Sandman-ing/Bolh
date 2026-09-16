@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="notif_channel_habits">Rappels d’habitudes</string>
+    <string name="notif_channel_habits_desc">Un rappel à l’heure choisie. Rien d’autre.</string>
+    <string name="notif_default_text">Cochez la journée</string>
+    <string name="notif_evening_text">%1$s, et la journée compte</string>
+    <string name="notif_action_minimum">Minimum</string>
+    <string name="notif_action_done">Fait</string>
+    <string name="notif_channel_alarms">Alarmes d’habitudes</string>
+    <string name="notif_channel_alarms_desc">Rappels avec une sonnerie qui continue jusqu’à ce que vous les ouvriez.</string>
+    <string name="notif_channel_payments">Paiements</string>
+    <string name="notif_channel_payments_desc">Rappels des paiements récurrents.</string>
+    <string name="notif_bad_text">Aujourd’hui sans</string>
+    <string name="notif_minutes_text">Temps prévu : %1$d min</string>
+    <string name="notif_action_norm">Complet</string>
+    <string name="notif_action_dismiss">Désactiver</string>
+    <string name="notif_recurring_text">Demain, prélèvement : %1$s</string>
+    <string name="notif_times_text">Cochées aujourd’hui : %1$d sur %2$d</string>
+    <string name="notif_recurring_today">Aujourd’hui, prélèvement : %1$s</string>
+    <string name="notif_recurring_on">Le %2$s, prélèvement : %1$s</string>
+</resources>

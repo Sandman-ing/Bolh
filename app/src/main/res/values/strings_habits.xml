@@ -7,13 +7,13 @@
     <string name="habits_week_previous">Previous week</string>
     <string name="habits_today">Today</string>
     <string name="habits_week_next">Next week</string>
-    <string name="habits_mark_minimum">min</string>
-    <string name="habits_mark_norm">norm</string>
+    <string name="habits_mark_minimum">Minimum</string>
+    <string name="habits_mark_norm">Full</string>
     <string name="habits_mark_done">Mark done</string>
     <string name="habits_slip">slip</string>
     <string name="habits_slip_add">+1</string>
     <string name="habits_slip_undo">Undo the last slip</string>
-    <string name="habits_recovery">minimum is enough this week</string>
+    <string name="habits_recovery">This week the minimum is enough</string>
     <string name="habits_paused">on pause</string>
 
     <string name="habit_done_of_planned">%1$d of %2$s</string>
@@ -50,7 +50,7 @@
     <string name="habit_mode_counter">Count days without a slip</string>
     <string name="habit_mode_limit">No more than N times a week</string>
     <string name="habit_minimum_hint">Minimum: what you cannot fail to do</string>
-    <string name="habit_norm_hint">Norm: what the habit is for</string>
+    <string name="habit_norm_hint">Full: what the habit is for</string>
     <string name="habit_limit_hint">Times a week</string>
     <string name="habit_times_per_day">Times a day</string>
     <string name="habit_times_per_day_hint">Teeth in the morning and at night are two, not one. The day counts only when every one of them is ticked.</string>
@@ -60,15 +60,20 @@
     <string name="habit_duration_minutes">%d min</string>
     <string name="habit_duration_hours">%d h</string>
     <string name="habit_duration_hours_minutes">%1$d h %2$d min</string>
-    <string name="habit_reminder">Reminder</string>
+    <string name="habit_reminders">Reminders</string>
+    <string name="habit_reminders_none">No reminders</string>
+    <string name="habit_reminder_add">Add a time</string>
+    <string name="habit_reminder_alarm">Ring like an alarm</string>
+    <string name="habit_reminder_exact">Allow exact alarms, otherwise the phone may delay reminders.</string>
+    <string name="habit_reminder_exact_action">Allow</string>
+    <string name="habit_reminder_blocked">Notifications for Bolh are turned off.</string>
+    <string name="habit_reminder_blocked_action">Turn on</string>
+    <string name="habit_reminder_remove">Remove %1$s</string>
     <string name="habit_reminder_evening">Evening repeat offering the minimum</string>
-    <string name="habit_reminder_off">Off</string>
     <string name="habit_start_date">Started on</string>
     <string name="habit_start_date_note">Days before this are not asked about: the habit did not exist yet.</string>
-    <string name="habit_min_line">min: %1$s</string>
-    <string name="habit_norm_line">norm: %1$s</string>
     <string name="habit_done_minimum">Done: minimum</string>
-    <string name="habit_done_norm">Done: norm</string>
+    <string name="habit_done_norm">Done: full</string>
     <string name="habit_save">Save</string>
     <string name="habit_blocked_name">Give the habit a name — that is all that is missing.</string>
     <string name="habit_blocked_days">Pick at least one day of the week, otherwise the habit is never expected.</string>
@@ -91,4 +96,5 @@
         <item quantity="one">Up to %d slip a week; above that the week counts as broken.</item>
         <item quantity="other">Up to %d slips a week; above that the week counts as broken.</item>
     </plurals>
+    <string name="habit_level_change">Change</string>
 </resources>

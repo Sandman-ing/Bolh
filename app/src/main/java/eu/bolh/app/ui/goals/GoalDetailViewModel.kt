@@ -201,7 +201,7 @@ class GoalDetailViewModel(
         window: DayWindow,
     ): List<Double> = linked.mapNotNull { habit ->
         HabitAnalytics.tempo(
-            marks = marks[habit.id].orEmpty(),
+            marks = HabitAnalytics.completeDays(marks[habit.id].orEmpty(), habit.timesPerDay),
             schedule = habit.schedule,
             window = window,
             startDate = habit.startDate,

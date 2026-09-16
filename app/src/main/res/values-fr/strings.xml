@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Bolh</string>
+    <string name="tab_goals">Objectifs</string>
+    <string name="tab_habits">Habitudes</string>
+    <string name="tab_finance">Finances</string>
+    <string name="tab_stats">Statistiques</string>
+    <string name="action_create">Créer</string>
+    <string name="action_settings">Réglages</string>
+    <string name="goals_empty_action">Créez votre premier objectif</string>
+    <string name="goals_empty_example">Par exemple : un logement à moi d’ici mai 2029</string>
+    <string name="habits_empty_action">Créez votre première habitude</string>
+    <string name="habits_empty_example">Par exemple : lire une page chaque jour</string>
+    <string name="finance_empty_action">Ajoutez votre premier compte</string>
+    <string name="finance_empty_example">Par exemple : carte, 1 240 €</string>
+    <string name="stats_empty_title">Rien à compter pour l’instant</string>
+    <string name="stats_empty_example">Les statistiques apparaissent dès que les habitudes et l’argent ont un peu d’historique</string>
+    <string name="common_delete">Supprimer</string>
+    <string name="common_cancel">Annuler</string>
+    <string name="confirm_delete">Supprimer « %1$s » ?</string>
+    <string name="tx_list_title">Opérations</string>
+    <string name="tx_selected">Sélection : %1$d</string>
+    <string name="tx_select_all">Tout sélectionner</string>
+    <string name="tx_list_empty">Rien d’enregistré pour l’instant</string>
+    <string name="finance_all_transactions">Toutes les opérations</string>
+    <plurals name="confirm_delete_transactions">
+        <item quantity="one">Supprimer %1$d opération ?</item>
+        <item quantity="many">Supprimer %1$d opérations ?</item>
+        <item quantity="other">Supprimer %1$d opérations ?</item>
+    </plurals>
+    <plurals name="days_of">
+        <item quantity="one">%d jour</item>
+        <item quantity="many">%d jours</item>
+        <item quantity="other">%d jours</item>
+    </plurals>
+    <plurals name="stages_of">
+        <item quantity="one">%d étape</item>
+        <item quantity="many">%d étapes</item>
+        <item quantity="other">%d étapes</item>
+    </plurals>
+    <string name="date_day_month">d MMMM</string>
+    <string name="date_full">d MMMM yyyy</string>
+    <string name="date_month_year">LLLL yyyy</string>
+    <string name="percent">%1$d %%</string>
+    <plurals name="stages_count">
+        <item quantity="one">%d étape</item>
+        <item quantity="many">%d étapes</item>
+        <item quantity="other">%d étapes</item>
+    </plurals>
+    <string name="date_weekday_day_month">EEEE d MMMM</string>
+</resources>

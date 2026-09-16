@@ -12,6 +12,7 @@ import eu.bolh.app.data.repository.HabitRepository
 import eu.bolh.app.domain.analytics.GoalAnalytics
 import eu.bolh.app.domain.analytics.HabitAnalytics
 import eu.bolh.app.domain.model.DayWindow
+import eu.bolh.app.domain.model.EntryLevel
 import eu.bolh.app.domain.model.Goal
 import eu.bolh.app.domain.model.GoalForecast
 import eu.bolh.app.domain.model.GoalSnapshot
@@ -19,6 +20,7 @@ import eu.bolh.app.domain.model.GoalSort
 import eu.bolh.app.domain.model.GoalStatus
 import eu.bolh.app.domain.model.Habit
 import eu.bolh.app.domain.model.Stage
+import java.time.temporal.ChronoUnit
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -40,6 +42,12 @@ data class GoalCardState(
     val forecast: GoalForecast?,
     val linkedHabits: List<Habit>,
     val isOverdue: Boolean,
+    /** Привычки цели, закрытые сегодня. */
+    val habitsDoneToday: Set<String> = emptySet(),
+    /** Дней до срока; меньше нуля — срок прошёл. Без срока — null. */
+    val daysLeft: Long? = null,
+    /** Номер следующего этапа по порядку, с единицы. */
+    val nextStageNumber: Int = 0,
 )
 
 /** Достигнутая цель не исчезает: она переезжает вниз и остаётся историей (§4.6). */
@@ -85,12 +93,14 @@ class GoalsViewModel(
 
             val tempos = linked.mapNotNull { habit ->
                 HabitAnalytics.tempo(
-                    marks = marksByHabit[habit.id].orEmpty(),
+                    marks = HabitAnalytics.completeDays(marksByHabit[habit.id].orEmpty(), habit.timesPerDay),
                     schedule = habit.schedule,
                     window = window,
                     startDate = habit.startDate,
                 )
             }
+
+            val next = stages.firstOrNull { !it.isDone }
 
             GoalCardState(
                 goal = goal,
@@ -98,7 +108,8 @@ class GoalsViewModel(
                 tempo = GoalAnalytics.tempo(tempos),
                 stagesTotal = stages.size,
                 stagesClosed = closed,
-                nextStage = stages.firstOrNull { !it.isDone },
+                nextStage = next,
+                nextStageNumber = next?.let { stages.indexOf(it) + 1 } ?: 0,
                 forecast = GoalAnalytics.forecast(
                     GoalSnapshot(
                         startDate = goal.startDate,
@@ -110,6 +121,14 @@ class GoalsViewModel(
                 ),
                 linkedHabits = linked,
                 isOverdue = goal.deadline?.isBefore(today) == true,
+                habitsDoneToday = linked
+                    .filter { habit ->
+                        marksByHabit[habit.id].orEmpty().count {
+                            it.date == today && it.level != EntryLevel.Slip
+                        } >= habit.timesPerDay
+                    }
+                    .mapTo(HashSet()) { it.id },
+                daysLeft = goal.deadline?.let { ChronoUnit.DAYS.between(today, it) },
             )
         }
 
@@ -137,6 +156,15 @@ class GoalsViewModel(
 
     fun setSort(sort: GoalSort) {
         viewModelScope.launch { settings.setGoalSort(sort) }
+    }
+
+    /** Этап закрывается прямо с карточки, не заходя в цель. */
+    fun setStageDone(stage: Stage, done: Boolean) {
+        viewModelScope.launch { goals.setStageDone(stage.id, done) }
+    }
+
+    fun completeGoal(goalId: String) {
+        viewModelScope.launch { goals.complete(goalId) }
     }
 
     private fun comparator(sort: GoalSort): Comparator<GoalCardState> = when (sort) {

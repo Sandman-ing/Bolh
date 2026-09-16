@@ -1,5 +1,7 @@
 package eu.bolh.app.ui.habits
 
+import eu.bolh.app.ui.habits.components.RemindersBlock
+import eu.bolh.app.ui.common.IconGrid
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.expandHorizontally
 import androidx.compose.foundation.layout.imePadding
@@ -416,12 +418,6 @@ private fun AdvancedSection(draft: HabitDraft, viewModel: HabitEditorViewModel) 
     val pause by viewModel.pause.collectAsStateWithLifecycle()
     val locale = rememberLocale()
 
-    // Разрешение спрашивается ровно тогда, когда человек сам захотел напоминание,
-    // а не при первом запуске: онбординга в приложении нет (§9.5).
-    val askNotifications = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestPermission(),
-    ) { }
-
     Text(
         text = stringResource(R.string.habit_mode_title),
         style = MaterialTheme.typography.labelMedium,
@@ -611,70 +607,16 @@ private fun AdvancedSection(draft: HabitDraft, viewModel: HabitEditorViewModel) 
         }
     }
 
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .fillMaxWidth()
-            .tappable(onClick = {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-                    ContextCompat.checkSelfPermission(
-                        context,
-                        Manifest.permission.POST_NOTIFICATIONS,
-                    ) != PackageManager.PERMISSION_GRANTED
-                ) {
-                    askNotifications.launch(Manifest.permission.POST_NOTIFICATIONS)
-                }
-                val current = draft.reminderMinuteOfDay ?: (20 * 60)
-                TimePickerDialog(
-                    context,
-                    { _, hour, minute -> viewModel.setReminder(hour * 60 + minute) },
-                    current / 60,
-                    current % 60,
-                    android.text.format.DateFormat.is24HourFormat(context),
-                ).show()
-            })
-            .padding(horizontal = Spacing.screenPadding, vertical = Spacing.m),
-    ) {
-        Text(
-            text = stringResource(R.string.habit_reminder),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onBackground,
-            modifier = Modifier.weight(1f),
-        )
-        AnimatedContent(
-            targetState = draft.reminderMinuteOfDay?.let { "%02d:%02d".format(it / 60, it % 60) } ?: "—",
-            transitionSpec = {
-                fadeIn(tween(Motion.CONTENT_MS)) togetherWith fadeOut(tween(Motion.CONTENT_MS / 2))
-            },
-            label = "reminder-time",
-        ) { time ->
-            Text(
-                text = time,
-                style = MaterialTheme.typography.bodyMedium,
-                color = status.textSecondary,
-            )
-        }
-        // Напоминание — опция, и выключать его нужно так же просто,
-        // как включать. Раньше поставленное время убрать было нечем.
-        AnimatedVisibility(
-            visible = draft.reminderMinuteOfDay != null,
-            enter = fadeIn(tween(Motion.CONTENT_MS)) + expandHorizontally(Motion.resize),
-            exit = fadeOut(tween(Motion.CONTENT_MS / 2)) + shrinkHorizontally(Motion.resize),
-            label = "reminder-off",
-        ) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_close),
-                    contentDescription = stringResource(R.string.habit_reminder_off),
-                    tint = status.textTertiary,
-                    modifier = Modifier
-                        .padding(start = Spacing.s)
-                        .size(32.dp)
-                        .clip(CircleShape)
-                        .tapIcon { viewModel.setReminder(null) }
-                        .padding(8.dp),
-                )
-        }
-    }
+    RemindersBlock(
+        times = draft.reminderTimes,
+        alarm = draft.reminderAlarm,
+        eveningRepeat = draft.reminderRepeatEvening,
+        onAdd = viewModel::addReminder,
+        onChange = viewModel::changeReminder,
+        onRemove = viewModel::removeReminder,
+        onAlarm = viewModel::setReminderAlarm,
+        onEvening = viewModel::setEveningRepeat,
+    )
 
     // Дата начала: по умолчанию сегодня, назад — сколько угодно, вперёд нельзя.
     val startDate = draft.startDate ?: java.time.LocalDate.now()
@@ -730,39 +672,6 @@ private fun AdvancedSection(draft: HabitDraft, viewModel: HabitEditorViewModel) 
             vertical = Spacing.xs,
         ),
     )
-
-    AnimatedVisibility(
-        visible = draft.reminderMinuteOfDay != null,
-        enter = fadeIn(tween(Motion.CONTENT_MS)) + expandVertically(Motion.resize),
-        exit = fadeOut(tween(Motion.CONTENT_MS / 2)) + shrinkVertically(Motion.resize),
-        label = "reminder-evening",
-    ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = Spacing.screenPadding, vertical = Spacing.xs),
-            ) {
-                Text(
-                    text = stringResource(R.string.habit_reminder_evening),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = status.textSecondary,
-                    modifier = Modifier.weight(1f),
-                )
-                Switch(
-                    checked = draft.reminderRepeatEvening,
-                    onCheckedChange = viewModel::setEveningRepeat,
-                    colors = SwitchDefaults.colors(
-                        checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
-                        checkedTrackColor = MaterialTheme.colorScheme.primary,
-                        checkedBorderColor = MaterialTheme.colorScheme.primary,
-                        uncheckedThumbColor = status.textTertiary,
-                        uncheckedTrackColor = status.surfaceSunken,
-                        uncheckedBorderColor = status.divider,
-                    ),
-                )
-            }
-    }
 }
 
 @Composable
@@ -795,40 +704,12 @@ private fun TemplatesRow(onPick: (HabitTemplate, String, String?, String?) -> Un
 
 @Composable
 private fun IconRow(icons: List<String>, selected: String, onSelect: (String) -> Unit) {
-    val status = LocalStatusColors.current
-    LazyRow(
-        horizontalArrangement = Arrangement.spacedBy(Spacing.s),
-        contentPadding = PaddingValues(horizontal = Spacing.screenPadding),
+    IconGrid(
+        icons = icons,
+        selected = selected,
+        onSelect = onSelect,
         modifier = Modifier.padding(vertical = Spacing.s),
-    ) {
-        items(icons) { key ->
-            val isSelected = key == selected
-            val press = rememberPressSource()
-            val tint by animateColorAsState(
-                targetValue = if (isSelected) {
-                    MaterialTheme.colorScheme.primary
-                } else {
-                    status.textTertiary
-                },
-                animationSpec = Motion.color,
-                label = "icon-tint",
-            )
-            Icon(
-                painter = painterResource(BolhIcons.resFor(key)),
-                contentDescription = null,
-                tint = tint,
-                modifier = Modifier
-                    .size(44.dp)
-                    .pressScale(press, pressedScale = 0.88f)
-                    .clip(CircleShape)
-                    .clickable(
-                        interactionSource = press,
-                        indication = ripple(),
-                    ) { onSelect(key) }
-                    .padding(10.dp),
-            )
-        }
-    }
+    )
 }
 
 @OptIn(ExperimentalLayoutApi::class)
