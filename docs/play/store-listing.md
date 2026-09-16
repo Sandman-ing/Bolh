@@ -1,9 +1,11 @@
 # Bolh: страница в Google Play
 
 Лимиты Google: название до 30 символов, краткое описание до 80, полное до 4000.
-Категория: **Продуктивность**. Контактный адрес: djeirahstudio@gmail.com.
+Категория: **Работа** (так в русском интерфейсе называется Productivity). Теги: «Личные финансы», «Саморазвитие». Контактный адрес: djeirahstudio@gmail.com.
 
 Язык страницы по умолчанию: **английский (en-US)**. Остальные языки добавляются в Play Console через «Управление переводами»: русский (ru-RU), нидерландский (nl-NL), немецкий (de-DE), французский (fr-FR).
+
+Описания написаны абзацами, без маркеров списка: так текст одинаково читается во всех версиях магазина.
 
 Графика лежит рядом:
 - значок 512×512: `play_icon_512.png` (один на все языки);
@@ -20,49 +22,25 @@ Bolh
 
 **Short description**
 
-Goals, habits and money in one app. Reminders that arrive on time.
+Goals, habits and money in one app, with reminders that arrive on time.
 
 **Full description**
 
-Bolh keeps goals, habits and money in one place and connects them: habits set the pace of a goal, and a goal's budget sits next to your account balances.
+Goals, habits and money usually live in separate apps. Bolh keeps them in one place and links them together, so you can see how everyday habits move a goal forward and how much money the goal still needs.
 
-GOALS
-• Stages with tasks inside, and a path that fills up stage by stage
-• Close the next stage right from the goal card; a mistaken tap can be undone
-• Pace and forecast: when the goal will be reached at the current rate
-• Deadline check: after five finished goals, Bolh suggests a realistic date based on your own history
-• A budget and a cost breakdown per goal: what is paid and what is left
+Each goal is split into stages, and a stage can hold a few tasks. With every finished stage the goal card fills up a little more. The next step stays in view, and you can tick it off right from the list. Bolh also remembers how your deadlines usually turn out and, after a few finished goals, suggests dates that match your real pace.
 
-HABITS
-• Minimum and full: on a hard day the minimum is enough, and it still counts
-• Several check-ins a day, for example water three times
-• Streaks, time per session and progress right on the habit card
-• Bad habits with a weekly limit or a count of clean days
-• A pause that doesn't break your count; habits can be attached to a goal
+Habits leave room for bad days. You can give each habit a minimum and a full version, and even the short version counts. A habit can be checked several times a day, for example when you want to drink three glasses of water. Your streak, the time per session and your progress are shown right on the card. For habits you want to break, Bolh counts clean days or keeps you within a weekly limit.
 
-REMINDERS
-• As many reminders a day as you need
-• Alarm mode with a sound that keeps ringing until you open it
-• Reminders survive a reboot and a time change
-• If notifications or exact alarms are off, the app says so and opens the right setting
+Reminders come at the time you choose, and a habit can have as many of them as you need. In alarm mode the sound keeps going until you open the reminder. Reminders keep working after a restart, and if notifications or exact alarms are turned off, the app tells you and opens the right setting.
 
-MONEY
-• Accounts in different currencies; the total is converted at the current rate
-• Changing an account's currency converts its balance and transactions
-• Categories with monthly limits
-• Recurring payments with a reminder and one-tap recording
+In the finance section you can keep accounts in different currencies, and the total is converted at the current rate. There are spending categories with monthly limits and recurring payments with reminders, and at the end of the month it is easy to see where the money went.
 
-STATS
-• Completion ring, charts by day, week and month, and your strongest weekday
-• Every habit's calendar, goal progress and where the money goes
-• Comparison with the previous period and short insights when there is something to say
+Statistics show how your week, month or year went: habit completion, goal progress, spending by category and a comparison with the previous period. Every habit has its own calendar.
 
-PRIVACY
-• No sign-up, no ads, no trackers
-• All data stays on your phone; the only network request fetches exchange rates
-• Backup to a file to move everything to a new phone
+All data stays on your phone. There is no account to create, no ads and no tracking. The only thing Bolh downloads is exchange rates. A backup file lets you move everything to a new phone.
 
-English, Russian, Dutch, German and French. Light and dark theme.
+Bolh is available in English, Russian, Dutch, German and French, with a light and a dark theme.
 
 ---
 
@@ -78,45 +56,21 @@ Bolh
 
 **Полное описание**
 
-Bolh держит цели, привычки и деньги в одном месте и связывает их: привычки задают темп цели, а бюджет цели виден рядом с остатками на счетах.
+Цели, привычки и деньги обычно живут в разных приложениях. Bolh собирает их в одном месте и связывает между собой, поэтому видно, как ежедневные привычки двигают цель и сколько денег на неё ещё нужно.
 
-ЦЕЛИ
-• Этапы и задачи внутри этапов, путь цели заполняется этап за этапом
-• Следующий этап закрывается прямо с карточки цели, случайное нажатие можно отменить
-• Темп и прогноз: когда цель будет достигнута при нынешнем ходе дел
-• Проверка срока: после пяти завершённых целей Bolh предложит реалистичную дату по вашей истории
-• Бюджет цели и смета по статьям: что оплачено и сколько осталось
+Каждая цель делится на этапы, а в этапе можно завести задачи. С каждым закрытым этапом карточка цели заполняется. Следующий шаг всегда на виду, отметить его можно прямо из списка. Bolh запоминает, как вы укладываетесь в сроки, и после нескольких завершённых целей предлагает даты с учётом вашего настоящего темпа.
 
-ПРИВЫЧКИ
-• Минимум и норма: в трудный день хватит минимума, и он засчитывается
-• Несколько отметок в день, например вода три раза
-• Серия, время за раз и прогресс прямо на карточке привычки
-• Вредные привычки с лимитом на неделю или счётом дней без срыва
-• Пауза, которая не ломает счёт; привычку можно привязать к цели
+В привычках есть место для трудных дней. Для каждой можно задать минимум и полную норму, и даже короткий подход засчитывается. Одну привычку можно отмечать несколько раз в день, например когда нужно выпить три стакана воды. Серия, время на одно занятие и прогресс видны прямо на карточке. Если привычку хочется бросить, Bolh считает дни без срывов или следит за недельным лимитом.
 
-НАПОМИНАНИЯ
-• Сколько угодно напоминаний в день
-• Режим будильника: звук звучит, пока напоминание не откроют
-• Напоминания переживают перезагрузку и смену времени
-• Если уведомления или точное время выключены, приложение скажет об этом и откроет нужную настройку
+Напоминания приходят в выбранное время, и у одной привычки их может быть сколько угодно. В режиме будильника звук не умолкает, пока вы не откроете напоминание. Напоминания продолжают работать после перезагрузки, а если уведомления или точные будильники выключены, приложение скажет об этом и откроет нужную настройку.
 
-ДЕНЬГИ
-• Счета в разных валютах, общий итог пересчитывается по текущему курсу
-• При смене валюты счёта остаток и операции пересчитываются
-• Категории с месячными лимитами
-• Регулярные платежи с напоминанием и записью в одно нажатие
+В разделе «Финансы» можно вести счета в разных валютах, а общий итог пересчитывается по текущему курсу. Есть категории расходов с месячными лимитами и регулярные платежи с напоминаниями, а в конце месяца легко понять, куда ушли деньги.
 
-СТАТИСТИКА
-• Кольцо выполнения, графики по дням, неделям и месяцам, лучший день недели
-• Календарь каждой привычки, прогресс целей и структура расходов
-• Сравнение с прошлым периодом и короткие выводы, когда есть что сказать
+Статистика показывает, как прошли неделя, месяц или год: выполнение привычек, прогресс по целям, расходы по категориям и сравнение с прошлым периодом. У каждой привычки есть свой календарь.
 
-ПРИВАТНОСТЬ
-• Без регистрации, рекламы и трекеров
-• Все данные хранятся на телефоне; в сеть уходит только запрос курсов валют
-• Резервная копия в файл, чтобы перенести всё на новый телефон
+Все данные хранятся только на телефоне. Аккаунт не нужен, рекламы и слежки нет. Из интернета Bolh загружает только курсы валют. С резервной копией в файле всё легко перенести на новый телефон.
 
-Английский, русский, нидерландский, немецкий и французский языки. Светлая и тёмная тема.
+Bolh работает на русском, английском, нидерландском, немецком и французском языках. Есть светлая и тёмная тема.
 
 ---
 
@@ -128,49 +82,25 @@ Bolh
 
 **Korte beschrijving**
 
-Doelen, gewoonten en geld in één app. Herinneringen die op tijd komen.
+Doelen, gewoonten en geld in één app, met herinneringen die op tijd komen.
 
 **Volledige beschrijving**
 
-Bolh brengt doelen, gewoonten en geld samen en verbindt ze: gewoonten bepalen het tempo van een doel, en het budget van een doel staat naast je rekeningen.
+Doelen, gewoonten en geld staan meestal in verschillende apps. Bolh brengt ze samen en koppelt ze aan elkaar, zodat je ziet hoe dagelijkse gewoonten een doel dichterbij brengen en hoeveel geld een doel nog nodig heeft.
 
-DOELEN
-• Etappes met taken, en een pad dat per etappe volloopt
-• Rond de volgende etappe af vanaf de doelkaart; een verkeerde tik maak je ongedaan
-• Tempo en prognose: wanneer je het doel haalt in het huidige tempo
-• Deadlinecheck: na vijf afgeronde doelen stelt Bolh een realistische datum voor op basis van je eigen geschiedenis
-• Budget en kostenoverzicht per doel: wat betaald is en wat er nog openstaat
+Elk doel is verdeeld in etappes, en een etappe kan een paar taken bevatten. Met elke afgeronde etappe vult de doelkaart zich verder. De volgende stap blijft in beeld en vink je direct in de lijst af. Bolh onthoudt ook hoe je deadlines meestal uitpakken en stelt na een paar afgeronde doelen data voor die bij je echte tempo passen.
 
-GEWOONTEN
-• Minimum en volledig: op een zware dag is het minimum genoeg en telt de dag mee
-• Meerdere keren per dag afvinken, bijvoorbeeld drie keer water
-• Reeks, tijd per keer en voortgang direct op de kaart
-• Slechte gewoonten met een weeklimiet of een telling van dagen zonder terugval
-• Een pauze die je telling niet breekt; gewoonten koppel je aan een doel
+Gewoonten laten ruimte voor slechte dagen. Je kunt voor elke gewoonte een minimum en een volledige versie instellen, en ook de korte versie telt mee. Een gewoonte kun je meerdere keren per dag afvinken, bijvoorbeeld als je drie glazen water wilt drinken. Je reeks, de tijd per keer en je voortgang staan direct op de kaart. Voor gewoonten die je wilt afleren, telt Bolh de dagen zonder terugval of houdt het een weeklimiet bij.
 
-HERINNERINGEN
-• Zoveel herinneringen per dag als je wilt
-• Wekkermodus met geluid dat blijft klinken tot je de melding opent
-• Herinneringen blijven werken na een herstart en een tijdwijziging
-• Staan meldingen of exacte wekkers uit, dan zegt de app dat en opent de juiste instelling
+Herinneringen komen op het tijdstip dat je kiest, en een gewoonte kan er zoveel hebben als je nodig hebt. In de wekkermodus blijft het geluid klinken tot je de herinnering opent. Herinneringen blijven werken na een herstart. Staan meldingen of exacte wekkers uit, dan zegt de app dat en opent de juiste instelling.
 
-GELD
-• Rekeningen in verschillende valuta; het totaal wordt omgerekend tegen de actuele koers
-• Wijzig je de valuta van een rekening, dan worden saldo en transacties omgerekend
-• Categorieën met maandlimieten
-• Vaste betalingen met herinnering en vastleggen met één tik
+In het financiële deel houd je rekeningen in verschillende valuta bij, en het totaal wordt omgerekend tegen de actuele koers. Er zijn uitgavencategorieën met maandlimieten en vaste betalingen met herinneringen, en aan het eind van de maand zie je meteen waar je geld naartoe is gegaan.
 
-STATISTIEK
-• Voortgangsring, grafieken per dag, week en maand, en je beste weekdag
-• Kalender per gewoonte, voortgang van doelen en waar je geld heen gaat
-• Vergelijking met de vorige periode en korte inzichten als er iets te melden is
+De statistieken laten zien hoe je week, maand of jaar verliep: voltooide gewoonten, voortgang van doelen, uitgaven per categorie en een vergelijking met de vorige periode. Elke gewoonte heeft een eigen kalender.
 
-PRIVACY
-• Geen account, geen advertenties, geen trackers
-• Alle gegevens blijven op je telefoon; alleen wisselkoersen worden online opgehaald
-• Back-up naar een bestand om alles naar een nieuwe telefoon over te zetten
+Al je gegevens blijven op je telefoon. Je hoeft geen account aan te maken, er zijn geen advertenties en er wordt niets gevolgd. Bolh downloadt alleen wisselkoersen. Met een back-upbestand zet je alles over naar een nieuwe telefoon.
 
-Engels, Russisch, Nederlands, Duits en Frans. Licht en donker thema.
+Bolh is beschikbaar in het Nederlands, Engels, Russisch, Duits en Frans, met een licht en een donker thema.
 
 ---
 
@@ -182,49 +112,25 @@ Bolh
 
 **Kurzbeschreibung**
 
-Ziele, Gewohnheiten und Finanzen in einer App. Erinnerungen, die ankommen.
+Ziele, Gewohnheiten und Finanzen in einer App, mit pünktlichen Erinnerungen.
 
 **Vollständige Beschreibung**
 
-Bolh bringt Ziele, Gewohnheiten und Finanzen zusammen und verbindet sie: Gewohnheiten bestimmen das Tempo eines Ziels, und das Budget eines Ziels steht neben deinen Kontoständen.
+Ziele, Gewohnheiten und Finanzen verteilen sich meist auf verschiedene Apps. Bolh bringt sie an einem Ort zusammen und verknüpft sie, sodass du siehst, wie tägliche Gewohnheiten ein Ziel voranbringen und wie viel Geld ein Ziel noch braucht.
 
-ZIELE
-• Etappen mit Aufgaben und ein Weg, der sich Etappe für Etappe füllt
-• Die nächste Etappe direkt auf der Zielkarte abhaken; ein versehentliches Tippen lässt sich zurücknehmen
-• Tempo und Prognose: wann das Ziel beim jetzigen Tempo erreicht ist
-• Fristprüfung: Nach fünf abgeschlossenen Zielen schlägt Bolh ein realistisches Datum auf Basis deines Verlaufs vor
-• Budget und Kostenaufstellung pro Ziel: was bezahlt ist und was noch fehlt
+Jedes Ziel ist in Etappen unterteilt, und eine Etappe kann einige Aufgaben enthalten. Mit jeder abgeschlossenen Etappe füllt sich die Zielkarte weiter. Der nächste Schritt bleibt im Blick und lässt sich direkt in der Liste abhaken. Bolh merkt sich außerdem, wie deine Fristen meistens ausgehen, und schlägt nach einigen abgeschlossenen Zielen Termine vor, die zu deinem tatsächlichen Tempo passen.
 
-GEWOHNHEITEN
-• Minimum und voll: An schweren Tagen reicht das Minimum, und der Tag zählt
-• Mehrmals am Tag abhaken, zum Beispiel dreimal Wasser
-• Serie, Zeit pro Mal und Fortschritt direkt auf der Karte
-• Schlechte Gewohnheiten mit Wochenlimit oder Zählung der Tage ohne Rückfall
-• Eine Pause, die die Zählung nicht unterbricht; Gewohnheiten lassen sich mit Zielen verknüpfen
+Gewohnheiten lassen Raum für schlechte Tage. Für jede Gewohnheit kannst du ein Minimum und eine volle Version festlegen, und auch die kurze Version zählt. Eine Gewohnheit lässt sich mehrmals am Tag abhaken, zum Beispiel für drei Gläser Wasser. Serie, Zeit pro Einheit und Fortschritt stehen direkt auf der Karte. Bei Gewohnheiten, die du ablegen möchtest, zählt Bolh die Tage ohne Rückfall oder achtet auf ein Wochenlimit.
 
-ERINNERUNGEN
-• Beliebig viele Erinnerungen pro Tag
-• Weckermodus mit einem Ton, der klingelt, bis du die Erinnerung öffnest
-• Erinnerungen bleiben nach Neustart und Zeitumstellung erhalten
-• Sind Benachrichtigungen oder genaue Wecker aus, sagt die App das und öffnet die passende Einstellung
+Erinnerungen kommen zur gewählten Uhrzeit, und eine Gewohnheit kann so viele davon haben, wie du brauchst. Im Weckermodus klingelt es weiter, bis du die Erinnerung öffnest. Erinnerungen funktionieren auch nach einem Neustart, und wenn Benachrichtigungen oder genaue Wecker ausgeschaltet sind, weist die App darauf hin und öffnet die passende Einstellung.
 
-FINANZEN
-• Konten in verschiedenen Währungen; die Summe wird zum aktuellen Kurs umgerechnet
-• Beim Wechsel der Kontowährung werden Kontostand und Buchungen umgerechnet
-• Kategorien mit Monatslimits
-• Wiederkehrende Zahlungen mit Erinnerung und Erfassung per Tippen
+Im Bereich Finanzen führst du Konten in verschiedenen Währungen, und die Gesamtsumme wird zum aktuellen Kurs umgerechnet. Es gibt Ausgabenkategorien mit Monatslimits und wiederkehrende Zahlungen mit Erinnerung, und am Monatsende siehst du auf einen Blick, wohin das Geld gegangen ist.
 
-STATISTIK
-• Fortschrittsring, Diagramme nach Tagen, Wochen und Monaten sowie dein stärkster Wochentag
-• Kalender jeder Gewohnheit, Fortschritt der Ziele und wohin das Geld geht
-• Vergleich mit dem vorherigen Zeitraum und kurze Hinweise, wenn es etwas zu sagen gibt
+Die Statistik zeigt, wie deine Woche, dein Monat oder dein Jahr gelaufen ist: erledigte Gewohnheiten, Fortschritt bei den Zielen, Ausgaben nach Kategorien und den Vergleich mit dem vorherigen Zeitraum. Jede Gewohnheit hat ihren eigenen Kalender.
 
-DATENSCHUTZ
-• Keine Anmeldung, keine Werbung, keine Tracker
-• Alle Daten bleiben auf dem Telefon; nur Wechselkurse werden online abgerufen
-• Backup in eine Datei, um alles auf ein neues Telefon umzuziehen
+Alle Daten bleiben auf deinem Telefon. Du brauchst kein Konto, es gibt keine Werbung und kein Tracking. Aus dem Internet lädt Bolh nur Wechselkurse. Mit einer Sicherungsdatei ziehst du alles auf ein neues Telefon um.
 
-Englisch, Russisch, Niederländisch, Deutsch und Französisch. Helles und dunkles Design.
+Bolh gibt es auf Deutsch, Englisch, Russisch, Niederländisch und Französisch, mit hellem und dunklem Design.
 
 ---
 
@@ -236,46 +142,22 @@ Bolh
 
 **Description courte**
 
-Objectifs, habitudes et argent dans une seule appli. Des rappels à l’heure.
+Objectifs, habitudes et argent dans une seule appli, avec des rappels à l’heure.
 
 **Description complète**
 
-Bolh réunit objectifs, habitudes et argent, et les relie : les habitudes donnent le rythme d’un objectif, et le budget d’un objectif s’affiche à côté du solde de vos comptes.
+Objectifs, habitudes et argent vivent souvent dans des applis différentes. Bolh les réunit au même endroit et les relie entre eux : vous voyez comment vos habitudes quotidiennes font avancer un objectif et combien d’argent il lui faut encore.
 
-OBJECTIFS
-• Des étapes avec leurs tâches, et un parcours qui se remplit étape par étape
-• Terminez l’étape suivante directement depuis la carte de l’objectif ; un appui par erreur s’annule
-• Rythme et prévision : quand l’objectif sera atteint au rythme actuel
-• Vérification de l’échéance : après cinq objectifs terminés, Bolh propose une date réaliste d’après votre historique
-• Budget et détail des coûts par objectif : ce qui est payé et ce qui reste
+Chaque objectif se divise en étapes, et une étape peut contenir quelques tâches. À chaque étape terminée, la carte de l’objectif se remplit un peu plus. La prochaine étape reste visible et se coche directement depuis la liste. Bolh retient aussi comment se passent habituellement vos échéances et, après quelques objectifs terminés, propose des dates adaptées à votre vrai rythme.
 
-HABITUDES
-• Minimum et complet : les jours difficiles, le minimum suffit et la journée compte
-• Plusieurs coches par jour, par exemple trois verres d’eau
-• Série, durée par séance et progression directement sur la carte
-• Mauvaises habitudes avec une limite par semaine ou un décompte des jours sans écart
-• Une pause qui ne casse pas le compte ; une habitude peut être associée à un objectif
+Les habitudes laissent de la place aux jours difficiles. Pour chacune, vous pouvez définir un minimum et une version complète, et même la version courte compte. Une habitude peut être cochée plusieurs fois par jour, par exemple pour boire trois verres d’eau. La série, le temps par séance et la progression s’affichent directement sur la carte. Pour les habitudes que vous voulez abandonner, Bolh compte les jours sans écart ou surveille une limite hebdomadaire.
 
-RAPPELS
-• Autant de rappels par jour que nécessaire
-• Mode alarme avec une sonnerie qui continue jusqu’à l’ouverture du rappel
-• Les rappels survivent au redémarrage et au changement d’heure
-• Si les notifications ou les alarmes exactes sont désactivées, l’appli le signale et ouvre le bon réglage
+Les rappels arrivent à l’heure choisie, et une habitude peut en avoir autant que nécessaire. En mode alarme, la sonnerie continue jusqu’à ce que vous ouvriez le rappel. Les rappels fonctionnent encore après un redémarrage, et si les notifications ou les alarmes exactes sont désactivées, l’appli vous le signale et ouvre le bon réglage.
 
-ARGENT
-• Comptes dans plusieurs devises ; le total est converti au taux actuel
-• Changer la devise d’un compte convertit son solde et ses opérations
-• Catégories avec limites mensuelles
-• Paiements récurrents avec rappel et enregistrement en un appui
+Dans la partie Finances, vous suivez des comptes dans plusieurs devises, et le total est converti au taux actuel. Vous y trouvez des catégories de dépenses avec des limites mensuelles et des paiements récurrents avec rappels, et à la fin du mois, vous voyez tout de suite où est passé l’argent.
 
-STATISTIQUES
-• Anneau de progression, graphiques par jour, semaine et mois, et votre meilleur jour de la semaine
-• Calendrier de chaque habitude, progression des objectifs et répartition des dépenses
-• Comparaison avec la période précédente et courts constats quand il y a quelque chose à dire
+Les statistiques montrent comment se sont passés votre semaine, votre mois ou votre année : habitudes réalisées, progression des objectifs, dépenses par catégorie et comparaison avec la période précédente. Chaque habitude a son propre calendrier.
 
-CONFIDENTIALITÉ
-• Sans inscription, sans publicité, sans traceurs
-• Toutes les données restent sur le téléphone ; seule la récupération des taux de change passe par Internet
-• Sauvegarde dans un fichier pour tout transférer sur un nouveau téléphone
+Toutes les données restent sur votre téléphone. Pas de compte à créer, pas de publicité, pas de pistage. Bolh ne télécharge que les taux de change. Un fichier de sauvegarde permet de tout transférer sur un nouveau téléphone.
 
-Anglais, russe, néerlandais, allemand et français. Thème clair et sombre.
+Bolh est disponible en français, anglais, russe, néerlandais et allemand, avec un thème clair et un thème sombre.
