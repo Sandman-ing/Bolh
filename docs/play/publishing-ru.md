@@ -8,6 +8,8 @@
 
 ## 1. Политика конфиденциальности по ссылке
 
+Готово 16.09.2026: **https://sites.google.com/view/bolhprivacypolicy** (Google Sites, открыта для всех). Текст для правок лежит в `privacy-policy.html`.
+
 Google требует ссылку на политику. Самый простой путь без кода:
 
 1. sites.google.com → «Пустой сайт».
