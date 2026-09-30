@@ -147,8 +147,10 @@ fun FinanceScreen(
     }
 
     pendingPayment?.let { id ->
+        // Имя того платежа, на котором нажали, а не ближайшего по дате.
+        val payment = state.payments.firstOrNull { it.id == id }
         ConfirmDeleteDialog(
-            title = stringResource(R.string.confirm_delete, state.nextPayment?.name.orEmpty()),
+            title = stringResource(R.string.confirm_delete, payment?.name.orEmpty()),
             onConfirm = { viewModel.deleteRecurring(id) },
             onDismiss = { pendingPayment = null },
         )
