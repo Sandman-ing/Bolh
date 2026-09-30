@@ -238,8 +238,18 @@ class FinanceRepository(
         return map.takeIf { complete(it) }
     }
 
+    /**
+     * Счёт удаляется вместе со своими регулярными платежами: иначе платёж
+     * оставался бы в списке и напоминал о себе, а «Записать» заводило бы
+     * трату, которой нигде не видно. Операции счёта остаются в базе, но
+     * больше нигде не видны и не считаются.
+     */
     suspend fun deleteAccount(id: String) {
-        dao.softDeleteAccount(id, clock.millis())
+        val now = clock.millis()
+        inTransaction {
+            dao.softDeleteAccount(id, now)
+            dao.softDeleteRecurringOfAccount(id, now)
+        }
     }
 
     // --- Категории --------------------------------------------------------
