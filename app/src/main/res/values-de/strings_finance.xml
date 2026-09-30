@@ -17,7 +17,7 @@
     <string name="finance_tab_overview">Übersicht</string>
     <string name="finance_tab_payments">Zahlungen</string>
     <string name="finance_tab_jars">Spartöpfe</string>
-    <string name="finance_no_payments">Noch keine wiederkehrenden Zahlungen</string>
+    <string name="finance_no_payments">Noch keine Zahlungen</string>
     <string name="finance_no_jars">Spartöpfe erscheinen hier, sobald ein Ziel ein Budget hat</string>
     <string name="confirm_delete_jar">Diesen Spartopf löschen?</string>
     <string name="finance_options">Anzeigeoptionen</string>
@@ -86,8 +86,14 @@
     <string name="recurring_period_month">Monat</string>
     <string name="recurring_period_year">Jahr</string>
     <string name="recurring_first_date">Erste Abbuchung</string>
-    <string name="recurring_add">Wiederkehrende Zahlung hinzufügen</string>
+    <string name="recurring_add">Zahlung hinzufügen</string>
     <string name="recurring_interval">Alle N Zeiträume wiederholen</string>
+    <string name="recurring_kind">Wie oft</string>
+    <string name="recurring_kind_regular">Regelmäßig</string>
+    <string name="recurring_kind_once">Einmal</string>
+    <string name="recurring_once_title">Einmalige Zahlung</string>
+    <string name="recurring_once_date">Zahlungsdatum</string>
+    <string name="recurring_once_mark">einmalig</string>
     <string name="account_edit">Bearbeiten</string>
     <string name="account_expenses">Ausgaben</string>
     <string name="account_income">Einnahmen</string>

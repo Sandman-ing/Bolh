@@ -284,21 +284,22 @@ fun GoalDetailScreen(
                 )
             }
 
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(Spacing.s),
-                modifier = Modifier.padding(top = Spacing.m),
-            ) {
-                MetricChip(
-                    text = state.tempo?.let {
-                        stringResource(R.string.goal_tempo, (it * 100).roundToInt())
-                    } ?: stringResource(R.string.goal_tempo_unknown),
-                    color = when {
-                        state.tempo == null -> status.textTertiary
-                        state.tempo!! >= 0.6 -> status.success
-                        state.tempo!! >= 0.3 -> status.attention
-                        else -> status.problem
-                    },
-                )
+            // Без привычек темпа нет, и плашка не нужна: ниже и так стоит
+            // блок привычек, который говорит об этом словами.
+            state.tempo?.let { tempo ->
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.s),
+                    modifier = Modifier.padding(top = Spacing.m),
+                ) {
+                    MetricChip(
+                        text = stringResource(R.string.goal_tempo, (tempo * 100).roundToInt()),
+                        color = when {
+                            tempo >= 0.6 -> status.success
+                            tempo >= 0.3 -> status.attention
+                            else -> status.problem
+                        },
+                    )
+                }
             }
             }
 
@@ -954,16 +955,20 @@ private fun AddTaskRow(onAdd: (String) -> Unit) {
         } else {
             val focus = remember { FocusRequester() }
             LaunchedEffect(Unit) { focus.requestFocus() }
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(start = Spacing.xxl, end = Spacing.s, bottom = Spacing.s),
+            // Поле во всю ширину, кнопка под ним — как у поля этапа. Рядом с
+            // кнопкой поле сжималось в узкий столбик, и текст задачи ломался
+            // по слогам.
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = Spacing.xl, end = Spacing.s, bottom = Spacing.s),
             ) {
                 BolhTextField(
                     value = text,
                     onValueChange = { text = it },
                     label = { Text(stringResource(R.string.goal_task_hint)) },
                     modifier = Modifier
-                        .weight(1f)
+                        .fillMaxWidth()
                         .focusRequester(focus),
                 )
                 // Поле остаётся открытым, а пустая задача заводится с именем по
@@ -976,7 +981,7 @@ private fun AddTaskRow(onAdd: (String) -> Unit) {
                         text = ""
                     },
                     icon = R.drawable.ic_task,
-                    modifier = Modifier.padding(start = Spacing.s),
+                    modifier = Modifier.padding(top = Spacing.s),
                 )
             }
         }

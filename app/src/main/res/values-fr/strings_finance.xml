@@ -17,7 +17,7 @@
     <string name="finance_tab_overview">Aperçu</string>
     <string name="finance_tab_payments">Paiements</string>
     <string name="finance_tab_jars">Cagnottes</string>
-    <string name="finance_no_payments">Aucun paiement récurrent pour l’instant</string>
+    <string name="finance_no_payments">Aucun paiement pour l’instant</string>
     <string name="finance_no_jars">Les cagnottes apparaissent ici dès qu’un objectif a un budget</string>
     <string name="confirm_delete_jar">Supprimer cette cagnotte ?</string>
     <string name="finance_options">Options d’affichage</string>
@@ -86,8 +86,14 @@
     <string name="recurring_period_month">mois</string>
     <string name="recurring_period_year">an</string>
     <string name="recurring_first_date">Premier prélèvement</string>
-    <string name="recurring_add">Ajouter un paiement récurrent</string>
+    <string name="recurring_add">Ajouter un paiement</string>
     <string name="recurring_interval">Répéter toutes les N périodes</string>
+    <string name="recurring_kind">À quelle fréquence</string>
+    <string name="recurring_kind_regular">Régulièrement</string>
+    <string name="recurring_kind_once">Une fois</string>
+    <string name="recurring_once_title">Paiement ponctuel</string>
+    <string name="recurring_once_date">Date du paiement</string>
+    <string name="recurring_once_mark">ponctuel</string>
     <string name="account_edit">Modifier</string>
     <string name="account_expenses">Dépenses</string>
     <string name="account_income">Revenus</string>

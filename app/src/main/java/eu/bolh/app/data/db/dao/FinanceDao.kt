@@ -13,6 +13,26 @@ import eu.bolh.app.data.db.entity.TransactionEntity
 import java.time.LocalDate
 import kotlinx.coroutines.flow.Flow
 
+/**
+ * Операция видна, пока жив её счёт.
+ *
+ * Счёт удаляется мягко, и его операции остаются в базе. Без этого условия
+ * траты удалённого счёта продолжали считаться в статистике, хотя в финансах
+ * их уже не было. Перевод живёт, пока жив хоть один из двух его счетов:
+ * иначе у оставшегося счёта задним числом поехал бы остаток.
+ */
+private const val OF_LIVE_ACCOUNT =
+    "(accountId IN (SELECT id FROM accounts WHERE deletedAt IS NULL) " +
+        "OR toAccountId IN (SELECT id FROM accounts WHERE deletedAt IS NULL))"
+
+/**
+ * Регулярный платёж живёт, пока жив его счёт. Со счётом он и удаляется, а это
+ * условие убирает платежи счетов, удалённых до того: иначе они оставались бы
+ * в списке и напоминали о себе.
+ */
+private const val PAYMENT_OF_LIVE_ACCOUNT =
+    "accountId IN (SELECT id FROM accounts WHERE deletedAt IS NULL)"
+
 @Dao
 interface FinanceDao {
 
@@ -61,23 +81,21 @@ interface FinanceDao {
 
     // --- Операции ---------------------------------------------------------
 
-    @Query("SELECT * FROM transactions WHERE deletedAt IS NULL ORDER BY date DESC, createdAt DESC")
+    @Query(
+        "SELECT * FROM transactions WHERE deletedAt IS NULL AND " + OF_LIVE_ACCOUNT +
+            " ORDER BY date DESC, createdAt DESC",
+    )
     fun observeTransactions(): Flow<List<TransactionEntity>>
 
     @Query(
-        """
-        SELECT * FROM transactions
-        WHERE deletedAt IS NULL AND date BETWEEN :from AND :to
-        ORDER BY date DESC, createdAt DESC
-        """,
+        "SELECT * FROM transactions WHERE deletedAt IS NULL AND " + OF_LIVE_ACCOUNT +
+            " AND date BETWEEN :from AND :to ORDER BY date DESC, createdAt DESC",
     )
     fun observeTransactionsBetween(from: LocalDate, to: LocalDate): Flow<List<TransactionEntity>>
 
     @Query(
-        """
-        SELECT * FROM transactions
-        WHERE deletedAt IS NULL AND date BETWEEN :from AND :to
-        """,
+        "SELECT * FROM transactions WHERE deletedAt IS NULL AND " + OF_LIVE_ACCOUNT +
+            " AND date BETWEEN :from AND :to",
     )
     suspend fun transactionsBetween(from: LocalDate, to: LocalDate): List<TransactionEntity>
 
@@ -131,13 +149,19 @@ interface FinanceDao {
 
     // --- Регулярные платежи -----------------------------------------------
 
-    @Query("SELECT * FROM recurring_payments WHERE deletedAt IS NULL AND isActive = 1 ORDER BY nextDate")
+    @Query(
+        "SELECT * FROM recurring_payments WHERE deletedAt IS NULL AND isActive = 1 AND " +
+            PAYMENT_OF_LIVE_ACCOUNT + " ORDER BY nextDate",
+    )
     fun observeRecurring(): Flow<List<RecurringPaymentEntity>>
 
-    @Query("SELECT * FROM recurring_payments WHERE deletedAt IS NULL")
+    @Query("SELECT * FROM recurring_payments WHERE deletedAt IS NULL AND " + PAYMENT_OF_LIVE_ACCOUNT)
     suspend fun allRecurring(): List<RecurringPaymentEntity>
 
-    @Query("SELECT * FROM recurring_payments WHERE id = :id AND deletedAt IS NULL")
+    @Query(
+        "SELECT * FROM recurring_payments WHERE id = :id AND deletedAt IS NULL AND " +
+            PAYMENT_OF_LIVE_ACCOUNT,
+    )
     suspend fun recurringById(id: String): RecurringPaymentEntity?
 
     @Upsert
@@ -146,8 +170,18 @@ interface FinanceDao {
     @Query("UPDATE recurring_payments SET nextDate = :nextDate, updatedAt = :now WHERE id = :id")
     suspend fun setRecurringNextDate(id: String, nextDate: LocalDate, now: Long)
 
+    /** Разовый платёж после записи или пропуска закрывается, но остаётся рядом со своей операцией. */
+    @Query("UPDATE recurring_payments SET isActive = 0, updatedAt = :now WHERE id = :id")
+    suspend fun deactivateRecurring(id: String, now: Long)
+
     @Query("UPDATE recurring_payments SET deletedAt = :now, updatedAt = :now WHERE id = :id")
     suspend fun softDeleteRecurring(id: String, now: Long)
+
+    @Query(
+        "UPDATE recurring_payments SET deletedAt = :now, updatedAt = :now " +
+            "WHERE accountId = :accountId AND deletedAt IS NULL",
+    )
+    suspend fun softDeleteRecurringOfAccount(accountId: String, now: Long)
 
     // --- Курсы валют ------------------------------------------------------
 

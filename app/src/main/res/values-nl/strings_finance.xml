@@ -17,7 +17,7 @@
     <string name="finance_tab_overview">Overzicht</string>
     <string name="finance_tab_payments">Betalingen</string>
     <string name="finance_tab_jars">Spaarpotten</string>
-    <string name="finance_no_payments">Nog geen vaste betalingen</string>
+    <string name="finance_no_payments">Nog geen betalingen</string>
     <string name="finance_no_jars">Spaarpotten verschijnen hier zodra een doel een budget heeft</string>
     <string name="confirm_delete_jar">Deze spaarpot verwijderen?</string>
     <string name="finance_options">Weergaveopties</string>
@@ -86,8 +86,14 @@
     <string name="recurring_period_month">maand</string>
     <string name="recurring_period_year">jaar</string>
     <string name="recurring_first_date">Eerste afschrijving</string>
-    <string name="recurring_add">Vaste betaling toevoegen</string>
+    <string name="recurring_add">Betaling toevoegen</string>
     <string name="recurring_interval">Elke N perioden herhalen</string>
+    <string name="recurring_kind">Hoe vaak</string>
+    <string name="recurring_kind_regular">Regelmatig</string>
+    <string name="recurring_kind_once">Eén keer</string>
+    <string name="recurring_once_title">Eenmalige betaling</string>
+    <string name="recurring_once_date">Betaaldatum</string>
+    <string name="recurring_once_mark">eenmalig</string>
     <string name="account_edit">Bewerken</string>
     <string name="account_expenses">Uitgaven</string>
     <string name="account_income">Inkomsten</string>

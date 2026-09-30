@@ -7,8 +7,10 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import eu.bolh.app.BolhApplication
 import eu.bolh.app.data.prefs.SettingsStore
+import eu.bolh.app.data.repository.FinanceRepository
 import eu.bolh.app.data.repository.GoalRepository
 import eu.bolh.app.data.repository.HabitRepository
+import eu.bolh.app.domain.analytics.FinanceAnalytics
 import eu.bolh.app.domain.analytics.GoalAnalytics
 import eu.bolh.app.domain.analytics.HabitAnalytics
 import eu.bolh.app.domain.model.DayWindow
@@ -48,7 +50,21 @@ data class GoalCardState(
     val daysLeft: Long? = null,
     /** Номер следующего этапа по порядку, с единицы. */
     val nextStageNumber: Int = 0,
+    /** Бюджет цели, если он заведён. */
+    val budget: GoalBudget? = null,
 )
+
+/**
+ * Бюджет на карточке: сколько собрано из нужного (§6.6). Считается так же,
+ * как на экране цели, — по истории пополнений копилки.
+ */
+data class GoalBudget(
+    val collectedMinor: Long,
+    val targetMinor: Long,
+    val currencyCode: String,
+) {
+    val isCollected: Boolean get() = targetMinor > 0L && collectedMinor >= targetMinor
+}
 
 /** Достигнутая цель не исчезает: она переезжает вниз и остаётся историей (§4.6). */
 data class CompletedGoalState(
@@ -69,8 +85,25 @@ data class GoalsUiState(
 class GoalsViewModel(
     private val goals: GoalRepository,
     private val habits: HabitRepository,
+    private val finance: FinanceRepository,
     private val settings: SettingsStore,
 ) : ViewModel() {
+
+    /** Бюджеты по целям. У цели одна копилка — берётся первая, как на экране цели. */
+    private val budgets = combine(
+        finance.observeJars(),
+        finance.observeContributions(),
+    ) { jars, contributions ->
+        jars.distinctBy { it.goalId }.associate { jar ->
+            jar.goalId to GoalBudget(
+                collectedMinor = FinanceAnalytics.jarBalance(jar.id, contributions),
+                targetMinor = jar.targetMinor,
+                currencyCode = jar.currencyCode,
+            )
+        }
+    }
+
+    private val sortAndBudgets = combine(settings.goalSort, budgets) { sort, byGoal -> sort to byGoal }
 
     val state: StateFlow<GoalsUiState> = combine(
         goals.observeAllGoals(),
@@ -80,8 +113,8 @@ class GoalsViewModel(
             from = habits.today().minusDays(HABIT_WINDOW_DAYS),
             to = habits.today(),
         ),
-        settings.goalSort,
-    ) { allGoals, stagesByGoal, habitList, marksByHabit, sort ->
+        sortAndBudgets,
+    ) { allGoals, stagesByGoal, habitList, marksByHabit, (sort, budgetsByGoal) ->
         val today = goals.today()
         val window = DayWindow.lastDays(today, 30)
         val goalList = allGoals.filter { it.status == GoalStatus.Active }
@@ -129,6 +162,7 @@ class GoalsViewModel(
                     }
                     .mapTo(HashSet()) { it.id },
                 daysLeft = goal.deadline?.let { ChronoUnit.DAYS.between(today, it) },
+                budget = budgetsByGoal[goal.id],
             )
         }
 
@@ -184,6 +218,7 @@ class GoalsViewModel(
                 GoalsViewModel(
                     goals = app.container.goalRepository,
                     habits = app.container.habitRepository,
+                    finance = app.container.financeRepository,
                     settings = app.container.settings,
                 )
             }

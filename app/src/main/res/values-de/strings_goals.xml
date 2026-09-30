@@ -7,7 +7,6 @@
     <string name="goal_no_deadline">ohne Frist</string>
     <string name="goal_progress">%1$d %% · %2$d von %3$s</string>
     <string name="goal_tempo">Tempo %1$d %%</string>
-    <string name="goal_tempo_unknown">keine Gewohnheiten</string>
     <string name="goal_forecast_title">Beim jetzigen Tempo</string>
     <string name="goal_forecast_later">%1$s, %2$s später</string>
     <string name="goal_forecast_earlier">%1$s, %2$s früher</string>

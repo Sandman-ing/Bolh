@@ -147,8 +147,10 @@ fun FinanceScreen(
     }
 
     pendingPayment?.let { id ->
+        // Имя того платежа, на котором нажали, а не ближайшего по дате.
+        val payment = state.payments.firstOrNull { it.id == id }
         ConfirmDeleteDialog(
-            title = stringResource(R.string.confirm_delete, state.nextPayment?.name.orEmpty()),
+            title = stringResource(R.string.confirm_delete, payment?.name.orEmpty()),
             onConfirm = { viewModel.deleteRecurring(id) },
             onDismiss = { pendingPayment = null },
         )
@@ -621,10 +623,17 @@ fun FinanceScreen(
                                 style = MaterialTheme.typography.titleMedium,
                                 color = MaterialTheme.colorScheme.onBackground,
                             )
+                            val date = payment.nextDate.format(
+                                DateTimeFormatter.ofPattern(stringResource(R.string.date_day_month), locale),
+                            )
+                            // Разовый платёж помечен: после записи он уйдёт из списка,
+                            // а не переедет на следующий месяц.
                             Text(
-                                text = payment.nextDate.format(
-                                    DateTimeFormatter.ofPattern(stringResource(R.string.date_day_month), locale),
-                                ),
+                                text = if (payment.recurrence.once) {
+                                    "$date · " + stringResource(R.string.recurring_once_mark)
+                                } else {
+                                    date
+                                },
                                 style = MaterialTheme.typography.labelMedium,
                                 color = status.textTertiary,
                             )

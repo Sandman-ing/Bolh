@@ -83,6 +83,8 @@ class BackupService(
         var rows = 0
         OutputStreamWriter(output, Charsets.UTF_8).use { writer ->
             writer.write("date,type,amount,currency,category,account,note\n")
+            // Операции удалённого счёта не выгружаются, как не видны и в самом
+            // приложении; перевод остаётся, пока жив хоть один из его счетов.
             db.query(
                 """
                 SELECT t.date, t.type, t.amountMinor, t.currencyCode,
@@ -93,6 +95,8 @@ class BackupService(
                 LEFT JOIN categories c ON c.id = t.categoryId
                 LEFT JOIN accounts a ON a.id = t.accountId
                 WHERE t.deletedAt IS NULL
+                  AND (t.accountId IN (SELECT id FROM accounts WHERE deletedAt IS NULL)
+                       OR t.toAccountId IN (SELECT id FROM accounts WHERE deletedAt IS NULL))
                 ORDER BY t.date
                 """.trimIndent(),
             ).use { cursor ->

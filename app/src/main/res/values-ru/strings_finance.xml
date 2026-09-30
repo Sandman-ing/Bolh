@@ -17,7 +17,7 @@
     <string name="finance_tab_overview">Обзор</string>
     <string name="finance_tab_payments">Платежи</string>
     <string name="finance_tab_jars">Копилки</string>
-    <string name="finance_no_payments">Регулярных платежей пока нет</string>
+    <string name="finance_no_payments">Платежей пока нет</string>
     <string name="finance_no_jars">Копилка появится здесь, когда у цели будет бюджет</string>
     <string name="confirm_delete_jar">Удалить эту копилку?</string>
     <string name="finance_options">Как показать</string>
@@ -88,8 +88,14 @@
     <string name="recurring_period_month">месяц</string>
     <string name="recurring_period_year">год</string>
     <string name="recurring_first_date">Первое списание</string>
-    <string name="recurring_add">Добавить регулярный платёж</string>
+    <string name="recurring_add">Добавить платёж</string>
     <string name="recurring_interval">Повторять через</string>
+    <string name="recurring_kind">Как часто</string>
+    <string name="recurring_kind_regular">Регулярно</string>
+    <string name="recurring_kind_once">Один раз</string>
+    <string name="recurring_once_title">Разовый платёж</string>
+    <string name="recurring_once_date">Дата платежа</string>
+    <string name="recurring_once_mark">разовый</string>
     <string name="account_edit">Изменить</string>
     <string name="account_expenses">Расходы</string>
     <string name="account_income">Доходы</string>

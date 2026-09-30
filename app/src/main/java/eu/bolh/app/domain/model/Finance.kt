@@ -62,7 +62,17 @@ data class SavingsJar(
 /** Периодичность регулярного платежа. Хранится строкой формата RRULE. */
 enum class RecurrenceUnit { Day, Week, Month, Year }
 
-data class Recurrence(val unit: RecurrenceUnit, val interval: Int = 1) {
+/**
+ * [once] — разовый платёж: он списывается один раз и после записи или
+ * пропуска закрывается, а не уезжает на следующий период. В RRULE это
+ * COUNT=1 — стандартное «одно повторение», поэтому схема базы та же.
+ * Период при этом хранится: передумал — и платёж снова регулярный.
+ */
+data class Recurrence(
+    val unit: RecurrenceUnit,
+    val interval: Int = 1,
+    val once: Boolean = false,
+) {
 
     fun next(from: LocalDate): LocalDate = when (unit) {
         RecurrenceUnit.Day -> from.plusDays(interval.toLong())
@@ -78,7 +88,8 @@ data class Recurrence(val unit: RecurrenceUnit, val interval: Int = 1) {
             RecurrenceUnit.Month -> "MONTHLY"
             RecurrenceUnit.Year -> "YEARLY"
         }
-        return "FREQ=$freq;INTERVAL=$interval"
+        val rule = "FREQ=$freq;INTERVAL=$interval"
+        return if (once) "$rule;COUNT=1" else rule
     }
 
     companion object {
@@ -99,7 +110,7 @@ data class Recurrence(val unit: RecurrenceUnit, val interval: Int = 1) {
                 else -> RecurrenceUnit.Month
             }
             val interval = parts["INTERVAL"]?.toIntOrNull()?.coerceAtLeast(1) ?: 1
-            return Recurrence(unit, interval)
+            return Recurrence(unit, interval, once = parts["COUNT"] == "1")
         }
     }
 }

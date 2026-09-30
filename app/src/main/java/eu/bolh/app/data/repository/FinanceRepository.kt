@@ -238,8 +238,18 @@ class FinanceRepository(
         return map.takeIf { complete(it) }
     }
 
+    /**
+     * Счёт удаляется вместе со своими регулярными платежами: иначе платёж
+     * оставался бы в списке и напоминал о себе, а «Записать» заводило бы
+     * трату, которой нигде не видно. Операции счёта остаются в базе, но
+     * больше нигде не видны и не считаются.
+     */
     suspend fun deleteAccount(id: String) {
-        dao.softDeleteAccount(id, clock.millis())
+        val now = clock.millis()
+        inTransaction {
+            dao.softDeleteAccount(id, now)
+            dao.softDeleteRecurringOfAccount(id, now)
+        }
     }
 
     // --- Категории --------------------------------------------------------
@@ -493,11 +503,13 @@ class FinanceRepository(
 
     /**
      * «Записать» из уведомления (§6.5): операция создаётся только по нажатию,
-     * и тогда же платёж уезжает на следующий период. Ничего не появляется
-     * в истории без ведома человека.
+     * и тогда же платёж уезжает на следующий период, а разовый закрывается.
+     * Ничего не появляется в истории без ведома человека.
      */
     suspend fun recordRecurring(paymentId: String, date: LocalDate = today()) {
-        val payment = dao.recurringById(paymentId) ?: return
+        // Закрытый разовый платёж второй раз не записывается: второе нажатие
+        // или «Записать» из старого уведомления удвоили бы трату.
+        val payment = dao.recurringById(paymentId)?.takeIf { it.isActive } ?: return
         val now = clock.millis()
         dao.upsertTransaction(
             TransactionEntity(
@@ -514,14 +526,22 @@ class FinanceRepository(
                 updatedAt = now,
             ),
         )
-        val next = Recurrence.parse(payment.rrule).next(payment.nextDate)
-        dao.setRecurringNextDate(payment.id, next, now)
+        advance(payment, now)
     }
 
     suspend fun skipRecurring(paymentId: String) {
-        val payment = dao.recurringById(paymentId) ?: return
-        val next = Recurrence.parse(payment.rrule).next(payment.nextDate)
-        dao.setRecurringNextDate(payment.id, next, clock.millis())
+        val payment = dao.recurringById(paymentId)?.takeIf { it.isActive } ?: return
+        advance(payment, clock.millis())
+    }
+
+    /** Регулярный платёж уезжает на следующий период, разовый — закрывается. */
+    private suspend fun advance(payment: RecurringPaymentEntity, now: Long) {
+        val recurrence = Recurrence.parse(payment.rrule)
+        if (recurrence.once) {
+            dao.deactivateRecurring(payment.id, now)
+        } else {
+            dao.setRecurringNextDate(payment.id, recurrence.next(payment.nextDate), now)
+        }
     }
 
     suspend fun deleteRecurring(id: String) {
