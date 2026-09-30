@@ -156,6 +156,10 @@ interface FinanceDao {
     @Query("UPDATE recurring_payments SET nextDate = :nextDate, updatedAt = :now WHERE id = :id")
     suspend fun setRecurringNextDate(id: String, nextDate: LocalDate, now: Long)
 
+    /** Разовый платёж после записи или пропуска закрывается, но остаётся рядом со своей операцией. */
+    @Query("UPDATE recurring_payments SET isActive = 0, updatedAt = :now WHERE id = :id")
+    suspend fun deactivateRecurring(id: String, now: Long)
+
     @Query("UPDATE recurring_payments SET deletedAt = :now, updatedAt = :now WHERE id = :id")
     suspend fun softDeleteRecurring(id: String, now: Long)
 

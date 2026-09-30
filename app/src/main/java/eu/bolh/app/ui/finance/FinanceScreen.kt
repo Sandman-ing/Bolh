@@ -621,10 +621,17 @@ fun FinanceScreen(
                                 style = MaterialTheme.typography.titleMedium,
                                 color = MaterialTheme.colorScheme.onBackground,
                             )
+                            val date = payment.nextDate.format(
+                                DateTimeFormatter.ofPattern(stringResource(R.string.date_day_month), locale),
+                            )
+                            // Разовый платёж помечен: после записи он уйдёт из списка,
+                            // а не переедет на следующий месяц.
                             Text(
-                                text = payment.nextDate.format(
-                                    DateTimeFormatter.ofPattern(stringResource(R.string.date_day_month), locale),
-                                ),
+                                text = if (payment.recurrence.once) {
+                                    "$date · " + stringResource(R.string.recurring_once_mark)
+                                } else {
+                                    date
+                                },
                                 style = MaterialTheme.typography.labelMedium,
                                 color = status.textTertiary,
                             )

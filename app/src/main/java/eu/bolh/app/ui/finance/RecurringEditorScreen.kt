@@ -1,5 +1,12 @@
 package eu.bolh.app.ui.finance
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import eu.bolh.app.ui.common.Motion
 import eu.bolh.app.ui.common.tappable
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.consumeWindowInsets
@@ -198,6 +205,7 @@ fun RecurringEditorScreen(
     var categoryId by remember { mutableStateOf<String?>(null) }
     var unit by remember { mutableStateOf(RecurrenceUnit.Month) }
     var interval by remember { mutableStateOf(1) }
+    var once by remember { mutableStateOf(false) }
     var firstDate by remember { mutableStateOf(LocalDate.now().plusDays(1)) }
 
     val existing by viewModel.existing.collectAsStateWithLifecycle()
@@ -212,6 +220,7 @@ fun RecurringEditorScreen(
             categoryId = payment.categoryId
             unit = payment.recurrence.unit
             interval = payment.recurrence.interval
+            once = payment.recurrence.once
             firstDate = payment.nextDate
         }
     }
@@ -228,7 +237,9 @@ fun RecurringEditorScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = stringResource(R.string.recurring_new_title),
+                        text = stringResource(
+                            if (once) R.string.recurring_once_title else R.string.recurring_new_title,
+                        ),
                         style = MaterialTheme.typography.titleLarge,
                     )
                 },
@@ -310,51 +321,81 @@ fun RecurringEditorScreen(
                 }
             }
 
-            Label(stringResource(R.string.recurring_every))
+            // Разовый платёж — тот же платёж без повтора: запомнить и записать
+            // один раз, когда придёт срок. Например, оплатить что-то через неделю.
+            Label(stringResource(R.string.recurring_kind))
             FlowRow(
                 horizontalArrangement = Arrangement.spacedBy(Spacing.s),
                 verticalArrangement = Arrangement.spacedBy(Spacing.s),
                 modifier = Modifier.padding(horizontal = Spacing.screenPadding),
             ) {
-                RecurrenceUnit.entries.forEach { option ->
-                    Chip(
-                        text = stringResource(unitLabel(option)),
-                        selected = unit == option,
-                        onClick = { unit = option },
-                    )
-                }
+                Chip(
+                    text = stringResource(R.string.recurring_kind_regular),
+                    selected = !once,
+                    onClick = { once = false },
+                )
+                Chip(
+                    text = stringResource(R.string.recurring_kind_once),
+                    selected = once,
+                    onClick = { once = true },
+                )
             }
 
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(
-                    start = Spacing.screenPadding,
-                    end = Spacing.screenPadding,
-                    top = Spacing.s,
-                ),
+            // Период разовому платежу не нужен и уходит переходом, а не пропадает.
+            AnimatedVisibility(
+                visible = !once,
+                enter = fadeIn(tween(Motion.CONTENT_MS)) + expandVertically(Motion.resize),
+                exit = fadeOut(tween(Motion.CONTENT_MS / 2)) + shrinkVertically(Motion.resize),
+                label = "recurring-period",
             ) {
-                Text(
-                    text = stringResource(R.string.recurring_interval),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = status.textSecondary,
-                    modifier = Modifier.weight(1f),
-                )
-                StepButton(
-                    symbol = "\u2212",
-                    onClick = { interval = (interval - 1).coerceAtLeast(1) },
-                    enabled = interval > 1,
-                )
-                Text(
-                    text = interval.toString(),
-                    style = NumberSmall,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier.padding(horizontal = Spacing.m),
-                )
-                StepButton(
-                    symbol = "+",
-                    onClick = { interval = (interval + 1).coerceAtMost(24) },
-                    enabled = interval < 24,
-                )
+                Column {
+                    Label(stringResource(R.string.recurring_every))
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(Spacing.s),
+                        verticalArrangement = Arrangement.spacedBy(Spacing.s),
+                        modifier = Modifier.padding(horizontal = Spacing.screenPadding),
+                    ) {
+                        RecurrenceUnit.entries.forEach { option ->
+                            Chip(
+                                text = stringResource(unitLabel(option)),
+                                selected = unit == option,
+                                onClick = { unit = option },
+                            )
+                        }
+                    }
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(
+                            start = Spacing.screenPadding,
+                            end = Spacing.screenPadding,
+                            top = Spacing.s,
+                        ),
+                    ) {
+                        Text(
+                            text = stringResource(R.string.recurring_interval),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = status.textSecondary,
+                            modifier = Modifier.weight(1f),
+                        )
+                        StepButton(
+                            symbol = "\u2212",
+                            onClick = { interval = (interval - 1).coerceAtLeast(1) },
+                            enabled = interval > 1,
+                        )
+                        Text(
+                            text = interval.toString(),
+                            style = NumberSmall,
+                            color = MaterialTheme.colorScheme.onBackground,
+                            modifier = Modifier.padding(horizontal = Spacing.m),
+                        )
+                        StepButton(
+                            symbol = "+",
+                            onClick = { interval = (interval + 1).coerceAtMost(24) },
+                            enabled = interval < 24,
+                        )
+                    }
+                }
             }
 
             Row(
@@ -373,7 +414,9 @@ fun RecurringEditorScreen(
                     .padding(horizontal = Spacing.screenPadding, vertical = Spacing.l),
             ) {
                 Text(
-                    text = stringResource(R.string.recurring_first_date),
+                    text = stringResource(
+                        if (once) R.string.recurring_once_date else R.string.recurring_first_date,
+                    ),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier.weight(1f),
@@ -394,7 +437,7 @@ fun RecurringEditorScreen(
                             amountMinor = minor,
                             accountId = account,
                             categoryId = categoryId,
-                            recurrence = Recurrence(unit, interval),
+                            recurrence = Recurrence(unit, interval, once),
                             firstDate = firstDate,
                         )
                     }

@@ -17,7 +17,7 @@
     <string name="finance_tab_overview">Overview</string>
     <string name="finance_tab_payments">Payments</string>
     <string name="finance_tab_jars">Jars</string>
-    <string name="finance_no_payments">No recurring payments yet</string>
+    <string name="finance_no_payments">No payments yet</string>
     <string name="finance_no_jars">Jars appear here once a goal gets a budget</string>
     <string name="confirm_delete_jar">Delete this jar?</string>
     <string name="finance_options">View options</string>
@@ -88,8 +88,14 @@
     <string name="recurring_period_month">month</string>
     <string name="recurring_period_year">year</string>
     <string name="recurring_first_date">First charge</string>
-    <string name="recurring_add">Add a recurring payment</string>
+    <string name="recurring_add">Add a payment</string>
     <string name="recurring_interval">Repeat every N periods</string>
+    <string name="recurring_kind">How often</string>
+    <string name="recurring_kind_regular">Regularly</string>
+    <string name="recurring_kind_once">Once</string>
+    <string name="recurring_once_title">One-time payment</string>
+    <string name="recurring_once_date">Payment date</string>
+    <string name="recurring_once_mark">one-time</string>
     <string name="account_edit">Edit</string>
     <string name="account_expenses">Expenses</string>
     <string name="account_income">Income</string>
