@@ -8,7 +8,6 @@
     <string name="goal_no_deadline">без срока</string>
     <string name="goal_progress">%1$d%% · %2$d из %3$s</string>
     <string name="goal_tempo">темп %1$d%%</string>
-    <string name="goal_tempo_unknown">без привычек</string>
 
     <string name="goal_forecast_title">При нынешнем темпе</string>
     <string name="goal_forecast_later">%1$s — на %2$s позже</string>

@@ -55,6 +55,7 @@ import eu.bolh.app.ui.common.BolhIcons
 import eu.bolh.app.ui.common.CompletionPulse
 import eu.bolh.app.ui.common.EmptyState
 import eu.bolh.app.ui.common.IconTag
+import eu.bolh.app.ui.common.Money
 import eu.bolh.app.ui.common.Motion
 import eu.bolh.app.ui.common.PillButton
 import eu.bolh.app.ui.common.completionPop
@@ -380,6 +381,7 @@ private fun GoalCard(
                     )
                     DaysLeftTag(daysLeft = card.daysLeft)
                     TempoTag(tempo = card.tempo)
+                    card.budget?.let { BudgetTag(it) }
                 }
             }
         }
@@ -528,23 +530,49 @@ private fun DaysLeftTag(daysLeft: Long?) {
 }
 
 /**
+ * Бюджет цели: сколько собрано из нужного. Валюта названа один раз, у суммы
+ * цели: плашка стоит в одной строке со сроком, и короче ей лучше. Собранный
+ * бюджет зелёный.
+ */
+@Composable
+private fun BudgetTag(budget: GoalBudget) {
+    val status = LocalStatusColors.current
+    val locale = rememberLocale()
+    IconTag(
+        text = stringResource(
+            R.string.finance_jar_progress,
+            Money.formatPlain(
+                budget.collectedMinor,
+                Money.fractionDigitsOf(budget.currencyCode),
+                locale,
+            ),
+            Money.format(budget.targetMinor, budget.currencyCode, locale),
+        ),
+        icon = R.drawable.ic_savings,
+        color = if (budget.isCollected) status.success else status.textSecondary,
+    )
+}
+
+/**
  * Темп цветом по значению (§4.7): зелёный — высокий, оранжевый — падает,
  * красный — цель стоит. Статусный цвет перебивает цвет раздела: то, что цель
  * встала, важнее того, откуда она.
+ *
+ * Темпа нет — нет и плашки. Серая «без привычек» ничего не сообщала,
+ * а место на карточке занимала.
  */
 @Composable
 internal fun TempoTag(tempo: Double?) {
+    if (tempo == null) return
     val status = LocalStatusColors.current
     val color = when {
-        tempo == null -> status.textTertiary
         tempo >= 0.6 -> status.success
         tempo >= 0.3 -> status.attention
         else -> status.problem
     }
     IconTag(
-        text = tempo?.let { stringResource(R.string.goal_tempo, (it * 100).roundToInt()) }
-            ?: stringResource(R.string.goal_tempo_unknown),
-        icon = if (tempo != null && tempo < 0.3) R.drawable.ic_trending_down else R.drawable.ic_trending_up,
+        text = stringResource(R.string.goal_tempo, (tempo * 100).roundToInt()),
+        icon = if (tempo < 0.3) R.drawable.ic_trending_down else R.drawable.ic_trending_up,
         color = color,
     )
 }
