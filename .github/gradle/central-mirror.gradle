@@ -1,0 +1,21 @@
+// Только для машин GitHub Actions, в сборку проекта не входит.
+//
+// Свежим машинам CI Maven Central иногда отвечает «429 Too Many Requests»,
+// и прогон падает на скачивании библиотек, не дойдя до тестов. Поэтому его
+// пакеты берутся с зеркала Maven Central от Google — тот же набор файлов.
+def mirror = 'https://maven-central.storage-download.googleapis.com/maven2/'
+def redirect = { RepositoryHandler repos ->
+    repos.withType(MavenArtifactRepository).configureEach { r ->
+        if (r.url.toString().startsWith('https://repo.maven.apache.org/maven2')) r.url = mirror
+    }
+}
+settingsEvaluated { settings ->
+    redirect(settings.pluginManagement.repositories)
+    redirect(settings.dependencyResolutionManagement.repositories)
+}
+// Robolectric скачивает сборки Android прямо во время тестов — с того же зеркала.
+allprojects {
+    tasks.withType(Test).configureEach {
+        systemProperty 'robolectric.dependency.repo.url', mirror
+    }
+}
