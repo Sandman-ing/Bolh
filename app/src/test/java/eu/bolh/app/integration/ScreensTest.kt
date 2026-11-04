@@ -7,6 +7,7 @@ import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isFocused
+import androidx.compose.ui.test.junit4.StateRestorationTester
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
@@ -15,6 +16,8 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import eu.bolh.app.domain.model.AccountType
+import eu.bolh.app.ui.finance.FinanceScreen
+import eu.bolh.app.ui.finance.FinanceViewModel
 import eu.bolh.app.ui.finance.RecurringEditorScreen
 import eu.bolh.app.ui.finance.RecurringEditorViewModel
 import eu.bolh.app.ui.finance.TransactionEditorViewModel
@@ -108,6 +111,41 @@ class ScreensTest {
         // Без прокрутки поле заметки оставалось под клавиатурой.
         val scrollable = compose.onAllNodes(hasScrollAction() and hasAnyDescendant(hasText("Date, note, goal")))
         assertTrue(scrollable.fetchSemanticsNodes().isNotEmpty())
+    }
+
+    @Test
+    fun financeKeepsChosenTabAfterLeavingTheScreen() {
+        runBlocking {
+            val card = app.finance.createAccount("Card", "credit_card", AccountType.Card, 0L)
+            app.finance.createRecurring(app.payment(card, "Rent"))
+        }
+        val vm = FinanceViewModel(app.finance, app.goals, app.container.settings)
+        val restoration = StateRestorationTester(compose)
+        restoration.setContent {
+            BolhTheme {
+                FinanceScreen(
+                    onAddAccount = {},
+                    onAddTransaction = {},
+                    onAddRecurring = {},
+                    onOpenTransactions = {},
+                    onOpenCategories = {},
+                    onOpenAccount = {},
+                    onOpenRecurring = {},
+                    viewModel = vm,
+                )
+            }
+        }
+        waitForText("Payments")
+        compose.onNodeWithText("Payments").performClick()
+        waitForText("Rent")
+
+        // Так экран переживает уход на редактор платежа и возврат, а также
+        // поворот телефона. Раньше вкладка сбрасывалась на «Обзор», и только
+        // что добавленный платёж пропадал из виду.
+        restoration.emulateSavedInstanceStateRestore()
+
+        waitForText("Rent")
+        waitForText("Add a payment")
     }
 
     @Test

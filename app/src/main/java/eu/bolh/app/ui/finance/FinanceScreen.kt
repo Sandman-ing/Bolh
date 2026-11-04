@@ -50,6 +50,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -126,7 +127,10 @@ fun FinanceScreen(
     var pendingJar by remember { mutableStateOf<String?>(null) }
     var accountMenu by remember { mutableStateOf(false) }
     var optionsMenu by remember { mutableStateOf(false) }
-    var tab by remember { mutableStateOf(FinanceTab.Overview) }
+    // Вкладка переживает уход на другой экран и поворот телефона. С обычным
+    // remember она сбрасывалась на «Обзор»: человек добавлял платёж и,
+    // вернувшись, не видел его — перед ним был уже другой список.
+    var tab by rememberSaveable { mutableStateOf(FinanceTab.Overview) }
     var pendingPayment by remember { mutableStateOf<String?>(null) }
 
     pendingAccount?.let { id ->
