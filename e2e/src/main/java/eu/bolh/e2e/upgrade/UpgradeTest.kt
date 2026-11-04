@@ -38,7 +38,7 @@ class SeedBeforeUpdateTest {
         flows.markHabit(Upgrade.HABIT)
         flows.createAccount(Upgrade.ACCOUNT)
         flows.recordExpense(Upgrade.ACCOUNT, "42", note = Upgrade.NOTE)
-        flows.addPayment(Upgrade.PAYMENT, "55", once = false)
+        flows.addPayment(Upgrade.PAYMENT, "55", once = false, tabKept = false)
         // Тема лежит не в базе, а в настройках: её тоже надо пронести.
         flows.openSettings()
         ui.tap("Light")

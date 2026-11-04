@@ -36,23 +36,31 @@ class BolhUi {
         shell("pm clear $PACKAGE")
     }
 
+    /**
+     * Запустить, как с иконки. Bolh может сразу спросить разрешение, например
+     * на уведомления для напоминаний: системное окно ложится поверх, и тест
+     * отвечает на него, как человек, прежде чем ждать сам экран.
+     */
     fun launch() {
         device.pressHome()
         shell("am start -W -n $PACKAGE/.MainActivity")
-        if (!device.wait(Until.hasObject(By.pkg(PACKAGE).depth(0)), TIMEOUT)) {
-            fail("Bolh did not open")
+        val opened = waitUntil(TIMEOUT) {
+            allowSystemDialogs()
+            device.hasObject(By.pkg(PACKAGE).depth(0)) && !device.hasObject(allowButton())
         }
-        allowSystemDialogs()
+        if (!opened) fail("Bolh did not open")
         device.waitForIdle()
     }
 
+    /** Кнопка «Разрешить» системного окна. У Google и у чистого Android разные пакеты. */
+    private fun allowButton(): BySelector = By.res(Pattern.compile(".*:id/permission_allow_button"))
+
     /** Системные окна разрешений: тест отвечает «разрешить», как человек. */
     fun allowSystemDialogs() {
-        repeat(2) {
-            val allow = device.findObject(By.res("com.android.permissioncontroller:id/permission_allow_button"))
-                ?: device.findObject(By.res("com.android.packageinstaller:id/permission_allow_button"))
-                ?: return
-            allow.click()
+        repeat(3) {
+            val allow = device.findObject(allowButton()) ?: return
+            Log.i(LOG_TAG, "allowing a system permission request")
+            runCatching { allow.click() }
             device.waitForIdle()
         }
     }
@@ -109,6 +117,23 @@ class BolhUi {
     /** Все надписи с этим текстом сверху вниз — когда одинаковых кнопок несколько. */
     fun allTexts(text: String): List<UiObject2> =
         device.findObjects(inApp(By.text(text))).sortedBy { it.visibleBounds.top }
+
+    /**
+     * Первая надпись [text] ниже того, что вернёт [anchor]: среди одинаковых
+     * кнопок нужна та, что под своим полем. Если она ушла за край экрана,
+     * экран понемногу докручивается.
+     */
+    fun textBelow(text: String, anchor: () -> UiObject2): UiObject2 {
+        repeat(5) {
+            val top = anchor().visibleBounds.bottom
+            allTexts(text).firstOrNull { it.visibleBounds.top >= top }?.let { return it }
+            val scrollable = scrollables().firstOrNull() ?: return@repeat
+            runCatching { scrollable.scroll(Direction.DOWN, 0.3f) }
+            device.waitForIdle()
+        }
+        fail("No \"$text\" below its field")
+        error("unreachable")
+    }
 
     /**
      * Нажать, как человек. Клавиатура сначала убирается: кнопка под ней есть

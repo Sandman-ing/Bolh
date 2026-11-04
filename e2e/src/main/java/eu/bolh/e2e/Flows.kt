@@ -73,7 +73,12 @@ class Flows(private val ui: BolhUi) {
         ui.expectText(account)
     }
 
-    fun addPayment(name: String, amount: String, once: Boolean) {
+    /**
+     * Платёж через вкладку «Платежи». [tabKept] — версия, где после сохранения
+     * человек возвращается на ту же вкладку; до 0.4.2 она сбрасывалась на
+     * «Обзор», и прежнюю версию тест проводит туда сам.
+     */
+    fun addPayment(name: String, amount: String, once: Boolean, tabKept: Boolean = true) {
         ui.tab("Finance")
         ui.tap("Payments")
         ui.tap("Add a payment")
@@ -84,6 +89,8 @@ class Flows(private val ui: BolhUi) {
             ui.expectText("Payment date")
         }
         ui.tap("Save")
+        ui.expectNoText("How often", BolhUi.TIMEOUT)
+        if (!tabKept) ui.tap("Payments")
         // Список платежей, а не поле редактора, где имя ещё набрано.
         ui.expectShownText(name)
     }

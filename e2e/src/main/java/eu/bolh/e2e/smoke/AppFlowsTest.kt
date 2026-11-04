@@ -73,10 +73,10 @@ class AppFlowsTest {
 
         field.text = "Translate every document"
         ui.hideKeyboard(expectIt = true)
-        val typed = ui.find(By.clazz(BolhUi.EDIT_TEXT).text("Translate every document"))
-            ?: run { fail("Typed task is not in its field"); error("unreachable") }
-        val submit = ui.allTexts("Add a task").firstOrNull { it.visibleBounds.top >= typed.visibleBounds.bottom }
-            ?: run { fail("No \"Add a task\" button under the task field"); error("unreachable") }
+        val typed = By.clazz(BolhUi.EDIT_TEXT).text("Translate every document")
+        val submit = ui.textBelow("Add a task") {
+            ui.find(typed) ?: run { fail("Typed task is not in its field"); error("unreachable") }
+        }
         ui.click(submit)
         ui.expectShownText("Translate every document")
 
