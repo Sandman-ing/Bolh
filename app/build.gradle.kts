@@ -71,6 +71,11 @@ android {
         }
     }
 
+    testOptions {
+        // Robolectric берёт ресурсы приложения: строки, темы, иконки.
+        unitTests.isIncludeAndroidResources = true
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
@@ -130,5 +135,9 @@ dependencies {
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.room.testing)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.test.junit)
+    testImplementation(composeBom)
+    testImplementation(libs.compose.ui.test.junit4)
     androidTestImplementation(libs.androidx.test.junit)
 }
