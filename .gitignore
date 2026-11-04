@@ -9,6 +9,7 @@
 .cxx
 local.properties
 /app/build/
+/e2e/build/
 
 # Ключ подписи и его пароль: в репозиторий не едут.
 /keystore.properties

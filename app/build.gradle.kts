@@ -69,6 +69,14 @@ android {
                 "proguard-rules.pro",
             )
         }
+        // Та же сборка, что уходит в Play: R8, сжатие ресурсов, тот же
+        // идентификатор. Только подписана отладочным ключом, чтобы автотесты
+        // на эмуляторе ставили её без ключа выпуска (модуль :e2e).
+        create("e2e") {
+            initWith(getByName("release"))
+            signingConfig = signingConfigs.getByName("debug")
+            matchingFallbacks += listOf("release")
+        }
     }
 
     testOptions {

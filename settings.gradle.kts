@@ -16,3 +16,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "Bolh"
 include(":app")
+include(":e2e")
