@@ -388,7 +388,7 @@ class BolhUi {
             val out = ByteArrayOutputStream()
             device.dumpWindowHierarchy(out)
             // Журнал режет записи по переводам строк, поэтому дерево идёт одной строкой.
-            out.toString().replace('\n', ' ').chunked(1_000).forEachIndexed { index, chunk ->
+            out.toString().replace('\n', ' ').replace('\r', ' ').chunked(1_000).forEachIndexed { index, chunk ->
                 Log.i(DUMP_TAG, "$name #$index $chunk")
             }
         }

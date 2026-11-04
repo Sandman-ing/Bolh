@@ -67,12 +67,14 @@ class AppFlowsTest {
         val addTask = ui.allTexts("Add a task").firstOrNull { it.visibleBounds.top > stage.visibleBounds.top }
             ?: run { fail("No \"Add a task\" under the second stage"); error("unreachable") }
         ui.click(addTask)
-        val field = ui.focusedField()
+        // Поле ищется по своей подписи: фокус переходит в него не сразу, и
+        // «поле в фокусе» в первый миг — ещё поле этапа, где писали до этого.
+        val field = ui.field("Task")
         val share = field.visibleBounds.width().toFloat() / ui.device.displayWidth
         assertTrue("task field takes only ${(share * 100).toInt()}% of the screen width", share > 0.6f)
+        assertTrue("the new task field should get the keyboard focus", ui.waitUntil(BolhUi.SHORT) { ui.field("Task").isFocused })
 
-        field.text = "Translate every document"
-        ui.hideKeyboard(expectIt = true)
+        ui.fill("Task", "Translate every document")
         val typed = By.clazz(BolhUi.EDIT_TEXT).text("Translate every document")
         val submit = ui.textBelow("Add a task") {
             ui.find(typed) ?: run { fail("Typed task is not in its field"); error("unreachable") }
@@ -107,7 +109,8 @@ class AppFlowsTest {
         ui.field("Note").click()
         val keyboard = ui.awaitKeyboard()
         ui.device.waitForIdle()
-        val note = ui.focusedField()
+        val note = ui.field("Note")
+        assertTrue("the note field should have the keyboard focus", note.isFocused)
         val noteBottom = note.visibleBounds.bottom
         assertTrue(
             "note field ends at $noteBottom px, under the keyboard that starts at ${keyboard.top} px",
