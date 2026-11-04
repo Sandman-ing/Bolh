@@ -15,7 +15,7 @@ class Flows(private val ui: BolhUi) {
         ui.expectText("New goal")
         ui.fill("Name", name)
         ui.tap("Save")
-        ui.expectText(name)
+        ui.expectShownText(name)
     }
 
     fun createHabit(name: String) {
@@ -24,7 +24,7 @@ class Flows(private val ui: BolhUi) {
         ui.expectText("New habit")
         ui.fill("Name", name)
         ui.tap("Save")
-        ui.expectText(name)
+        ui.expectShownText(name)
     }
 
     /** Отметить привычку кругом справа от названия. */
@@ -54,7 +54,7 @@ class Flows(private val ui: BolhUi) {
         ui.expectText("New account")
         ui.fill("Name", name)
         ui.tap("Save")
-        ui.expectText(name)
+        ui.expectShownText(name)
     }
 
     /** Трата со страницы счёта: счёт в шторке уже выбран. */
@@ -84,7 +84,8 @@ class Flows(private val ui: BolhUi) {
             ui.expectText("Payment date")
         }
         ui.tap("Save")
-        ui.expectText(name)
+        // Список платежей, а не поле редактора, где имя ещё набрано.
+        ui.expectShownText(name)
     }
 
     fun openSettings() {

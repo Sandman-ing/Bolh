@@ -72,7 +72,7 @@ class AppFlowsTest {
         assertTrue("task field takes only ${(share * 100).toInt()}% of the screen width", share > 0.6f)
 
         field.text = "Translate every document"
-        ui.hideKeyboard()
+        ui.hideKeyboard(expectIt = true)
         val typed = ui.find(By.clazz(BolhUi.EDIT_TEXT).text("Translate every document"))
             ?: run { fail("Typed task is not in its field"); error("unreachable") }
         val submit = ui.allTexts("Add a task").firstOrNull { it.visibleBounds.top >= typed.visibleBounds.bottom }
@@ -99,22 +99,22 @@ class AppFlowsTest {
 
     @Test
     fun expenseNoteStaysAboveKeyboard() {
-        flows.createAccount("Card")
+        flows.createAccount("Main card")
         ui.tapDesc("Create")
         ui.fill("Amount", "12")
         ui.tap("Date, note, goal")
 
-        val note = ui.field("Note")
-        note.click()
+        ui.field("Note").click()
         val keyboard = ui.awaitKeyboard()
         ui.device.waitForIdle()
-        val noteBottom = ui.field("Note").visibleBounds.bottom
+        val note = ui.focusedField()
+        val noteBottom = note.visibleBounds.bottom
         assertTrue(
             "note field ends at $noteBottom px, under the keyboard that starts at ${keyboard.top} px",
             noteBottom <= keyboard.top,
         )
 
-        ui.field("Note").text = "Coffee with Anna"
+        note.text = "Coffee with Anna"
         ui.tap("Record")
         ui.expectNoText("Date, note, goal", BolhUi.TIMEOUT)
         ui.tap("All transactions")
@@ -123,7 +123,7 @@ class AppFlowsTest {
 
     @Test
     fun oneTimePaymentIsRecordedOnceAndLeavesTheList() {
-        flows.createAccount("Card")
+        flows.createAccount("Main card")
         flows.addPayment("Claude", "37", once = true)
         ui.expectTextContains("one-time")
 
