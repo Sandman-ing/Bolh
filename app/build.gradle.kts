@@ -56,6 +56,11 @@ android {
 
     buildTypes {
         release {
+            // R8 сжимает и оптимизирует код, а неиспользуемые ресурсы убирает.
+            // Без него Google Play помечал сборку: «Оптимизация DEX-кода ниже
+            // порога». Файл деобфускации для разбора сбоев едет внутри бандла.
+            isMinifyEnabled = true
+            isShrinkResources = true
             if (keystorePropertiesFile.exists()) {
                 signingConfig = signingConfigs.getByName("release")
             }
