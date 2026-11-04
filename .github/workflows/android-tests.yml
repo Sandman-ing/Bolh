@@ -53,17 +53,37 @@ jobs:
       - name: Release build for the emulator and the tests
         run: bash gradlew --no-daemon :app:assembleE2e :e2e:assembleE2e
 
-      - name: Previous version from its bundle
+      - name: Previous and new version for the emulator
         run: |
           curl -fsSL -o bundletool.jar \
             "https://github.com/google/bundletool/releases/download/$BUNDLETOOL_VERSION/bundletool-all-$BUNDLETOOL_VERSION.jar"
           echo "$BUNDLETOOL_SHA256  bundletool.jar" | sha256sum -c -
-          java -jar bundletool.jar build-apks --bundle="$PREVIOUS_BUNDLE" --output=previous.apks \
-            --mode=universal --ks="$HOME/.android/debug.keystore" --ks-pass=pass:android \
-            --ks-key-alias=androiddebugkey --key-pass=pass:android
+          # Пакет со всем сразу из .aab, подписанный тем же отладочным ключом.
+          universal() {
+            java -jar bundletool.jar build-apks --bundle="$1" --output="$RUNNER_TEMP/universal.apks" \
+              --overwrite --mode=universal --ks="$HOME/.android/debug.keystore" --ks-pass=pass:android \
+              --ks-key-alias=androiddebugkey --key-pass=pass:android
+            unzip -p "$RUNNER_TEMP/universal.apks" universal.apk > "$2"
+          }
           mkdir -p build/e2e-apks
-          unzip -p previous.apks universal.apk > build/e2e-apks/bolh-previous.apk
-          cp app/build/outputs/apk/e2e/app-e2e.apk build/e2e-apks/bolh-new.apk
+          universal "$PREVIOUS_BUNDLE" build/e2e-apks/bolh-previous.apk
+
+          version=$(sed -n 's/.*versionName = "\(.*\)".*/\1/p' app/build.gradle.kts)
+          code=$(sed -n 's/.*versionCode = \([0-9]*\).*/\1/p' app/build.gradle.kts)
+          bundle="Bolh-$version.aab"
+          if [ -f "$bundle" ] && [ "$bundle" != "$PREVIOUS_BUNDLE" ]; then
+            # Сборка версии уже в репозитории: проверяется тот самый файл, что уйдёт в Play.
+            inside=$(java -jar bundletool.jar dump manifest --bundle="$bundle" --xpath=/manifest/@android:versionCode)
+            if [ "$inside" != "$code" ]; then
+              echo "::error::$bundle has versionCode $inside, but the code says $code"
+              exit 1
+            fi
+            universal "$bundle" build/e2e-apks/bolh-new.apk
+            echo "New version: the committed bundle $bundle (versionCode $code)"
+          else
+            cp app/build/outputs/apk/e2e/app-e2e.apk build/e2e-apks/bolh-new.apk
+            echo "New version: the e2e build of this commit"
+          fi
           cp e2e/build/outputs/apk/e2e/e2e-e2e.apk build/e2e-apks/bolh-e2e-tests.apk
           ls -la build/e2e-apks
 
