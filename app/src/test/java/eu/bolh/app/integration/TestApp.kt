@@ -4,9 +4,14 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import eu.bolh.app.BolhContainer
 import eu.bolh.app.domain.model.Goal
+import eu.bolh.app.domain.model.Habit
+import eu.bolh.app.domain.model.HabitKind
+import eu.bolh.app.domain.model.HabitMode
+import eu.bolh.app.domain.model.HabitSchedule
 import eu.bolh.app.domain.model.Recurrence
 import eu.bolh.app.domain.model.RecurrenceUnit
 import eu.bolh.app.domain.model.RecurringPayment
+import eu.bolh.app.domain.model.ScheduleType
 import eu.bolh.app.domain.model.Transaction
 import eu.bolh.app.domain.model.TransactionType
 import java.time.LocalDate
@@ -37,6 +42,22 @@ class TestApp {
     fun goal(name: String, deadline: LocalDate? = null): String = runBlocking {
         val id = UUID.randomUUID().toString()
         goals.create(Goal(id, name, "flag", LocalDate.of(2026, 9, 1), deadline))
+        id
+    }
+
+    fun habit(name: String): String = runBlocking {
+        val id = UUID.randomUUID().toString()
+        habits.create(
+            Habit(
+                id = id,
+                name = name,
+                icon = "book",
+                kind = HabitKind.Good,
+                mode = HabitMode.Game,
+                schedule = HabitSchedule(ScheduleType.Daily),
+                startDate = finance.today().minusDays(10),
+            ),
+        )
         id
     }
 
